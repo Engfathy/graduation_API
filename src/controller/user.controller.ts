@@ -50,7 +50,7 @@ export const registerUser = async (
         });
         user = await user.save();
         return res.status(200).json({
-            msg: "Registration is sucesssss",
+            msg: "Registration is sucess",
             hashedpass: hashPass,
         });
     } catch (error) {
@@ -155,7 +155,7 @@ export const getUserData = async (
         });
     } catch (error) {
         return res.status(500).json({
-            msg: "Error fetching user profile.",
+            msg: "Error fetching user data.",
         });
     }
 };
