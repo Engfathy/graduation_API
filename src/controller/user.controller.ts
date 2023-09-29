@@ -3,21 +3,31 @@ import jwt from "jsonwebtoken";
 import gravatar from "gravatar";
 import User from "../models/user.model";
 import express from "express";
-import { body, validationResult } from "express-validator";
+import {  validationResult } from "express-validator";
 
-
-export const registerUser = async (req: express.Request, res: express.Response) => {
+export const registerUser = async (
+    req: express.Request,
+    res: express.Response,
+) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
         let { name, email, password } = req.body;
-        //check if user is exist
+        //check if user is exist with email
         let user: User | null = await User.findOne({ email: email });
         if (user) {
             return res.status(400).json({
-                msg: "user already exist",
+                msg: "Email already exist",
+            });
+        }
+        //check if user name is used
+
+        let userWithName: User | null = await User.findOne({ name: name });
+        if (userWithName) {
+            return res.status(400).json({
+                msg: "username already used",
             });
         }
 
@@ -32,7 +42,12 @@ export const registerUser = async (req: express.Request, res: express.Response) 
             d: "mm",
         });
         // register user
-        user = new User({ name: name.toLowerCase(), email, password: hashPass, avatar });
+        user = new User({
+            name: name.toLowerCase(),
+            email,
+            password: hashPass,
+            avatar,
+        });
         user = await user.save();
         return res.status(200).json({
             msg: "Registration is sucesssss",
@@ -47,7 +62,10 @@ export const registerUser = async (req: express.Request, res: express.Response) 
 
 
 
-export const loginUser =async (req: express.Request, res: express.Response) => {
+export const loginUser = async (
+    req: express.Request,
+    res: express.Response,
+) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -63,10 +81,7 @@ export const loginUser =async (req: express.Request, res: express.Response) => {
             });
         }
 
-        const isMatch: boolean = await bcrypt.compare(
-            password,
-            user.password,
-        );
+        const isMatch: boolean = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
             return res.status(401).json({
@@ -74,7 +89,8 @@ export const loginUser =async (req: express.Request, res: express.Response) => {
             });
         }
 
-        const secretKey: string | undefined  =process.env.JWT_SECRET_KEY || "ssssshhhhh";
+        const secretKey: string | undefined =
+            process.env.JWT_SECRET_KEY || "ssssshhhhh";
         if (!secretKey) {
             return res.status(500).json({
                 msg: "JWT secret key not available",
@@ -89,13 +105,12 @@ export const loginUser =async (req: express.Request, res: express.Response) => {
         };
 
         const token = jwt.sign(payLoad, secretKey);
-        res.setHeader("authorization",token);
+        res.setHeader("authorization", token);
         res.cookie("userName", user.name);
         res.cookie("userId", user.id);
         return res.status(200).json({
             msg: "Login is successful",
             token: token,
-           
         });
     } catch (error) {
         return res.status(500).json({
@@ -104,29 +119,35 @@ export const loginUser =async (req: express.Request, res: express.Response) => {
     }
 };
 
-
-export const getUserData = async (req: express.Request, res: express.Response) => {
+export const getUserData = async (
+    req: express.Request,
+    res: express.Response,
+) => {
     try {
         interface UserHeader {
             id: string;
             name: string;
         }
-        const requestedUser:UserHeader  | undefined = req.headers["user"] as UserHeader | undefined;
+        const requestedUser: UserHeader | undefined = req.headers["user"] as
+            | UserHeader
+            | undefined;
 
         if (!requestedUser) {
             return res.status(400).json({
                 msg: "User header missing.",
             });
         }
-        
-        const user: User | null | any= await User.findOne({ _id: requestedUser.id }).select("-password");
-        
+
+        const user: User | null | any = await User.findOne({
+            _id: requestedUser.id,
+        }).select("-password");
+
         if (!user) {
             return res.status(401).json({
                 msg: "User data not found.",
             });
         }
-        
+
         return res.status(200).json({
             msg: {
                 user: user,
@@ -139,11 +160,13 @@ export const getUserData = async (req: express.Request, res: express.Response) =
     }
 };
 
+export const logoutUser = async (
+    req: express.Request,
+    res: express.Response,
+) => {
+    res.setHeader("authorization", "");
+    res.clearCookie("userName");
+    res.clearCookie("userId");
 
-export const logoutUser =async (req: express.Request, res: express.Response)  => {
-    res.setHeader('authorization', '');
-    res.clearCookie('userName');
-    res.clearCookie('userId');
-  
-    return res.status(200).json({ msg: 'Logout successful' });
-  };
+    return res.status(200).json({ msg: "Logout successful" });
+};
