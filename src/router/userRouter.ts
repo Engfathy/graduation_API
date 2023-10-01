@@ -1,7 +1,7 @@
 import express from "express";
 import tokenVerifier from "../middleware/tokenVerifier";
 import { body, validationResult } from "express-validator";
-import { getUserData, loginUser, logoutUser, registerUser } from "../controller/user.controller";
+import { forgetPassword, getUserData, loginUser, logoutUser, registerUser } from "../controller/user.controller";
 
 // import multer from "multer";
 
@@ -48,4 +48,6 @@ userRouter.post('/logout',
     logoutUser );
 
 
+
+    userRouter.post("/forget-password",forgetPassword)
 export default userRouter;
