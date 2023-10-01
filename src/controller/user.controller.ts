@@ -4,6 +4,7 @@ import gravatar from "gravatar";
 import User from "../models/user.model";
 import express from "express";
 import {  validationResult } from "express-validator";
+import config from "../config/config";
 
 export const registerUser = async (
     req: express.Request,
@@ -90,7 +91,7 @@ export const loginUser = async (
         }
 
         const secretKey: string | undefined =
-            process.env.JWT_SECRET_KEY || "ssssshhhhh";
+            process.env.JWT_SECRET_KEY ||config.secret_jwt;
         if (!secretKey) {
             return res.status(500).json({
                 msg: "JWT secret key not available",
@@ -134,7 +135,7 @@ export const getUserData = async (
 
         if (!requestedUser) {
             return res.status(400).json({
-                msg: "User header missing.",
+                msg: "User header is missing.",
             });
         }
 

@@ -1,6 +1,6 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-
+import config from "../config/config";
 
 const tokenVerifier = (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
@@ -11,7 +11,7 @@ const tokenVerifier = (req: express.Request, res: express.Response, next: expres
             });
         }
         
-        const secretKey: string | any = process.env.JWT_SECRET_KEY || "ssssshhhhh";
+        const secretKey: string | any = process.env.JWT_SECRET_KEY || config.secret_jwt;
         let decode: any;
         
         try {
