@@ -179,7 +179,7 @@ export const forgetPassword = async (
         let user: User | null = await User.findOne({ email: email });
         if (user) {
             const randomString = generateRandomString();
-            const setToken = await user.updateOne(
+            const setToken = await User.updateOne(
                 { email: email },
                 { $set: { token: randomString } },
             );
@@ -190,14 +190,12 @@ export const forgetPassword = async (
                 subject: "resset password",
                 html: `<p>Hi ${user.name}, please copy the link below and reset your password:</p>
                 <a href="http://127.0.0.1:5500/api/v1/user/reset-password?token=${randomString}">Reset Password</a>
-                `
+                `,
             });
-            return res
-                .status(200)
-                .json({
-                    success: true,
-                    msg: "Please check your inbox for reset your password",
-                });
+            return res.status(200).json({
+                success: true,
+                msg: "Please check your inbox for reset your password",
+            });
         } else {
             return res
                 .status(400)
@@ -208,12 +206,35 @@ export const forgetPassword = async (
     }
 };
 
-// export const resetPassword = async (
-//     req: express.Request,
-//     res: express.Response,
-// ) => {
-//     try {
-//     } catch (error) {
-//         return res.status(400).json({ success: false, msg: error });
-//     }
-// };
+
+export const resetPassword = async (
+    req: express.Request,
+    res: express.Response,
+) => {
+    try {
+        const newPassword = req.body.password;
+        const token = req.query.token;
+
+        const user: User | null = await User.findOne({ token: token });
+
+        if (user) {
+            const salt = await bcrypt.genSalt(10);
+            const newHashPass = await bcrypt.hash(newPassword, salt);
+            await User.findByIdAndUpdate(
+                { _id: user._id },
+                { $set: { password: newHashPass } },
+            );
+            res.status(200).json({
+                success: true,
+                msg: "Password reset successful",
+            });
+        } else {
+            res.status(200).json({
+                success: false,
+                msg: "This link has expired or is invalid",
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({ success: false, msg: error });
+    }
+};
