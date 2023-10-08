@@ -52,6 +52,7 @@ export const registerUser = async (
             avatar,
         });
         user = await user.save();
+        console.log(user);
         return res.status(200).json({
             success: true,
             msg: "Registration is sucess",
@@ -181,7 +182,7 @@ export const forgetPassword = async (
             const randomString = generateRandomString();
             const setToken = await User.updateOne(
                 { email: email },
-                { $set: { token: randomString } },
+                { $set: { reset_token: randomString } },
             );
 
             sendResetPasswordMail({
@@ -217,14 +218,14 @@ export const resetPassword = async (
         if(!newPassword|| !token){
             return res.status(400).json({success:false,msg:"data hasn't send propably"})
         }
-        const user: User | null = await User.findOne({ token: token });
+        const user: User | null = await User.findOne({ reset_token: token });
 
         if (user) {
             const salt = await bcrypt.genSalt(10);
             const newHashPass = await bcrypt.hash(newPassword, salt);
             await User.findByIdAndUpdate(
                 { _id: user._id },
-                { $set: { password: newHashPass ,token:""} },
+                { $set: { password: newHashPass ,reset_token:""} },
             {new:true});
             return res.status(200).json({
                 success: true,
