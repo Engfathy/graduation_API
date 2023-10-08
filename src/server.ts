@@ -21,8 +21,10 @@ app.get(
     }),
 );
 
-app.get("/auth/google/callback", passport.authenticate("google"));
-// send data from form
+app.get("/auth/google/callback", passport.authenticate("google"),async(req:express.Request,res:express.Response)=>{
+
+    return res.json({msg:"fuck you"})
+});
 app.use(bodyParser.urlencoded({ extended: true }));
 
 //connect database
