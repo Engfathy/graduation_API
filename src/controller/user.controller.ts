@@ -214,7 +214,9 @@ export const resetPassword = async (
     try {
         const newPassword = req.body.password;
         const token = req.query.token;
-
+        if(!newPassword|| !token){
+            return res.status(400).json({success:false,msg:"data hasn't send propably"})
+        }
         const user: User | null = await User.findOne({ token: token });
 
         if (user) {
@@ -222,14 +224,14 @@ export const resetPassword = async (
             const newHashPass = await bcrypt.hash(newPassword, salt);
             await User.findByIdAndUpdate(
                 { _id: user._id },
-                { $set: { password: newHashPass } },
-            );
-            res.status(200).json({
+                { $set: { password: newHashPass ,token:""} },
+            {new:true});
+            return res.status(200).json({
                 success: true,
                 msg: "Password reset successful",
             });
         } else {
-            res.status(200).json({
+            return res.status(200).json({
                 success: false,
                 msg: "This link has expired or is invalid",
             });
