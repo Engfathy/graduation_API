@@ -47,7 +47,7 @@ export const registerUser = async (
         // register user
         user = new User({
             name: name.toLowerCase(),
-            email,
+            email: email,
             password: hashPass,
             avatar,
         });
@@ -207,7 +207,6 @@ export const forgetPassword = async (
     }
 };
 
-
 export const resetPassword = async (
     req: express.Request,
     res: express.Response,
@@ -215,8 +214,10 @@ export const resetPassword = async (
     try {
         const newPassword = req.body.password;
         const token = req.query.token;
-        if(!newPassword|| !token){
-            return res.status(400).json({success:false,msg:"data hasn't send propably"})
+        if (!newPassword || !token) {
+            return res
+                .status(400)
+                .json({ success: false, msg: "data hasn't send propably" });
         }
         const user: User | null = await User.findOne({ reset_token: token });
 
@@ -225,8 +226,9 @@ export const resetPassword = async (
             const newHashPass = await bcrypt.hash(newPassword, salt);
             await User.findByIdAndUpdate(
                 { _id: user._id },
-                { $set: { password: newHashPass ,reset_token:""} },
-            {new:true});
+                { $set: { password: newHashPass, reset_token: "" } },
+                { new: true },
+            );
             return res.status(200).json({
                 success: true,
                 msg: "Password reset successful",

@@ -1,12 +1,20 @@
 import express from "express";
 import tokenVerifier from "../middleware/tokenVerifier";
 import { body, validationResult } from "express-validator";
-import { forgetPassword, getUserData, loginUser, logoutUser, registerUser, resetPassword } from "../controller/user.controller";
+import {
+    forgetPassword,
+    getUserData,
+    loginUser,
+    logoutUser,
+    registerUser,
+    resetPassword,
+} from "../controller/user.controller";
 
-// import multer from "multer";
-
-
-
+import {
+    createAccountLimiter,
+    forgetPasswordLimiter,
+    ResetPasswordLimiter,
+} from "../utils/reqLimiter";
 
 // let upload = multer();
 const userRouter: express.Router = express.Router();
@@ -19,13 +27,16 @@ userRouter.get("/", (req: express.Request, res: express.Response) => {
 });
 userRouter.post(
     "/register",
+    createAccountLimiter,
     [
         body("name").not().isEmpty().withMessage("Name is required"),
         body("email").isEmail().withMessage("email isnot valid"),
         body("password")
-            .isLength({ min: 8 , max: 20 })
+            .isLength({ min: 8, max: 20 })
             .withMessage("min 8 , max 20 char required for password"),
-    ],registerUser);
+    ],
+    registerUser,
+);
 
 userRouter.post(
     "/login",
@@ -34,23 +45,18 @@ userRouter.post(
         body("password")
             .isLength({ min: 5 })
             .withMessage("min 5 characters required for password"),
-    ],loginUser);
-
-
-
-userRouter.get(
-    "/profile",
-    tokenVerifier,
-    getUserData
-   
+    ],
+    loginUser,
 );
-userRouter.post('/logout',
-    logoutUser );
 
+userRouter.get("/profile", tokenVerifier, getUserData);
+userRouter.get("/test", async (req: express.Request, res: express.Response) => {
+    res.status(200).json({ msg: "fuck you" });
+});
+userRouter.post("/logout", logoutUser);
 
+userRouter.post("/forget-password", forgetPasswordLimiter, forgetPassword);
 
-    userRouter.post("/forget-password",forgetPassword);
+userRouter.post("/reset-password", ResetPasswordLimiter, resetPassword);
 
-
-    userRouter.post("/reset-password",resetPassword)
 export default userRouter;
