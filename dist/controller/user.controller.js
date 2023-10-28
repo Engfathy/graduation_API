@@ -1,51 +1,49 @@
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import gravatar from "gravatar";
-import User from "../models/user.model";
-import express from "express";
-import { validationResult } from "express-validator";
-import config from "../config/config";
-import { generateRandomString } from "../utils/randomString";
-import sendResetPasswordMail from "../utils/nodemailer";
-
-export const registerUser = async (
-    req: express.Request,
-    res: express.Response,
-) => {
-    const errors = validationResult(req);
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.resetPassword = exports.forgetPassword = exports.logoutUser = exports.getUserData = exports.loginUser = exports.registerUser = void 0;
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const gravatar_1 = __importDefault(require("gravatar"));
+const user_model_1 = __importDefault(require("../models/user.model"));
+const express_validator_1 = require("express-validator");
+const config_1 = __importDefault(require("../config/config"));
+const randomString_1 = require("../utils/randomString");
+const nodemailer_1 = __importDefault(require("../utils/nodemailer"));
+const registerUser = async (req, res) => {
+    const errors = (0, express_validator_1.validationResult)(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ success: false, errors: errors.array() });
     }
     try {
         let { name, email, password } = req.body;
         //check if user is exist with email
-        let user: User | null = await User.findOne({ email: email });
+        let user = await user_model_1.default.findOne({ email: email });
         if (user) {
             return res
                 .status(400)
                 .json({ success: false, msg: "Email already exist" });
         }
         //check if user name is used
-
-        let userWithName: User | null = await User.findOne({ name: name });
+        let userWithName = await user_model_1.default.findOne({ name: name });
         if (userWithName) {
             return res
                 .status(400)
                 .json({ success: true, msg: "username already used" });
         }
-
         // encrypt password
-        let salt = await bcrypt.genSalt(10);
-        let hashPass = await bcrypt.hash(password, salt);
-
+        let salt = await bcryptjs_1.default.genSalt(10);
+        let hashPass = await bcryptjs_1.default.hash(password, salt);
         //get avatar url
-        const avatar = gravatar.url(email, {
+        const avatar = gravatar_1.default.url(email, {
             s: "300",
             r: "pg",
             d: "mm",
         });
         // register user
-        user = new User({
+        user = new user_model_1.default({
             name: name.toLowerCase(),
             email: email,
             password: hashPass,
@@ -58,17 +56,15 @@ export const registerUser = async (
             msg: "Registration is sucess",
             hashedpass: hashPass,
         });
-    } catch (error) {
+    }
+    catch (error) {
         return res.status(500).json({ success: false, msg: error });
     }
 };
-
-export const loginUser = async (
-    req: express.Request,
-    res: express.Response,
-) => {
+exports.registerUser = registerUser;
+const loginUser = async (req, res) => {
     try {
-        const errors = validationResult(req);
+        const errors = (0, express_validator_1.validationResult)(req);
         if (!errors.isEmpty()) {
             return res
                 .status(400)
@@ -76,38 +72,31 @@ export const loginUser = async (
         }
         console.log(req.body);
         const { email, password } = req.body;
-        const user: User | null = await User.findOne({ email: email });
-
+        const user = await user_model_1.default.findOne({ email: email });
         if (!user) {
             return res
                 .status(401)
                 .json({ success: true, msg: "Invalid email" });
         }
-
-        const isMatch: boolean = await bcrypt.compare(password, user.password);
-
+        const isMatch = await bcryptjs_1.default.compare(password, user.password);
         if (!isMatch) {
             return res
                 .status(401)
                 .json({ success: true, msg: "Incorrect password" });
         }
-
-        const secretKey: string | undefined =
-            process.env.JWT_SECRET_KEY || config.secret_jwt;
+        const secretKey = process.env.JWT_SECRET_KEY || config_1.default.secret_jwt;
         if (!secretKey) {
             return res
                 .status(500)
                 .json({ success: true, msg: "JWT secret key not available" });
         }
-
         const payLoad = {
             user: {
                 id: user.id,
                 name: user.name,
             },
         };
-
-        const token = jwt.sign(payLoad, secretKey);
+        const token = jsonwebtoken_1.default.sign(payLoad, secretKey);
         res.setHeader("authorization", token);
         res.cookie("userName", user.name);
         res.cookie("userId", user.id);
@@ -115,79 +104,57 @@ export const loginUser = async (
         return res
             .status(200)
             .json({ success: true, msg: "Login is successful", token: token });
-    } catch (error) {
+    }
+    catch (error) {
         return res.status(500).json({ success: false, msg: error });
     }
 };
-
-export const getUserData = async (
-    req: express.Request,
-    res: express.Response,
-) => {
+exports.loginUser = loginUser;
+const getUserData = async (req, res) => {
     try {
-        interface UserHeader {
-            id: string;
-            name: string;
-        }
-        const requestedUser: UserHeader | undefined = req.headers["user"] as
-            | UserHeader
-            | undefined;
-
+        const requestedUser = req.headers["user"];
         if (!requestedUser) {
             return res
                 .status(400)
                 .json({ success: true, msg: "User header is missing." });
         }
-
-        const user: User | null | any = await User.findOne({
+        const user = await user_model_1.default.findOne({
             _id: requestedUser.id,
         }).select("-password");
-
         if (!user) {
             return res
                 .status(401)
                 .json({ success: true, msg: "User data not found." });
         }
-
         return res.status(200).json({
             msg: {
                 user: user,
             },
         });
-    } catch (error) {
+    }
+    catch (error) {
         return res
             .status(500)
             .json({ success: false, msg: "Error fetching user data." });
     }
 };
-
-export const logoutUser = async (
-    req: express.Request,
-    res: express.Response,
-) => {
+exports.getUserData = getUserData;
+const logoutUser = async (req, res) => {
     res.setHeader("authorization", "");
     res.clearCookie("userName");
     res.clearCookie("userId");
-
     return res.status(200).json({ success: true, msg: "Logout successful" });
 };
-
-export const forgetPassword = async (
-    req: express.Request,
-    res: express.Response,
-) => {
+exports.logoutUser = logoutUser;
+const forgetPassword = async (req, res) => {
     try {
         let { email } = req.body;
-        let user: User | null = await User.findOne({ email: email });
+        let user = await user_model_1.default.findOne({ email: email });
         if (user) {
-            const randomString = generateRandomString();
-            const setToken = await User.updateOne(
-                { email: email },
-                { $set: { reset_token: randomString } },
-            );
-
-            sendResetPasswordMail({
-                from: config.emailUser,
+            const randomString = (0, randomString_1.generateRandomString)();
+            const setToken = await user_model_1.default.updateOne({ email: email }, { $set: { reset_token: randomString } });
+            (0, nodemailer_1.default)({
+                from: config_1.default.emailUser,
                 to: email,
                 subject: "resset password",
                 html: `<p>Hi ${user.name}, please copy the link below and reset your password:</p>
@@ -198,20 +165,19 @@ export const forgetPassword = async (
                 success: true,
                 msg: "Please check your inbox for reset your password",
             });
-        } else {
+        }
+        else {
             return res
                 .status(400)
                 .json({ success: true, msg: "this email doesn't exist" });
         }
-    } catch (error) {
+    }
+    catch (error) {
         return res.status(400).json({ success: false, msg: error });
     }
 };
-
-export const resetPassword = async (
-    req: express.Request,
-    res: express.Response,
-) => {
+exports.forgetPassword = forgetPassword;
+const resetPassword = async (req, res) => {
     try {
         const newPassword = req.body.password;
         const token = req.query.token;
@@ -220,27 +186,26 @@ export const resetPassword = async (
                 .status(400)
                 .json({ success: false, msg: "data hasn't send propably" });
         }
-        const user: User | null = await User.findOne({ reset_token: token });
-
+        const user = await user_model_1.default.findOne({ reset_token: token });
         if (user) {
-            const salt = await bcrypt.genSalt(10);
-            const newHashPass = await bcrypt.hash(newPassword, salt);
-            await User.findByIdAndUpdate(
-                { _id: user._id },
-                { $set: { password: newHashPass, reset_token: "" } },
-                { new: true },
-            );
+            const salt = await bcryptjs_1.default.genSalt(10);
+            const newHashPass = await bcryptjs_1.default.hash(newPassword, salt);
+            await user_model_1.default.findByIdAndUpdate({ _id: user._id }, { $set: { password: newHashPass, reset_token: "" } }, { new: true });
             return res.status(200).json({
                 success: true,
                 msg: "Password reset successful",
             });
-        } else {
+        }
+        else {
             return res.status(200).json({
                 success: false,
                 msg: "This link has expired or is invalid",
             });
         }
-    } catch (error) {
+    }
+    catch (error) {
         return res.status(500).json({ success: false, msg: error });
     }
 };
+exports.resetPassword = resetPassword;
+//# sourceMappingURL=user.controller.js.map

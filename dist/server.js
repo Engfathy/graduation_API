@@ -10,24 +10,104 @@ const userRouter_1 = __importDefault(require("./router/userRouter"));
 const dbCon_1 = __importDefault(require("./database/dbCon"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const body_parser_1 = __importDefault(require("body-parser"));
+const reqLimiter_1 = require("./middleware/reqLimiter");
+const hpp_1 = __importDefault(require("hpp"));
+const express_mongo_sanitize_1 = __importDefault(require("express-mongo-sanitize"));
+const http_1 = __importDefault(require("http"));
+const socket_io_1 = require("socket.io");
 const app = (0, express_1.default)();
+const server = http_1.default.createServer(app);
+const io = new socket_io_1.Server(server);
+app.set("trust proxy", 0);
+// middleware
 app.use((0, cors_1.default)());
-app.use(express_1.default.json());
+app.use(express_1.default.json({ limit: "50kb" }));
 app.use((0, cookie_parser_1.default)());
-// send data from form
 app.use(body_parser_1.default.urlencoded({ extended: true }));
+//----------*******sanatize data********------------
+//middle ware to prevent xss attack
+//middleware to prevent nosql injection
+app.use((0, express_mongo_sanitize_1.default)());
+//----------*****************************------------
+// middleware to protect against HTTP Parameter Pollution attacks  put after parsing process
+app.use((0, hpp_1.default)());
 //connect database
 dbCon_1.default.ConnectDb();
-app.use("/api/v1/user", userRouter_1.default);
+app.use("/api/v1/user", reqLimiter_1.defaultLimiter, userRouter_1.default);
 dotenv_1.default.config({ path: "./../config.env" });
-const hostName = process.env.HOST_NAME || "127.0.0.1";
+const hostName = process.env.HOST_NAME || "0.0.0.0";
 const port = Number(process.env.PORT) || 5500;
 //-------------------------------------------------------
-app.get("/", (req, res) => {
-    res.send("welcom server is running").status(200);
+app.get("/1", (req, res) => {
+    res.send("welcome server is running").status(200);
+});
+app.get("/socket", (req, res) => {
+    res.sendFile(__dirname + "/index.html");
+});
+let counter = 0;
+let names = ["fathy", "alice", "mohamed"];
+// io.on("connection", async (socket) => {
+//     socket.data.username = names[counter];
+//     counter++;
+//     // io.engine.generateId = (req) => {
+//     //     return uuid.v4(); // Generate a unique identifier for each socket connection
+//     // };
+//     console.log(socket.rooms); // Set { <socket.id> }
+//     socket.join("room1");
+//     console.log(socket.rooms); // Set { <socket.id>, "room1" }
+//     // const sockets = await io.fetchSockets();
+//     // console.log(sockets);
+//     // for (const socket of sockets) {
+//     //     console.log(socket.id);
+//     //     console.log(socket.data);
+//     //   }
+//     console.log(`${counter}users connected `);
+//     console.log(`A user connected with ID: ${socket.id} and name ${socket.data.username}`);
+//     io.emit("user numbers", counter);
+//     // display number of user connected
+//     // console.log(io.engine.clientsCount);
+//     // console.log(io.engine.eventNames);
+//     // console.log(socket.handshake);
+//     // console.log(socket.rooms);
+//     // console.log(socket.data);
+//     // numver of users in specific route
+//     console.log(io.of("/").sockets.size);
+//     socket.on("chat message", async (msg) => {
+//         console.log("message: " + msg);
+//         io.emit(
+//             "chat message",
+//             `${socket.data.username}: ${msg}`,
+//         );
+//         const sockets = await io.fetchSockets();
+//     });
+//     socket.on("typing", (isTyping) => {
+//         io.emit("typing", isTyping);
+//     });
+//     socket.on("disconnect", () => {
+//         console.log("User disconnected");
+//         counter--;
+//         io.emit("user numbers", counter);
+//         console.log(`${counter}users connected`);
+//         io.emit("user leave", "user diconnected");
+//     });
+//     io.engine.on("initial_headers", (headers, req) => {
+//         headers["test"] = "123";
+//         headers["set-cookie"] = "mycookie=456";
+//         headers["id"] = socket.id;
+//     });
+// });
+// io.engine.on("connection_error", (err) => {
+//     console.log(err.req); // the request object
+//     console.log(err.code); // the error code, for example 1
+//     console.log(err.message); // the error message, for example "Session ID unknown"
+//     console.log(err.context); // some additional error context
+// });
+app.get("/ip", (request, response) => {
+    console.log(request.ip);
+    response.send(request.ip);
 });
 if (hostName && port) {
-    app.listen(port, hostName, () => {
+    server.listen(port, hostName, () => {
         console.log(`server is running at http://${hostName}:${port}`);
     });
 }

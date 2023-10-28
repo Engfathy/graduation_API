@@ -18,8 +18,8 @@ async function sendResetPasswordMail(options: MailOptions) {
             port: 465,
             secure: true,
             auth: {
-                user: config.emailUser,
-                pass: config.emailPassword,
+                user: config.emailUser || process.env.EMAIL_USER,
+                pass: config.emailPassword || process.env.EMAIL_PASSWORD,
             },
         });
 

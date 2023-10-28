@@ -7,7 +7,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 class Db {
     static ConnectDb() {
         mongoose_1.default
-            .connect("mongodb://127.0.0.1:27017/IOT")
+            .connect("mongodb+srv://iotcompany2:rVeYsy6vrbz7jiVG@iot.zkvyqzo.mongodb.net/?retryWrites=true&w=majority")
             .then((res) => {
             console.log("Database connected successfully..................");
         })

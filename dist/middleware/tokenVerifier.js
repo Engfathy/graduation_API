@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const config_1 = __importDefault(require("../config/config"));
 const tokenVerifier = (req, res, next) => {
     try {
         const token = req.headers["authorization"];
@@ -12,7 +13,7 @@ const tokenVerifier = (req, res, next) => {
                 msg: "No token provided. Access denied.",
             });
         }
-        const secretKey = process.env.JWT_SECRET_KEY || "ssssshhhhh";
+        const secretKey = process.env.JWT_SECRET_KEY || config_1.default.secret_jwt;
         let decode;
         try {
             decode = jsonwebtoken_1.default.verify(token, secretKey);

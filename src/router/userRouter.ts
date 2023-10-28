@@ -14,7 +14,7 @@ import {
     createAccountLimiter,
     forgetPasswordLimiter,
     ResetPasswordLimiter,
-} from "../utils/reqLimiter";
+} from "../middleware/reqLimiter";
 
 // let upload = multer();
 const userRouter: express.Router = express.Router();
@@ -29,10 +29,11 @@ userRouter.post(
     "/register",
     createAccountLimiter,
     [
-        body("name").not().isEmpty().withMessage("Name is required"),
-        body("email").isEmail().withMessage("email isnot valid"),
+        body("name").not().isEmpty().escape().withMessage("Name is required"),
+        body("email").isEmail().escape().withMessage("email isnot valid"),
         body("password")
             .isLength({ min: 8, max: 20 })
+            .escape()
             .withMessage("min 8 , max 20 char required for password"),
     ],
     registerUser,
@@ -41,9 +42,10 @@ userRouter.post(
 userRouter.post(
     "/login",
     [
-        body("email").isEmail().withMessage("email is not valid"),
+        body("email").isEmail().escape().withMessage("email is not valid"),
         body("password")
             .isLength({ min: 5 })
+            .escape()
             .withMessage("min 5 characters required for password"),
     ],
     loginUser,
@@ -55,8 +57,23 @@ userRouter.get("/test", async (req: express.Request, res: express.Response) => {
 });
 userRouter.post("/logout", logoutUser);
 
-userRouter.post("/forget-password", forgetPasswordLimiter, forgetPassword);
+userRouter.post(
+    "/forget-password",
+    [body("email").isEmail().escape().withMessage("email is not valid")],
+    forgetPasswordLimiter,
+    forgetPassword,
+);
 
-userRouter.post("/reset-password", ResetPasswordLimiter, resetPassword);
+userRouter.post(
+    "/reset-password",
+    [
+        body("password")
+            .isLength({ min: 5 })
+            .escape()
+            .withMessage("min 5 characters required for password"),
+    ],
+    ResetPasswordLimiter,
+    resetPassword,
+);
 
 export default userRouter;
