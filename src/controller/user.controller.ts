@@ -190,8 +190,8 @@ export const forgetPassword = async (
                 from: config.emailUser,
                 to: email,
                 subject: "resset password",
-                html: `<p>Hi ${user.name}, please copy the link below and reset your password:</p>
-                <a href="http://127.0.0.1:5500/api/v1/user/reset-password?token=${randomString}">Reset Password</a>
+                html: `<p>Hi ${user.name}, please copy the code  below and reset your password:</p><br>
+                <h1>${randomString}</h1>
                 `,
             });
             return res.status(200).json({
