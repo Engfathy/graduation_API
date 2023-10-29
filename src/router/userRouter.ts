@@ -10,11 +10,7 @@ import {
     resetPassword,
 } from "../controller/user.controller";
 
-import {
-    createAccountLimiter,
-    forgetPasswordLimiter,
-    ResetPasswordLimiter,
-} from "../middleware/reqLimiter";
+
 
 // let upload = multer();
 const userRouter: express.Router = express.Router();
@@ -27,7 +23,6 @@ userRouter.get("/", (req: express.Request, res: express.Response) => {
 });
 userRouter.post(
     "/register",
-    createAccountLimiter,
     [
         body("name").not().isEmpty().escape().withMessage("Name is required"),
         body("email").isEmail().escape().withMessage("email isnot valid"),
@@ -60,7 +55,7 @@ userRouter.post("/logout", logoutUser);
 userRouter.post(
     "/forget-password",
     [body("email").isEmail().escape().withMessage("email is not valid")],
-    forgetPasswordLimiter,
+    
     forgetPassword,
 );
 
@@ -72,7 +67,7 @@ userRouter.post(
             .escape()
             .withMessage("min 5 characters required for password"),
     ],
-    ResetPasswordLimiter,
+    
     resetPassword,
 );
 
