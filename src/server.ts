@@ -57,71 +57,73 @@ app.get("/1", (req: express.Request, res: express.Response) => {
 app.get("/socket", (req, res) => {
     res.sendFile(__dirname + "/index.html");
 });
-let counter: number = 0;
 let names = ["fathy", "alice", "mohamed"];
-// io.on("connection", async (socket) => {
-//     socket.data.username = names[counter];
-//     counter++;
 
-//     // io.engine.generateId = (req) => {
-//     //     return uuid.v4(); // Generate a unique identifier for each socket connection
-//     // };
+// let newnmaespace= io.of('/newnamespace'); => to make new name space
+io.on("connection", async (socket) => {
+    socket.data.username = names[io.engine.clientsCount];
+    const clientIP = socket.handshake.address; // This gets the client's IP address
+    console.log(`Client connected with IP: ${clientIP}`);
 
-//     console.log(socket.rooms); // Set { <socket.id> }
-//     socket.join("room1");
-//     console.log(socket.rooms); // Set { <socket.id>, "room1" }
-//     // const sockets = await io.fetchSockets();
-//     // console.log(sockets);
-//     // for (const socket of sockets) {
-//     //     console.log(socket.id);
+    // io.engine.generateId = (req) => {
+    //     return uuid.v4(); // Generate a unique identifier for each socket connection
+    // };
 
-//     //     console.log(socket.data);
-//     //   }
-//     console.log(`${counter}users connected `);
-//     console.log(`A user connected with ID: ${socket.id} and name ${socket.data.username}`);
-//     io.emit("user numbers", counter);
-//     // display number of user connected
-//     // console.log(io.engine.clientsCount);
-//     // console.log(io.engine.eventNames);
-//     // console.log(socket.handshake);
-//     // console.log(socket.rooms);
-//     // console.log(socket.data);
-//     // numver of users in specific route
-//     console.log(io.of("/").sockets.size);
+    console.log(socket.rooms); // Set { <socket.id> }
+    socket.join("room1");
+    // io.sockets.in("room1").emit("message","fuck you"); => send msg to specific room
+    console.log(socket.rooms); // Set { <socket.id>, "room1" }
+    // const sockets = await io.fetchSockets();
+    // console.log(sockets);
+    // for (const socket of sockets) {
+    //     console.log(socket.id);
 
-//     socket.on("chat message", async (msg) => {
-//         console.log("message: " + msg);
-//         io.emit(
-//             "chat message",
-//             `${socket.data.username}: ${msg}`,
-//         );
-//         const sockets = await io.fetchSockets();
-//     });
-//     socket.on("typing", (isTyping) => {
-//         io.emit("typing", isTyping);
-//     });
-    
-//     socket.on("disconnect", () => {
-//         console.log("User disconnected");
-//         counter--;
-//         io.emit("user numbers", counter);
-//         console.log(`${counter}users connected`);
-//         io.emit("user leave", "user diconnected");
-//     });
+    //     console.log(socket.data);
+    //   }
+    console.log(`${io.engine.clientsCount} users connected `);
+    console.log(
+        `A user connected with ID: ${socket.id} and name ${socket.data.username}`,
+    );
+    io.emit("user numbers", io.engine.clientsCount);
+    // display number of user connected
+    // console.log(io.engine.clientsCount);
+    // console.log(io.engine.eventNames);
+    // console.log(socket.handshake);
+    // console.log(socket.rooms);
+    // console.log(socket.data);
+    // numver of users in specific route
+    console.log(io.of("/").sockets.size, "of name space");
 
-//     io.engine.on("initial_headers", (headers, req) => {
-//         headers["test"] = "123";
-//         headers["set-cookie"] = "mycookie=456";
-//         headers["id"] = socket.id;
-//     });
-// });
+    socket.on("chat message", async (msg) => {
+        console.log("message: " + msg);
+        io.emit("chat message", `${socket.data.username}: ${msg}`);
+        const sockets = await io.fetchSockets();
+    });
+    socket.on("typing", (isTyping) => {
+        io.emit("typing", isTyping);
+    });
 
-// io.engine.on("connection_error", (err) => {
-//     console.log(err.req); // the request object
-//     console.log(err.code); // the error code, for example 1
-//     console.log(err.message); // the error message, for example "Session ID unknown"
-//     console.log(err.context); // some additional error context
-// });
+    socket.on("disconnect", () => {
+        console.log("User disconnected");
+
+        io.emit("user numbers", io.engine.clientsCount);
+
+        io.emit("user leave", "user diconnected");
+    });
+
+    io.engine.on("initial_headers", (headers, req) => {
+        headers["test"] = "123";
+        headers["set-cookie"] = "mycookie=456";
+        headers["id"] = socket.id;
+    });
+});
+
+io.engine.on("connection_error", (err) => {
+    console.log(err.req); // the request object
+    console.log(err.code); // the error code, for example 1
+    console.log(err.message); // the error message, for example "Session ID unknown"
+    console.log(err.context); // some additional error context
+});
 
 app.get("/ip", (request, response) => {
     console.log(request.ip);

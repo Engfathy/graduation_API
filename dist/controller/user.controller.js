@@ -31,7 +31,7 @@ const registerUser = async (req, res) => {
         if (userWithName) {
             return res
                 .status(400)
-                .json({ success: true, msg: "username already used" });
+                .json({ success: false, msg: "username already used" });
         }
         // encrypt password
         let salt = await bcryptjs_1.default.genSalt(10);
@@ -76,19 +76,19 @@ const loginUser = async (req, res) => {
         if (!user) {
             return res
                 .status(401)
-                .json({ success: true, msg: "Invalid email" });
+                .json({ success: false, msg: "Invalid email" });
         }
         const isMatch = await bcryptjs_1.default.compare(password, user.password);
         if (!isMatch) {
             return res
                 .status(401)
-                .json({ success: true, msg: "Incorrect password" });
+                .json({ success: false, msg: "Incorrect password" });
         }
         const secretKey = process.env.JWT_SECRET_KEY || config_1.default.secret_jwt;
         if (!secretKey) {
             return res
                 .status(500)
-                .json({ success: true, msg: "JWT secret key not available" });
+                .json({ success: false, msg: "JWT secret key not available" });
         }
         const payLoad = {
             user: {
@@ -116,7 +116,7 @@ const getUserData = async (req, res) => {
         if (!requestedUser) {
             return res
                 .status(400)
-                .json({ success: true, msg: "User header is missing." });
+                .json({ success: false, msg: "User header is missing." });
         }
         const user = await user_model_1.default.findOne({
             _id: requestedUser.id,
@@ -124,7 +124,7 @@ const getUserData = async (req, res) => {
         if (!user) {
             return res
                 .status(401)
-                .json({ success: true, msg: "User data not found." });
+                .json({ success: false, msg: "User data not found." });
         }
         return res.status(200).json({
             msg: {
@@ -169,7 +169,7 @@ const forgetPassword = async (req, res) => {
         else {
             return res
                 .status(400)
-                .json({ success: true, msg: "this email doesn't exist" });
+                .json({ success: false, msg: "this email doesn't exist" });
         }
     }
     catch (error) {
