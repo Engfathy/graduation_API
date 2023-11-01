@@ -31,7 +31,7 @@ export const registerUser = async (
         if (userWithName) {
             return res
                 .status(400)
-                .json({ success: true, msg: "username already used" });
+                .json({ success: false, msg: "username already used" });
         }
 
         // encrypt password
@@ -81,7 +81,7 @@ export const loginUser = async (
         if (!user) {
             return res
                 .status(401)
-                .json({ success: true, msg: "Invalid email" });
+                .json({ success: false, msg: "Invalid email" });
         }
 
         const isMatch: boolean = await bcrypt.compare(password, user.password);
@@ -89,7 +89,7 @@ export const loginUser = async (
         if (!isMatch) {
             return res
                 .status(401)
-                .json({ success: true, msg: "Incorrect password" });
+                .json({ success: false, msg: "Incorrect password" });
         }
 
         const secretKey: string | undefined =
@@ -97,7 +97,7 @@ export const loginUser = async (
         if (!secretKey) {
             return res
                 .status(500)
-                .json({ success: true, msg: "JWT secret key not available" });
+                .json({ success: false, msg: "JWT secret key not available" });
         }
 
         const payLoad = {
@@ -136,7 +136,7 @@ export const getUserData = async (
         if (!requestedUser) {
             return res
                 .status(400)
-                .json({ success: true, msg: "User header is missing." });
+                .json({ success: false, msg: "User header is missing." });
         }
 
         const user: User | null | any = await User.findOne({
@@ -146,7 +146,7 @@ export const getUserData = async (
         if (!user) {
             return res
                 .status(401)
-                .json({ success: true, msg: "User data not found." });
+                .json({ success: false, msg: "User data not found." });
         }
 
         return res.status(200).json({
@@ -201,7 +201,7 @@ export const forgetPassword = async (
         } else {
             return res
                 .status(400)
-                .json({ success: true, msg: "this email doesn't exist" });
+                .json({ success: false, msg: "this email doesn't exist" });
         }
     } catch (error) {
         return res.status(400).json({ success: false, msg: error });
