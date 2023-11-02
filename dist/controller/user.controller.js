@@ -157,7 +157,7 @@ const forgetPassword = async (req, res) => {
             // Update the user's reset token in the database
             const setToken = await user_model_1.default.updateOne({ email: email }, { $set: { reset_token: resetToken } });
             (0, nodemailer_1.default)({
-                from: config_1.default.emailUser,
+                from: process.env.EMAIL_USER || config_1.default.emailUser,
                 to: email,
                 subject: "Reset Password",
                 html: `<p>Hi ${user.name}, please use the token below to reset your password:</p><br>

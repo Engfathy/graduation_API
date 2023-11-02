@@ -192,7 +192,7 @@ export const forgetPassword = async (req: express.Request, res: express.Response
             );
 
             sendResetPasswordMail({
-                from: config.emailUser,
+                from: process.env.EMAIL_USER||config.emailUser,
                 to: email,
                 subject: "Reset Password",
                 html: `<p>Hi ${user.name}, please use the token below to reset your password:</p><br>
