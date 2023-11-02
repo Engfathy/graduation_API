@@ -18,6 +18,8 @@ export const registerUser = async (
     }
     try {
         let { name, email, password } = req.body;
+
+        const verificationCode = generateRandomString();
         //check if user is exist with email
         let user: User | null = await User.findOne({ email: email });
         if (user) {
@@ -49,6 +51,7 @@ export const registerUser = async (
             name: name.toLowerCase(),
             email: email,
             password: hashPass,
+            verificationCode: verificationCode,
             avatar,
         });
         user = await user.save();
@@ -172,36 +175,39 @@ export const logoutUser = async (
     return res.status(200).json({ success: true, msg: "Logout successful" });
 };
 
-export const forgetPassword = async (
-    req: express.Request,
-    res: express.Response,
-) => {
+export const forgetPassword = async (req: express.Request, res: express.Response) => {
     try {
-        let { email } = req.body;
-        let user: User | null = await User.findOne({ email: email });
+        const { email } = req.body;
+        const user: User | null = await User.findOne({ email: email });
+
         if (user) {
             const randomString = generateRandomString();
+            const expirationTime = Math.floor(Date.now() / 1000) + 600; // 10 minutes from now
+            const resetToken = jwt.sign(
+                { email, userId: user._id, randomString, exp: expirationTime },
+                process.env.JWT_SECRET_KEY || config.secret_jwt
+            );
+
+            // Update the user's reset token in the database
             const setToken = await User.updateOne(
                 { email: email },
-                { $set: { reset_token: randomString } },
+                { $set: { reset_token: resetToken } }
             );
 
             sendResetPasswordMail({
                 from: config.emailUser,
                 to: email,
-                subject: "resset password",
-                html: `<p>Hi ${user.name}, please copy the code  below and reset your password:</p><br>
-                <h1>${randomString}</h1>
-                `,
+                subject: "Reset Password",
+                html: `<p>Hi ${user.name}, please use the token below to reset your password:</p><br>
+                <h1>Token: ${resetToken}</h1>`
             });
+
             return res.status(200).json({
                 success: true,
-                msg: "Please check your inbox for reset your password",
+                msg: "Please check your inbox for resetting your password."
             });
         } else {
-            return res
-                .status(400)
-                .json({ success: false, msg: "this email doesn't exist" });
+            return res.status(400).json({ success: false, msg: "This email doesn't exist" });
         }
     } catch (error) {
         return res.status(400).json({ success: false, msg: error });
@@ -237,7 +243,7 @@ export const resetPassword = async (
         } else {
             return res.status(200).json({
                 success: false,
-                msg: "This link has expired or is invalid",
+                msg: "This token time has expired or is invalid",
             });
         }
     } catch (error) {
