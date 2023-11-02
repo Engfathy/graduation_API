@@ -8,6 +8,8 @@ import {
     logoutUser,
     registerUser,
     resetPassword,
+    sendVerificationEmail,
+    verifyEmail,
 } from "../controller/user.controller";
 
 
@@ -51,6 +53,20 @@ userRouter.get("/test", async (req: express.Request, res: express.Response) => {
     res.status(200).json({ msg: "fuck you" });
 });
 userRouter.post("/logout", logoutUser);
+
+
+userRouter.post(
+    "/sendEmail-verify",
+    [body("email").isEmail().escape().withMessage("email is not valid")],
+    
+    sendVerificationEmail,
+);
+userRouter.post(
+    "/verify-email",
+    [body("email").isEmail().escape().withMessage("email is not valid")],
+    
+    verifyEmail,
+);
 
 userRouter.post(
     "/forget-password",

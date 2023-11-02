@@ -1,3 +1,4 @@
+import { body } from "express-validator";
 import mongoose, { Document, Schema } from "mongoose";
 
 // Define the interface for the user document
@@ -6,7 +7,9 @@ interface User extends Document {
     name: string;
     email: string;
     password: string;
-    avatar : string;
+    verificationCode?:string;
+    verified?: boolean;
+    avatar: string;
     reset_token: string;
     createdAt?: Date;
     updatedAt?: Date;
@@ -15,11 +18,13 @@ interface User extends Document {
 // Define the user schema
 const userSchema: Schema = new mongoose.Schema<User>(
     {
-        name: { type: String, required: true , unique: true},
+        name: { type: String, required: true, unique: true },
         email: { type: String, required: true, unique: true },
         password: { type: String, required: true },
+        verificationCode: { type: String, default: "" },
+        verified: { type: Boolean, default: false },
         avatar: { type: String, required: true },
-        reset_token: { type: String, default:'' },
+        reset_token: { type: String, default: "" },
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now },
     },
