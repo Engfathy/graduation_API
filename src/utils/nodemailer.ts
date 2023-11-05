@@ -10,7 +10,7 @@ interface MailOptions {
     html?: string;
 }
 
-async function sendResetPasswordMail(options: MailOptions) {
+async function sendMail(options: MailOptions) {
     const transporter: nodemailer.Transporter<SMTPTransport.SentMessageInfo> =
         nodemailer.createTransport({
             host: "smtp.gmail.com",
@@ -45,4 +45,4 @@ async function sendResetPasswordMail(options: MailOptions) {
 
 
 
-export default sendResetPasswordMail;
+export default sendMail;

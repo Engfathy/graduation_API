@@ -37,6 +37,8 @@ userRouter.get("/test", async (req, res) => {
 });
 userRouter.post("/logout", user_controller_1.logoutUser);
 userRouter.post("/forget-password", [(0, express_validator_1.body)("email").isEmail().escape().withMessage("email is not valid")], reqLimiter_1.forgetPasswordLimiter, user_controller_1.forgetPassword);
+userRouter.post("/sendEmail-verify", [(0, express_validator_1.body)("email").isEmail().escape().withMessage("email is not valid")], user_controller_1.sendVerificationEmail);
+userRouter.post("/verify-email", [(0, express_validator_1.body)("email").isEmail().escape().withMessage("email is not valid")], user_controller_1.verifyEmail);
 userRouter.post("/reset-password", [
     (0, express_validator_1.body)("password")
         .isLength({ min: 5 })

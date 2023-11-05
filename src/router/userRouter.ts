@@ -8,6 +8,8 @@ import {
     logoutUser,
     registerUser,
     resetPassword,
+    sendVerificationEmail,
+    verifyEmail,
 } from "../controller/user.controller";
 
 import {
@@ -62,6 +64,18 @@ userRouter.post(
     [body("email").isEmail().escape().withMessage("email is not valid")],
     forgetPasswordLimiter,
     forgetPassword,
+);
+userRouter.post(
+    "/sendEmail-verify",
+    [body("email").isEmail().escape().withMessage("email is not valid")],
+    
+    sendVerificationEmail,
+);
+userRouter.post(
+    "/verify-email",
+    [body("email").isEmail().escape().withMessage("email is not valid")],
+    
+    verifyEmail,
 );
 
 userRouter.post(

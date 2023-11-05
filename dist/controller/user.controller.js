@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgetPassword = exports.logoutUser = exports.getUserData = exports.loginUser = exports.registerUser = void 0;
+exports.logoutUser = exports.resetPassword = exports.forgetPassword = exports.verifyEmail = exports.sendVerificationEmail = exports.getUserData = exports.loginUser = exports.registerUser = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const gravatar_1 = __importDefault(require("gravatar"));
@@ -19,6 +19,7 @@ const registerUser = async (req, res) => {
     }
     try {
         let { name, email, password } = req.body;
+        const verificationCode = (0, randomString_1.generateRandomString)();
         //check if user is exist with email
         let user = await user_model_1.default.findOne({ email: email });
         if (user) {
@@ -47,6 +48,7 @@ const registerUser = async (req, res) => {
             name: name.toLowerCase(),
             email: email,
             password: hashPass,
+            verificationCode: verificationCode,
             avatar,
         });
         user = await user.save();
@@ -139,37 +141,134 @@ const getUserData = async (req, res) => {
     }
 };
 exports.getUserData = getUserData;
-const logoutUser = async (req, res) => {
-    res.setHeader("authorization", "");
-    res.clearCookie("userName");
-    res.clearCookie("userId");
-    return res.status(200).json({ success: true, msg: "Logout successful" });
-};
-exports.logoutUser = logoutUser;
-const forgetPassword = async (req, res) => {
+//-------------------------------------------------------
+const sendVerificationEmail = async (req, res) => {
     try {
-        let { email } = req.body;
-        let user = await user_model_1.default.findOne({ email: email });
+        const { email } = req.body;
+        const user = await user_model_1.default.findOne({ email: email });
+        if ((user === null || user === void 0 ? void 0 : user.verified) === true) {
+            return res.status(200).json({
+                success: true,
+                msg: "This Email is already verified",
+            });
+        }
         if (user) {
-            const randomString = (0, randomString_1.generateRandomString)();
-            const setToken = await user_model_1.default.updateOne({ email: email }, { $set: { reset_token: randomString } });
+            const expirationTime = Math.floor(Date.now() / 1000) + 120; // 2 minutes from now
+            const verifiyCode = jsonwebtoken_1.default.sign({ exp: expirationTime, email }, process.env.JWT_SECRET_KEY || config_1.default.secret_jwt);
+            console.log(verifiyCode);
+            // Update the user's reset token in the database
+            const updateUserVerficationCode = await user_model_1.default.updateOne({ email: email }, { $set: { verificationCode: verifiyCode } });
             (0, nodemailer_1.default)({
-                from: config_1.default.emailUser,
+                from: process.env.EMAIL_USER || config_1.default.emailUser,
                 to: email,
-                subject: "resset password",
-                html: `<p>Hi ${user.name}, please copy the code  below and reset your password:</p><br>
-                <h1>${randomString}</h1>
+                subject: "Email Verification",
+                html: `
+                <div style="max-width: 400px; margin: 0 auto; font-family: Arial, sans-serif;">
+    <h1>Hello ${user.name},</h1>
+    <p>Thank you for signing up. Please use the verification code below to verify your email:</p>
+    <div style="background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 5px; padding: 10px; text-align: center; font-family: 'Courier New', monospace; font-size: 14px;">
+        <strong style="font-size: 16px;margin-bottom:20px;">Verification Code:</strong>
+        <br>
+        <span id="verificationCode" style="background-color: #fff; border: 1px solid #ccc; font-size: 18px; padding: 5px 10px; user-select: text;">
+            ${verifiyCode}
+        </span>
+    </div>
+    <p>Please enter this code on the website to complete the verification process.</p>
+    <p>If you have any questions, feel free to reply to this email or contact us at support@yourwebsite.com.</p>
+    <p>Best,<br>Your Name</p>
+</div>
+
+            
                 `,
             });
             return res.status(200).json({
                 success: true,
-                msg: "Please check your inbox for reset your password",
+                msg: "Please check your inbox for verify your email.",
             });
         }
         else {
             return res
                 .status(400)
-                .json({ success: false, msg: "this email doesn't exist" });
+                .json({ success: false, msg: "This email doesn't exist" });
+        }
+    }
+    catch (error) {
+        return res.status(400).json({ success: false, msg: error });
+    }
+};
+exports.sendVerificationEmail = sendVerificationEmail;
+//--------------------------------------------------
+const verifyEmail = async (req, res) => {
+    try {
+        const verifyCode = req.query.verifyCode;
+        if (!verifyCode) {
+            return res
+                .status(400)
+                .json({ success: false, msg: "data hasn't send propably" });
+        }
+        // verify code
+        const secretKey = process.env.JWT_SECRET_KEY || config_1.default.secret_jwt;
+        let decode = jsonwebtoken_1.default.verify(verifyCode, secretKey);
+        // console.log(decode);
+        // get user
+        const user = await user_model_1.default.findOne({ email: decode.email, verificationCode: verifyCode });
+        if ((user === null || user === void 0 ? void 0 : user.verified) === false) {
+            const updatedUser = await user_model_1.default.findByIdAndUpdate({ _id: user._id }, { $set: { verificationCode: " ", verified: true } }, { new: true });
+            console.log(updatedUser);
+            return res.status(200).json({
+                success: true,
+                msg: "Email verified successfully",
+            });
+        }
+        else {
+            return res.status(200).json({
+                success: false,
+                msg: "This token time has expired or is invalid",
+            });
+        }
+    }
+    catch (error) {
+        return res.status(500).json({ success: false, msg: error });
+    }
+};
+exports.verifyEmail = verifyEmail;
+const forgetPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await user_model_1.default.findOne({ email: email });
+        if (user) {
+            const expirationTime = Math.floor(Date.now() / 1000) + 120; // 2 minutes from now
+            const resetToken = jsonwebtoken_1.default.sign({ exp: expirationTime, email }, process.env.JWT_SECRET_KEY || config_1.default.secret_jwt);
+            // Update the user's reset token in the database
+            const setToken = await user_model_1.default.updateOne({ email: email }, { $set: { reset_token: resetToken } });
+            (0, nodemailer_1.default)({
+                from: process.env.EMAIL_USER || config_1.default.emailUser,
+                to: email,
+                subject: "Reset Password",
+                html: `<div style="max-width: 400px; margin: 0 auto; font-family: Arial, sans-serif;">
+                <h1>Hello ${user.name},</h1>
+                <p>Please use the verification code below to reset your password:</p>
+                <div style="background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 5px; padding: 10px; text-align: center; font-family: 'Courier New', monospace; font-size: 14px;">
+                    <strong style="font-size: 16px;margin-bottom:20px;">Verification Code:</strong>
+                    <br>
+                    <span id="verificationCode" style="background-color: #fff; border: 1px solid #ccc; font-size: 18px; padding: 5px 10px; user-select: text;">
+                        ${resetToken}
+                    </span>
+                </div>
+                <p>Please enter this code on the website to complete the reset password process.</p>
+                <p>If you have any questions, feel free to reply to this email or contact us at support@yourwebsite.com.</p>
+                <p>Best,<br>Your Name</p>
+            </div>`,
+            });
+            return res.status(200).json({
+                success: true,
+                msg: "Please check your inbox for resetting your password.",
+            });
+        }
+        else {
+            return res
+                .status(400)
+                .json({ success: false, msg: "This email doesn't exist" });
         }
     }
     catch (error) {
@@ -187,7 +286,9 @@ const resetPassword = async (req, res) => {
                 .json({ success: false, msg: "data hasn't send propably" });
         }
         const user = await user_model_1.default.findOne({ reset_token: token });
-        if (user) {
+        const secretKey = process.env.JWT_SECRET_KEY || config_1.default.secret_jwt;
+        let decode = jsonwebtoken_1.default.verify(token, secretKey);
+        if (user && decode) {
             const salt = await bcryptjs_1.default.genSalt(10);
             const newHashPass = await bcryptjs_1.default.hash(newPassword, salt);
             await user_model_1.default.findByIdAndUpdate({ _id: user._id }, { $set: { password: newHashPass, reset_token: "" } }, { new: true });
@@ -199,7 +300,7 @@ const resetPassword = async (req, res) => {
         else {
             return res.status(200).json({
                 success: false,
-                msg: "This link has expired or is invalid",
+                msg: "This token time has expired or is invalid",
             });
         }
     }
@@ -208,4 +309,11 @@ const resetPassword = async (req, res) => {
     }
 };
 exports.resetPassword = resetPassword;
+const logoutUser = async (req, res) => {
+    res.setHeader("authorization", "");
+    res.clearCookie("userName");
+    res.clearCookie("userId");
+    return res.status(200).json({ success: true, msg: "Logout successful" });
+};
+exports.logoutUser = logoutUser;
 //# sourceMappingURL=user.controller.js.map

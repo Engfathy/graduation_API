@@ -22,7 +22,7 @@ const userSchema: Schema = new mongoose.Schema<User>(
         email: { type: String, required: true, unique: true },
         password: { type: String, required: true },
         verificationCode: { type: String, default: "" },
-        verified: { type: body, default: false },
+        verified: { type: Boolean, default: false },
         avatar: { type: String, required: true },
         reset_token: { type: String, default: "" },
         createdAt: { type: Date, default: Date.now },

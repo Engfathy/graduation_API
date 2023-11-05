@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const config_1 = __importDefault(require("../config/config"));
-async function sendResetPasswordMail(options) {
+async function sendMail(options) {
     const transporter = nodemailer_1.default.createTransport({
         host: "smtp.gmail.com",
         service: "gmail",
@@ -32,5 +32,5 @@ async function sendResetPasswordMail(options) {
         }
     });
 }
-exports.default = sendResetPasswordMail;
+exports.default = sendMail;
 //# sourceMappingURL=nodemailer.js.map

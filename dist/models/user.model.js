@@ -9,8 +9,10 @@ const userSchema = new mongoose_1.default.Schema({
     name: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    verificationCode: { type: String, default: "" },
+    verified: { type: Boolean, default: false },
     avatar: { type: String, required: true },
-    reset_token: { type: String, default: '' },
+    reset_token: { type: String, default: "" },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
 }, { timestamps: true });
