@@ -129,7 +129,10 @@ export const googleLogin = async (
     }
     try {
         const { googleId } = req.body;
-        const user: User | null = await User.findOne({ googleId: googleId });
+        const user: User | null = await User.findOne({
+            googleId: googleId,
+            registrationMethod: "google",
+        });
 
         if (!user) {
             return res

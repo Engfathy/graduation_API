@@ -31,7 +31,7 @@ userRouter.get("/", (req: express.Request, res: express.Response) => {
 });
 userRouter.post(
     "/register",
-    createAccountLimiter,
+    // createAccountLimiter,
     [
         body("name").not().isEmpty().escape().withMessage("Name is required"),
         body("email").isEmail().escape().withMessage("email isnot valid"),
@@ -45,28 +45,38 @@ userRouter.post(
 
 // gooogle register route
 userRouter.post(
-    '/google-register',
+    "/google-register",
+    // createAccountLimiter,
     [
-      body('name').not().isEmpty().escape().withMessage('Name is required'),
-      body('email').isEmail().escape().withMessage('Email is not valid'),
-      body('googleId').not().isEmpty().escape().withMessage('Google ID is required')
-      // Add any other validation rules you need for Google registration
+        body("name").not().isEmpty().escape().withMessage("Name is required"),
+        body("email").isEmail().escape().withMessage("Email is not valid"),
+        body("googleId")
+            .not()
+            .isEmpty()
+            .escape()
+            .isString()
+            .isLength({ min: 1 })
+            .withMessage("Google ID is required"),
+        // Add any other validation rules you need for Google registration
     ],
-    googleRegister
-  );
-
-
+    googleRegister,
+);
 
 // google login route
 
 userRouter.post(
-    '/google-login',
+    "/google-login",
     [
-      body('googleId').not().isEmpty().escape().withMessage('Google ID is required'),
-     
+        body("googleId")
+            .not()
+            .isEmpty()
+            .escape()
+            .isString()
+            .isLength({ min: 1 })
+            .withMessage("Google ID is required"),
     ],
-    googleLogin
-  );
+    googleLogin,
+);
 userRouter.post(
     "/login",
     [
@@ -94,13 +104,13 @@ userRouter.post(
 userRouter.post(
     "/sendEmail-verify",
     [body("email").isEmail().escape().withMessage("email is not valid")],
-    
+
     sendVerificationEmail,
 );
 userRouter.post(
     "/verify-email",
     [body("email").isEmail().escape().withMessage("email is not valid")],
-    
+
     verifyEmail,
 );
 
