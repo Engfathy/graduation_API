@@ -29,7 +29,10 @@ export const registerUser = async (
         }
         //check if user name is used
 
-        let userWithName: User | null = await User.findOne({ name: name });
+        let userWithName: User | null = await User.findOne({
+            name: name,
+            registrationMethod: "email",
+        });
         if (userWithName) {
             return res
                 .status(400)
@@ -48,6 +51,7 @@ export const registerUser = async (
         });
         // register user
         user = new User({
+            registrationMethod: "email",
             name: name.toLowerCase(),
             email: email,
             password: hashPass,
@@ -66,6 +70,102 @@ export const registerUser = async (
     }
 };
 
+//register with google
+export const googleRegister = async (
+    req: express.Request,
+    res: express.Response,
+) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    try {
+        let { name, email, googleId } = req.body;
+
+        const verificationCode = generateRandomString();
+        //check if user is exist with google id
+        let user = await User.findOne({ googleId });
+        if (user) {
+            return res
+                .status(400)
+                .json({ success: false, msg: "Email already exist" });
+        }
+
+        //get avatar url
+        const avatar = gravatar.url(email, {
+            s: "300",
+            r: "pg",
+            d: "mm",
+        });
+        // register user
+        user = new User({
+            registrationMethod: "google",
+            name: name.toLowerCase(),
+            email: email,
+            googleId: googleId,
+            verificationCode: verificationCode,
+            avatar: avatar,
+        });
+        user = await user.save();
+        console.log(user);
+        return res.status(200).json({
+            success: true,
+            msg: "Registration is sucess",
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, msg: error });
+    }
+};
+
+// login with google
+
+export const googleLogin = async (
+    req: express.Request,
+    res: express.Response,
+) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    try {
+        const { googleId } = req.body;
+        const user: User | null = await User.findOne({ googleId: googleId });
+
+        if (!user) {
+            return res
+                .status(401)
+                .json({ success: false, msg: "User not found" });
+        }
+
+        const secretKey: string | undefined =
+            process.env.JWT_SECRET_KEY || config.secret_jwt;
+        if (!secretKey) {
+            return res
+                .status(500)
+                .json({ success: false, msg: "JWT secret key not available" });
+        }
+
+        const payLoad = {
+            user: {
+                googleId: user.googleId,
+                id: user.id,
+                name: user.name,
+            },
+        };
+        const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
+        const token = jwt.sign({ exp: expirationTime, payLoad }, secretKey);
+        res.setHeader("authorization", token);
+        res.cookie("userName", user.name);
+        res.cookie("userId", user.id);
+        res.cookie("googleId", user.googleId);
+        console.log("logged");
+        return res
+            .status(200)
+            .json({ success: true, msg: "Login is successful", token: token });
+    } catch (error) {
+        return res.status(500).json({ success: false, msg: error });
+    }
+};
 export const loginUser = async (
     req: express.Request,
     res: express.Response,
@@ -109,8 +209,8 @@ export const loginUser = async (
                 name: user.name,
             },
         };
-
-        const token = jwt.sign(payLoad, secretKey);
+        const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
+        const token = jwt.sign({ exp: expirationTime, payLoad }, secretKey);
         res.setHeader("authorization", token);
         res.cookie("userName", user.name);
         res.cookie("userId", user.id);
@@ -164,7 +264,6 @@ export const getUserData = async (
     }
 };
 
-
 //-------------------------------------------------------
 
 export const sendVerificationEmail = async (
@@ -174,7 +273,7 @@ export const sendVerificationEmail = async (
     try {
         const { email } = req.body;
         const user: User | null = await User.findOne({ email: email });
-        if(user?.verified === true){
+        if (user?.verified === true) {
             return res.status(200).json({
                 success: true,
                 msg: "This Email is already verified",
@@ -182,8 +281,7 @@ export const sendVerificationEmail = async (
         }
 
         if (user) {
-            
-            const expirationTime = Math.floor(Date.now() / 1000) + 120; // 2 minutes from now
+            const expirationTime = Math.floor(Date.now() / 1000) + 5 * 60; // 5 minutes from now
             const verifiyCode = jwt.sign(
                 { exp: expirationTime, email },
                 process.env.JWT_SECRET_KEY || config.secret_jwt,
@@ -233,8 +331,6 @@ export const sendVerificationEmail = async (
     }
 };
 
-
-
 //--------------------------------------------------
 export const verifyEmail = async (
     req: express.Request,
@@ -246,14 +342,18 @@ export const verifyEmail = async (
             return res
                 .status(400)
                 .json({ success: false, msg: "data hasn't send propably" });
-            }
-            // verify code
-            const secretKey: string | any = process.env.JWT_SECRET_KEY || config.secret_jwt;
-            let decode : any = jwt.verify(verifyCode, secretKey);
-                // console.log(decode);
+        }
+        // verify code
+        const secretKey: string | any =
+            process.env.JWT_SECRET_KEY || config.secret_jwt;
+        let decode: any = jwt.verify(verifyCode, secretKey);
+        // console.log(decode);
 
         // get user
-        const user: User | null = await User.findOne({ email:decode.email ,verificationCode: verifyCode });
+        const user: User | null = await User.findOne({
+            email: decode.email,
+            verificationCode: verifyCode,
+        });
 
         if (user?.verified === false) {
             const updatedUser = await User.findByIdAndUpdate(
@@ -286,10 +386,9 @@ export const forgetPassword = async (
         const user: User | null = await User.findOne({ email: email });
 
         if (user) {
-            
-            const expirationTime = Math.floor(Date.now() / 1000) + 120; // 2 minutes from now
+            const expirationTime = Math.floor(Date.now() / 1000) + 5 * 60; // 5 minutes from now
             const resetToken = jwt.sign(
-                { exp: expirationTime ,email},
+                { exp: expirationTime, email },
                 process.env.JWT_SECRET_KEY || config.secret_jwt,
             );
 
@@ -339,15 +438,16 @@ export const resetPassword = async (
 ) => {
     try {
         const newPassword = req.body.password;
-        const token : string | any = req.query.token;
+        const token: string | any = req.query.token;
         if (!newPassword || !token) {
             return res
                 .status(400)
                 .json({ success: false, msg: "data hasn't send propably" });
         }
         const user: User | null = await User.findOne({ reset_token: token });
-        const secretKey: string | any = process.env.JWT_SECRET_KEY || config.secret_jwt;
-        let decode : any = jwt.verify(token, secretKey);
+        const secretKey: string | any =
+            process.env.JWT_SECRET_KEY || config.secret_jwt;
+        let decode: any = jwt.verify(token, secretKey);
         if (user && decode) {
             const salt = await bcrypt.genSalt(10);
             const newHashPass = await bcrypt.hash(newPassword, salt);
@@ -369,7 +469,6 @@ export const resetPassword = async (
     } catch (error) {
         return res.status(500).json({ success: false, msg: error });
     }
-    
 };
 
 export const logoutUser = async (
@@ -382,4 +481,3 @@ export const logoutUser = async (
 
     return res.status(200).json({ success: true, msg: "Logout successful" });
 };
-

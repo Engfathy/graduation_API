@@ -6,8 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 // Define the user schema
 const userSchema = new mongoose_1.default.Schema({
+    registrationMethod: { type: String, enum: ['google', 'email'], required: true },
     name: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
+    googleId: { type: String, default: "", required: function () { return this.registrationMethod === 'google'; }, unique: true },
     password: { type: String, required: true },
     verificationCode: { type: String, default: "" },
     verified: { type: Boolean, default: false },

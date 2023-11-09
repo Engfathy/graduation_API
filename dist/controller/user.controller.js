@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logoutUser = exports.resetPassword = exports.forgetPassword = exports.verifyEmail = exports.sendVerificationEmail = exports.getUserData = exports.loginUser = exports.registerUser = void 0;
+exports.logoutUser = exports.resetPassword = exports.forgetPassword = exports.verifyEmail = exports.sendVerificationEmail = exports.getUserData = exports.loginUser = exports.googleLogin = exports.googleRegister = exports.registerUser = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const gravatar_1 = __importDefault(require("gravatar"));
@@ -28,7 +28,10 @@ const registerUser = async (req, res) => {
                 .json({ success: false, msg: "Email already exist" });
         }
         //check if user name is used
-        let userWithName = await user_model_1.default.findOne({ name: name });
+        let userWithName = await user_model_1.default.findOne({
+            name: name,
+            registrationMethod: "email",
+        });
         if (userWithName) {
             return res
                 .status(400)
@@ -45,6 +48,7 @@ const registerUser = async (req, res) => {
         });
         // register user
         user = new user_model_1.default({
+            registrationMethod: "email",
             name: name.toLowerCase(),
             email: email,
             password: hashPass,
@@ -64,6 +68,92 @@ const registerUser = async (req, res) => {
     }
 };
 exports.registerUser = registerUser;
+//register with google
+const googleRegister = async (req, res) => {
+    const errors = (0, express_validator_1.validationResult)(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    try {
+        let { name, email, googleId } = req.body;
+        const verificationCode = (0, randomString_1.generateRandomString)();
+        //check if user is exist with google id
+        let user = await user_model_1.default.findOne({ googleId });
+        if (user) {
+            return res
+                .status(400)
+                .json({ success: false, msg: "Email already exist" });
+        }
+        //get avatar url
+        const avatar = gravatar_1.default.url(email, {
+            s: "300",
+            r: "pg",
+            d: "mm",
+        });
+        // register user
+        user = new user_model_1.default({
+            registrationMethod: "google",
+            name: name.toLowerCase(),
+            email: email,
+            googleId: googleId,
+            verificationCode: verificationCode,
+            avatar: avatar,
+        });
+        user = await user.save();
+        console.log(user);
+        return res.status(200).json({
+            success: true,
+            msg: "Registration is sucess",
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ success: false, msg: error });
+    }
+};
+exports.googleRegister = googleRegister;
+// login with google
+const googleLogin = async (req, res) => {
+    const errors = (0, express_validator_1.validationResult)(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    try {
+        const { googleId } = req.body;
+        const user = await user_model_1.default.findOne({ googleId: googleId });
+        if (!user) {
+            return res
+                .status(401)
+                .json({ success: false, msg: "User not found" });
+        }
+        const secretKey = process.env.JWT_SECRET_KEY || config_1.default.secret_jwt;
+        if (!secretKey) {
+            return res
+                .status(500)
+                .json({ success: false, msg: "JWT secret key not available" });
+        }
+        const payLoad = {
+            user: {
+                googleId: user.googleId,
+                id: user.id,
+                name: user.name,
+            },
+        };
+        const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
+        const token = jsonwebtoken_1.default.sign({ exp: expirationTime, payLoad }, secretKey);
+        res.setHeader("authorization", token);
+        res.cookie("userName", user.name);
+        res.cookie("userId", user.id);
+        res.cookie("googleId", user.googleId);
+        console.log("logged");
+        return res
+            .status(200)
+            .json({ success: true, msg: "Login is successful", token: token });
+    }
+    catch (error) {
+        return res.status(500).json({ success: false, msg: error });
+    }
+};
+exports.googleLogin = googleLogin;
 const loginUser = async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
@@ -98,7 +188,8 @@ const loginUser = async (req, res) => {
                 name: user.name,
             },
         };
-        const token = jsonwebtoken_1.default.sign(payLoad, secretKey);
+        const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
+        const token = jsonwebtoken_1.default.sign({ exp: expirationTime, payLoad }, secretKey);
         res.setHeader("authorization", token);
         res.cookie("userName", user.name);
         res.cookie("userId", user.id);
@@ -153,7 +244,7 @@ const sendVerificationEmail = async (req, res) => {
             });
         }
         if (user) {
-            const expirationTime = Math.floor(Date.now() / 1000) + 120; // 2 minutes from now
+            const expirationTime = Math.floor(Date.now() / 1000) + 5 * 60; // 5 minutes from now
             const verifiyCode = jsonwebtoken_1.default.sign({ exp: expirationTime, email }, process.env.JWT_SECRET_KEY || config_1.default.secret_jwt);
             console.log(verifiyCode);
             // Update the user's reset token in the database
@@ -211,7 +302,10 @@ const verifyEmail = async (req, res) => {
         let decode = jsonwebtoken_1.default.verify(verifyCode, secretKey);
         // console.log(decode);
         // get user
-        const user = await user_model_1.default.findOne({ email: decode.email, verificationCode: verifyCode });
+        const user = await user_model_1.default.findOne({
+            email: decode.email,
+            verificationCode: verifyCode,
+        });
         if ((user === null || user === void 0 ? void 0 : user.verified) === false) {
             const updatedUser = await user_model_1.default.findByIdAndUpdate({ _id: user._id }, { $set: { verificationCode: " ", verified: true } }, { new: true });
             console.log(updatedUser);
@@ -237,7 +331,7 @@ const forgetPassword = async (req, res) => {
         const { email } = req.body;
         const user = await user_model_1.default.findOne({ email: email });
         if (user) {
-            const expirationTime = Math.floor(Date.now() / 1000) + 120; // 2 minutes from now
+            const expirationTime = Math.floor(Date.now() / 1000) + 5 * 60; // 5 minutes from now
             const resetToken = jsonwebtoken_1.default.sign({ exp: expirationTime, email }, process.env.JWT_SECRET_KEY || config_1.default.secret_jwt);
             // Update the user's reset token in the database
             const setToken = await user_model_1.default.updateOne({ email: email }, { $set: { reset_token: resetToken } });

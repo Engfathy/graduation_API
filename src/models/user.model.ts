@@ -4,6 +4,8 @@ import mongoose, { Document, Schema } from "mongoose";
 // Define the interface for the user document
 interface User extends Document {
     _id?: string;
+    registrationMethod: 'google' | 'email';
+    googleId?:string;
     name: string;
     email: string;
     password: string;
@@ -18,8 +20,10 @@ interface User extends Document {
 // Define the user schema
 const userSchema: Schema = new mongoose.Schema<User>(
     {
+        registrationMethod: { type: String, enum: ['google', 'email'], required: true },
         name: { type: String, required: true, unique: true },
         email: { type: String, required: true, unique: true },
+        googleId: { type: String, default:"", required: function () { return this.registrationMethod === 'google'; }, unique: true },
         password: { type: String, required: true },
         verificationCode: { type: String, default: "" },
         verified: { type: Boolean, default: false },
