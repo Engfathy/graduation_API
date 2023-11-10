@@ -10,7 +10,6 @@ const gravatar_1 = __importDefault(require("gravatar"));
 const user_model_1 = __importDefault(require("../models/user.model"));
 const express_validator_1 = require("express-validator");
 const config_1 = __importDefault(require("../config/config"));
-const randomString_1 = require("../utils/randomString");
 const nodemailer_1 = __importDefault(require("../utils/nodemailer"));
 const registerUser = async (req, res) => {
     const errors = (0, express_validator_1.validationResult)(req);
@@ -19,9 +18,11 @@ const registerUser = async (req, res) => {
     }
     try {
         let { name, email, password } = req.body;
-        const verificationCode = (0, randomString_1.generateRandomString)();
         //check if user is exist with email
-        let user = await user_model_1.default.findOne({ email: email });
+        let user = await user_model_1.default.findOne({
+            email: email,
+            registrationMethod: "email",
+        });
         if (user) {
             return res
                 .status(400)
@@ -29,7 +30,7 @@ const registerUser = async (req, res) => {
         }
         //check if user name is used
         let userWithName = await user_model_1.default.findOne({
-            name: name,
+            name: name.toLowerCase(),
             registrationMethod: "email",
         });
         if (userWithName) {
@@ -52,8 +53,7 @@ const registerUser = async (req, res) => {
             name: name.toLowerCase(),
             email: email,
             password: hashPass,
-            verificationCode: verificationCode,
-            avatar,
+            avatar: avatar,
         });
         user = await user.save();
         console.log(user);
@@ -76,9 +76,11 @@ const googleRegister = async (req, res) => {
     }
     try {
         let { name, email, googleId } = req.body;
-        const verificationCode = (0, randomString_1.generateRandomString)();
         //check if user is exist with google id
-        let user = await user_model_1.default.findOne({ googleId });
+        let user = await user_model_1.default.findOne({
+            $or: [{ googleId }, { email }],
+            registrationMethod: "google",
+        });
         if (user) {
             return res
                 .status(400)
@@ -96,7 +98,6 @@ const googleRegister = async (req, res) => {
             name: name.toLowerCase(),
             email: email,
             googleId: googleId,
-            verificationCode: verificationCode,
             avatar: avatar,
         });
         user = await user.save();
@@ -119,7 +120,10 @@ const googleLogin = async (req, res) => {
     }
     try {
         const { googleId } = req.body;
-        const user = await user_model_1.default.findOne({ googleId: googleId });
+        const user = await user_model_1.default.findOne({
+            googleId: googleId,
+            registrationMethod: "google",
+        });
         if (!user) {
             return res
                 .status(401)
@@ -164,7 +168,10 @@ const loginUser = async (req, res) => {
         }
         console.log(req.body);
         const { email, password } = req.body;
-        const user = await user_model_1.default.findOne({ email: email });
+        const user = await user_model_1.default.findOne({
+            email: email,
+            registrationMethod: "email",
+        });
         if (!user) {
             return res
                 .status(401)

@@ -19,9 +19,11 @@ export const registerUser = async (
     try {
         let { name, email, password } = req.body;
 
-        const verificationCode = generateRandomString();
         //check if user is exist with email
-        let user: User | null = await User.findOne({ email: email });
+        let user: User | null = await User.findOne({
+            email: email,
+            registrationMethod: "email",
+        });
         if (user) {
             return res
                 .status(400)
@@ -30,7 +32,7 @@ export const registerUser = async (
         //check if user name is used
 
         let userWithName: User | null = await User.findOne({
-            name: name,
+            name: name.toLowerCase(),
             registrationMethod: "email",
         });
         if (userWithName) {
@@ -55,8 +57,7 @@ export const registerUser = async (
             name: name.toLowerCase(),
             email: email,
             password: hashPass,
-            verificationCode: verificationCode,
-            avatar,
+            avatar: avatar,
         });
         user = await user.save();
         console.log(user);
@@ -81,10 +82,11 @@ export const googleRegister = async (
     }
     try {
         let { name, email, googleId } = req.body;
-
-        const verificationCode = generateRandomString();
         //check if user is exist with google id
-        let user = await User.findOne({ googleId });
+        let user = await User.findOne({
+            $or: [{ googleId }, { email }],
+            registrationMethod: "google",
+        });
         if (user) {
             return res
                 .status(400)
@@ -103,7 +105,6 @@ export const googleRegister = async (
             name: name.toLowerCase(),
             email: email,
             googleId: googleId,
-            verificationCode: verificationCode,
             avatar: avatar,
         });
         user = await user.save();
@@ -182,7 +183,10 @@ export const loginUser = async (
         }
         console.log(req.body);
         const { email, password } = req.body;
-        const user: User | null = await User.findOne({ email: email });
+        const user: User | null = await User.findOne({
+            email: email,
+            registrationMethod: "email",
+        });
 
         if (!user) {
             return res

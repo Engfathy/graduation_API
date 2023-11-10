@@ -15,6 +15,8 @@ const hpp_1 = __importDefault(require("hpp"));
 const express_mongo_sanitize_1 = __importDefault(require("express-mongo-sanitize"));
 const http_1 = __importDefault(require("http"));
 const socket_io_1 = require("socket.io");
+// import uuid from "uuid";
+// import { Socket } from "dgram";
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 const io = new socket_io_1.Server(server);
@@ -47,12 +49,15 @@ app.get("/socket", (req, res) => {
 let names = ["fathy", "alice", "mohamed"];
 // let newnmaespace= io.of('/newnamespace'); => to make new name space
 io.on("connection", async (socket) => {
-    socket.data.username = names[io.engine.clientsCount];
+    socket.data.username = names[io.engine.clientsCount - 1];
     const clientIP = socket.handshake.address; // This gets the client's IP address
     console.log(`Client connected with IP: ${clientIP}`);
+    console.log(`${io.engine.clientsCount} users connected `);
+    console.log(`A user connected with ID: ${socket.id} and name ${socket.data.username}`);
     // io.engine.generateId = (req) => {
     //     return uuid.v4(); // Generate a unique identifier for each socket connection
     // };
+    // socket.broadcast.emit send to everyone expect the sender
     console.log(socket.rooms); // Set { <socket.id> }
     socket.join("room1");
     // io.sockets.in("room1").emit("message","fuck you"); => send msg to specific room
@@ -63,8 +68,6 @@ io.on("connection", async (socket) => {
     //     console.log(socket.id);
     //     console.log(socket.data);
     //   }
-    console.log(`${io.engine.clientsCount} users connected `);
-    console.log(`A user connected with ID: ${socket.id} and name ${socket.data.username}`);
     io.emit("user numbers", io.engine.clientsCount);
     // display number of user connected
     // console.log(io.engine.clientsCount);
@@ -74,10 +77,11 @@ io.on("connection", async (socket) => {
     // console.log(socket.data);
     // numver of users in specific route
     console.log(io.of("/").sockets.size, "of name space");
-    socket.on("chat message", async (msg) => {
+    socket.on("chat message", async (msg, callback) => {
         console.log("message: " + msg);
         io.emit("chat message", `${socket.data.username}: ${msg}`);
         const sockets = await io.fetchSockets();
+        callback("message arrived succesfully");
     });
     socket.on("typing", (isTyping) => {
         io.emit("typing", isTyping);

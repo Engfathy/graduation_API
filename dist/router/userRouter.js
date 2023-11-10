@@ -16,7 +16,9 @@ userRouter.get("/", (req, res) => {
         msg: "main router for users",
     });
 });
-userRouter.post("/register", reqLimiter_1.createAccountLimiter, [
+userRouter.post("/register", 
+// createAccountLimiter,
+[
     (0, express_validator_1.body)("name").not().isEmpty().escape().withMessage("Name is required"),
     (0, express_validator_1.body)("email").isEmail().escape().withMessage("email isnot valid"),
     (0, express_validator_1.body)("password")
@@ -25,15 +27,29 @@ userRouter.post("/register", reqLimiter_1.createAccountLimiter, [
         .withMessage("min 8 , max 20 char required for password"),
 ], user_controller_1.registerUser);
 // gooogle register route
-userRouter.post('/google-register', [
-    (0, express_validator_1.body)('name').not().isEmpty().escape().withMessage('Name is required'),
-    (0, express_validator_1.body)('email').isEmail().escape().withMessage('Email is not valid'),
-    (0, express_validator_1.body)('googleId').not().isEmpty().escape().withMessage('Google ID is required')
+userRouter.post("/google-register", 
+// createAccountLimiter,
+[
+    (0, express_validator_1.body)("name").not().isEmpty().escape().withMessage("Name is required"),
+    (0, express_validator_1.body)("email").isEmail().escape().withMessage("Email is not valid"),
+    (0, express_validator_1.body)("googleId")
+        .not()
+        .isEmpty()
+        .escape()
+        .isString()
+        .isLength({ min: 1 })
+        .withMessage("Google ID is required"),
     // Add any other validation rules you need for Google registration
 ], user_controller_1.googleRegister);
 // google login route
-userRouter.post('/google-login', [
-    (0, express_validator_1.body)('googleId').not().isEmpty().escape().withMessage('Google ID is required'),
+userRouter.post("/google-login", [
+    (0, express_validator_1.body)("googleId")
+        .not()
+        .isEmpty()
+        .escape()
+        .isString()
+        .isLength({ min: 1 })
+        .withMessage("Google ID is required"),
 ], user_controller_1.googleLogin);
 userRouter.post("/login", [
     (0, express_validator_1.body)("email").isEmail().escape().withMessage("email is not valid"),

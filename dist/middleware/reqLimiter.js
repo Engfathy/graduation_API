@@ -29,13 +29,13 @@ exports.createAccountLimiter = (0, express_rate_limit_1.default)({
 });
 exports.forgetPasswordLimiter = (0, express_rate_limit_1.default)({
     windowMs: 2 * 60 * 60 * 1000,
-    limit: 2,
+    limit: 4,
     message: "Too many attemot from this IP, please try again after 2 hour",
     keyGenerator: keyGenerator,
 });
 exports.ResetPasswordLimiter = (0, express_rate_limit_1.default)({
     windowMs: 2 * 60 * 60 * 1000,
-    limit: 2,
+    limit: 4,
     message: "Too many accounts created from this IP, please try again after 2 hour",
     keyGenerator: keyGenerator,
 });
