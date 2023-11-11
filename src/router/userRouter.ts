@@ -4,6 +4,8 @@ import { body, validationResult } from "express-validator";
 import {
     forgetPassword,
     getUserData,
+    googleLogin,
+    googleRegister,
     loginUser,
     logoutUser,
     registerUser,
@@ -46,6 +48,40 @@ userRouter.post(
             .withMessage("min 5 characters required for password"),
     ],
     loginUser,
+);
+// gooogle register route
+userRouter.post(
+    "/google-register",
+    // createAccountLimiter,
+    [
+        body("name").not().isEmpty().escape().withMessage("Name is required"),
+        body("email").isEmail().escape().withMessage("Email is not valid"),
+        body("googleId")
+            .not()
+            .isEmpty()
+            .escape()
+            .isString()
+            .isLength({ min: 1 })
+            .withMessage("Google ID is required"),
+        // Add any other validation rules you need for Google registration
+    ],
+    googleRegister,
+);
+
+// google login route
+
+userRouter.post(
+    "/google-login",
+    [
+        body("googleId")
+            .not()
+            .isEmpty()
+            .escape()
+            .isString()
+            .isLength({ min: 1 })
+            .withMessage("Google ID is required"),
+    ],
+    googleLogin,
 );
 
 userRouter.get("/profile", tokenVerifier, getUserData);

@@ -30,6 +30,31 @@ userRouter.post("/login", [
         .escape()
         .withMessage("min 5 characters required for password"),
 ], user_controller_1.loginUser);
+// gooogle register route
+userRouter.post("/google-register", 
+// createAccountLimiter,
+[
+    (0, express_validator_1.body)("name").not().isEmpty().escape().withMessage("Name is required"),
+    (0, express_validator_1.body)("email").isEmail().escape().withMessage("Email is not valid"),
+    (0, express_validator_1.body)("googleId")
+        .not()
+        .isEmpty()
+        .escape()
+        .isString()
+        .isLength({ min: 1 })
+        .withMessage("Google ID is required"),
+    // Add any other validation rules you need for Google registration
+], user_controller_1.googleRegister);
+// google login route
+userRouter.post("/google-login", [
+    (0, express_validator_1.body)("googleId")
+        .not()
+        .isEmpty()
+        .escape()
+        .isString()
+        .isLength({ min: 1 })
+        .withMessage("Google ID is required"),
+], user_controller_1.googleLogin);
 userRouter.get("/profile", tokenVerifier_1.default, user_controller_1.getUserData);
 userRouter.get("/test", async (req, res) => {
     res.status(200).json({ msg: "fuck you" });

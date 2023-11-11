@@ -65,6 +65,106 @@ export const registerUser = async (
         return res.status(500).json({ success: false, msg: error });
     }
 };
+//register with google
+export const googleRegister = async (
+    req: express.Request,
+    res: express.Response,
+) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    try {
+        let { name, email, googleId } = req.body;
+        //check if user is exist with google id
+        let user = await User.findOne({
+            $or: [{ googleId }, { email }],
+            registrationMethod: "google",
+        });
+        if (user) {
+            return res
+                .status(400)
+                .json({ success: false, msg: "Email already exist" });
+        }
+
+        //get avatar url
+        const avatar = gravatar.url(email, {
+            s: "300",
+            r: "pg",
+            d: "mm",
+        });
+        // register user
+        user = new User({
+            registrationMethod: "google",
+            name: name.toLowerCase(),
+            email: email,
+            googleId: googleId,
+            avatar: avatar,
+        });
+        user = await user.save();
+        console.log(user);
+        return res.status(200).json({
+            success: true,
+            msg: "Registration is sucess",
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, msg: error });
+    }
+};
+
+// login with google
+
+export const googleLogin = async (
+    req: express.Request,
+    res: express.Response,
+) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    try {
+        const { googleId } = req.body;
+        const user: User | null = await User.findOne({
+            googleId: googleId,
+            registrationMethod: "google",
+        });
+
+        if (!user) {
+            return res
+                .status(401)
+                .json({ success: false, msg: "User not found" });
+        }
+
+        const secretKey: string | undefined =
+            process.env.JWT_SECRET_KEY || config.secret_jwt;
+        if (!secretKey) {
+            return res
+                .status(500)
+                .json({ success: false, msg: "JWT secret key not available" });
+        }
+
+        const payLoad = {
+            user: {
+                googleId: user.googleId,
+                id: user.id,
+                name: user.name,
+            },
+        };
+        const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
+        const token = jwt.sign({ exp: expirationTime, payLoad }, secretKey);
+        res.setHeader("authorization", token);
+        res.cookie("userName", user.name);
+        res.cookie("userId", user.id);
+        res.cookie("googleId", user.googleId);
+        console.log("logged");
+        return res
+            .status(200)
+            .json({ success: true, msg: "Login is successful", token: token });
+    } catch (error) {
+        return res.status(500).json({ success: false, msg: error });
+    }
+};
+
 
 export const loginUser = async (
     req: express.Request,

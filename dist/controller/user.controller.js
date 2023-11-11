@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logoutUser = exports.resetPassword = exports.forgetPassword = exports.verifyEmail = exports.sendVerificationEmail = exports.getUserData = exports.loginUser = exports.registerUser = void 0;
+exports.logoutUser = exports.resetPassword = exports.forgetPassword = exports.verifyEmail = exports.sendVerificationEmail = exports.getUserData = exports.loginUser = exports.googleLogin = exports.googleRegister = exports.registerUser = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const gravatar_1 = __importDefault(require("gravatar"));
@@ -64,6 +64,96 @@ const registerUser = async (req, res) => {
     }
 };
 exports.registerUser = registerUser;
+//register with google
+const googleRegister = async (req, res) => {
+    const errors = (0, express_validator_1.validationResult)(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    try {
+        let { name, email, googleId } = req.body;
+        //check if user is exist with google id
+        let user = await user_model_1.default.findOne({
+            $or: [{ googleId }, { email }],
+            registrationMethod: "google",
+        });
+        if (user) {
+            return res
+                .status(400)
+                .json({ success: false, msg: "Email already exist" });
+        }
+        //get avatar url
+        const avatar = gravatar_1.default.url(email, {
+            s: "300",
+            r: "pg",
+            d: "mm",
+        });
+        // register user
+        user = new user_model_1.default({
+            registrationMethod: "google",
+            name: name.toLowerCase(),
+            email: email,
+            googleId: googleId,
+            avatar: avatar,
+        });
+        user = await user.save();
+        console.log(user);
+        return res.status(200).json({
+            success: true,
+            msg: "Registration is sucess",
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ success: false, msg: error });
+    }
+};
+exports.googleRegister = googleRegister;
+// login with google
+const googleLogin = async (req, res) => {
+    const errors = (0, express_validator_1.validationResult)(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    try {
+        const { googleId } = req.body;
+        const user = await user_model_1.default.findOne({
+            googleId: googleId,
+            registrationMethod: "google",
+        });
+        if (!user) {
+            return res
+                .status(401)
+                .json({ success: false, msg: "User not found" });
+        }
+        const secretKey = process.env.JWT_SECRET_KEY || config_1.default.secret_jwt;
+        if (!secretKey) {
+            return res
+                .status(500)
+                .json({ success: false, msg: "JWT secret key not available" });
+        }
+        const payLoad = {
+            user: {
+                googleId: user.googleId,
+                id: user.id,
+                name: user.name,
+            },
+        };
+        const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
+        const token = jsonwebtoken_1.default.sign({ exp: expirationTime, payLoad }, secretKey);
+        res.setHeader("authorization", token);
+        res.cookie("userName", user.name);
+        res.cookie("userId", user.id);
+        res.cookie("googleId", user.googleId);
+        console.log("logged");
+        return res
+            .status(200)
+            .json({ success: true, msg: "Login is successful", token: token });
+    }
+    catch (error) {
+        return res.status(500).json({ success: false, msg: error });
+    }
+};
+exports.googleLogin = googleLogin;
 const loginUser = async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
