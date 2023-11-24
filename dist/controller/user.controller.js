@@ -46,6 +46,7 @@ const registerUser = async (req, res) => {
         // register user
         user = new user_model_1.default({
             name: name.toLowerCase(),
+            registrationMethod: "email",
             email: email,
             password: hashPass,
             verificationCode: verificationCode,
@@ -164,7 +165,7 @@ const loginUser = async (req, res) => {
         }
         console.log(req.body);
         const { email, password } = req.body;
-        const user = await user_model_1.default.findOne({ email: email });
+        const user = await user_model_1.default.findOne({ email: email, registrationMethod: "email" });
         if (!user) {
             return res
                 .status(401)

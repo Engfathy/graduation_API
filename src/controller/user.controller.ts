@@ -49,6 +49,7 @@ export const registerUser = async (
         // register user
         user = new User({
             name: name.toLowerCase(),
+            registrationMethod:"email",
             email: email,
             password: hashPass,
             verificationCode: verificationCode,
@@ -179,7 +180,7 @@ export const loginUser = async (
         }
         console.log(req.body);
         const { email, password } = req.body;
-        const user: User | null = await User.findOne({ email: email });
+        const user: User | null = await User.findOne({ email: email ,registrationMethod:"email"});
 
         if (!user) {
             return res
