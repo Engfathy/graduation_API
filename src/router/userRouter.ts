@@ -19,6 +19,7 @@ import {
     forgetPasswordLimiter,
     ResetPasswordLimiter,
 } from "../middleware/reqLimiter";
+import verifyEmailVerifier from "../middleware/verifyEmailVerifier";
 
 // let upload = multer();
 const userRouter: express.Router = express.Router();
@@ -111,7 +112,7 @@ userRouter.post(
     "/verify-email",
     [body("email").isEmail().escape().withMessage("email is not valid")],
 
-    verifyEmail,
+    verifyEmailVerifier,verifyEmail,
 );
 
 userRouter.post(
@@ -123,6 +124,7 @@ userRouter.post(
             .withMessage("min 5 characters required for password"),
     ],
     ResetPasswordLimiter,
+    tokenVerifier,
     resetPassword,
 );
 

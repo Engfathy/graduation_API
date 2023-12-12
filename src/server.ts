@@ -61,7 +61,7 @@ let names = ["fathy", "alice", "mohamed"];
 
 // let newnmaespace= io.of('/newnamespace'); => to make new name space
 io.on("connection", async (socket) => {
-    socket.data.username = names[io.engine.clientsCount-1];
+    socket.data.username = names[io.engine.clientsCount - 1];
     const clientIP = socket.handshake.address; // This gets the client's IP address
     console.log(`Client connected with IP: ${clientIP}`);
     console.log(`${io.engine.clientsCount} users connected `);
@@ -69,10 +69,24 @@ io.on("connection", async (socket) => {
         `A user connected with ID: ${socket.id} and name ${socket.data.username}`,
     );
 
+    socket.on("data", () => {
+        io.emit("data", "This is a text response");
+    });
+
+    socket.on("getNumber", () => {
+        const randomNumber = Math.random() * 100; // Replace with your logic
+        io.emit("numberData", randomNumber);
+    });
+
+    socket.on("getBoolean", () => {
+        const randomBoolean = Math.random() < 0.5; // Replace with your logic
+        io.emit("booleanData", randomBoolean);
+    });
+
     // io.engine.generateId = (req) => {
     //     return uuid.v4(); // Generate a unique identifier for each socket connection
     // };
-        // socket.broadcast.emit send to everyone expect the sender
+    // socket.broadcast.emit send to everyone expect the sender
     console.log(socket.rooms); // Set { <socket.id> }
     socket.join("room1");
     // io.sockets.in("room1").emit("message","fuck you"); => send msg to specific room
@@ -84,7 +98,7 @@ io.on("connection", async (socket) => {
 
     //     console.log(socket.data);
     //   }
-    
+
     io.emit("user numbers", io.engine.clientsCount);
     // display number of user connected
     // console.log(io.engine.clientsCount);
@@ -95,7 +109,7 @@ io.on("connection", async (socket) => {
     // numver of users in specific route
     console.log(io.of("/").sockets.size, "of name space");
 
-    socket.on("chat message", async (msg,callback) => {
+    socket.on("chat message", async (msg, callback) => {
         console.log("message: " + msg);
         io.emit("chat message", `${socket.data.username}: ${msg}`);
         const sockets = await io.fetchSockets();
