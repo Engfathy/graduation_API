@@ -54,6 +54,17 @@ io.on("connection", async (socket) => {
     console.log(`Client connected with IP: ${clientIP}`);
     console.log(`${io.engine.clientsCount} users connected `);
     console.log(`A user connected with ID: ${socket.id} and name ${socket.data.username}`);
+    socket.on("data", () => {
+        io.emit("data", "This is a text response");
+    });
+    socket.on("getNumber", () => {
+        const randomNumber = Math.random() * 100; // Replace with your logic
+        io.emit("numberData", randomNumber);
+    });
+    socket.on("getBoolean", () => {
+        const randomBoolean = Math.random() < 0.5; // Replace with your logic
+        io.emit("booleanData", randomBoolean);
+    });
     // io.engine.generateId = (req) => {
     //     return uuid.v4(); // Generate a unique identifier for each socket connection
     // };

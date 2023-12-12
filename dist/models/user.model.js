@@ -16,9 +16,11 @@ const userSchema = new mongoose_1.default.Schema({
     googleId: { type: String, sparse: true },
     password: { type: String },
     verificationCode: { type: String, default: "" },
+    verificationCode_expiration: { type: String, default: "" },
     verified: { type: Boolean, default: false },
     avatar: { type: String, required: true },
     reset_token: { type: String, default: "" },
+    reset_token_expiration: { type: String, default: "" },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
 }, { timestamps: true });

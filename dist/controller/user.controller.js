@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -10,7 +33,9 @@ const gravatar_1 = __importDefault(require("gravatar"));
 const user_model_1 = __importDefault(require("../models/user.model"));
 const express_validator_1 = require("express-validator");
 const config_1 = __importDefault(require("../config/config"));
+const randomString_1 = require("../utils/randomString");
 const nodemailer_1 = __importDefault(require("../utils/nodemailer"));
+const crypto = __importStar(require("crypto"));
 const registerUser = async (req, res) => {
     const errors = (0, express_validator_1.validationResult)(req);
     if (!errors.isEmpty()) {
@@ -18,21 +43,16 @@ const registerUser = async (req, res) => {
     }
     try {
         let { name, email, password } = req.body;
+        const verificationCode = (0, randomString_1.generateRandomString)();
         //check if user is exist with email
-        let user = await user_model_1.default.findOne({
-            email: email,
-            registrationMethod: "email",
-        });
+        let user = await user_model_1.default.findOne({ email: email });
         if (user) {
             return res
                 .status(400)
                 .json({ success: false, msg: "Email already exist" });
         }
         //check if user name is used
-        let userWithName = await user_model_1.default.findOne({
-            name: name.toLowerCase(),
-            registrationMethod: "email",
-        });
+        let userWithName = await user_model_1.default.findOne({ name: name });
         if (userWithName) {
             return res
                 .status(400)
@@ -49,11 +69,12 @@ const registerUser = async (req, res) => {
         });
         // register user
         user = new user_model_1.default({
-            registrationMethod: "email",
             name: name.toLowerCase(),
+            registrationMethod: "email",
             email: email,
             password: hashPass,
-            avatar: avatar,
+            verificationCode: verificationCode,
+            avatar,
         });
         user = await user.save();
         console.log(user);
@@ -195,8 +216,7 @@ const loginUser = async (req, res) => {
                 name: user.name,
             },
         };
-        const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
-        const token = jsonwebtoken_1.default.sign({ exp: expirationTime, payLoad }, secretKey);
+        const token = jsonwebtoken_1.default.sign(payLoad, secretKey);
         res.setHeader("authorization", token);
         res.cookie("userName", user.name);
         res.cookie("userId", user.id);
@@ -251,11 +271,15 @@ const sendVerificationEmail = async (req, res) => {
             });
         }
         if (user) {
-            const expirationTime = Math.floor(Date.now() / 1000) + 5 * 60; // 5 minutes from now
-            const verifiyCode = jsonwebtoken_1.default.sign({ exp: expirationTime, email }, process.env.JWT_SECRET_KEY || config_1.default.secret_jwt);
-            console.log(verifiyCode);
+            const verifiyCode_ExpirationTime = Date.now() + 180000; // 3 minutes from now
+            const verifiyCode = crypto.randomInt(10000, 99999).toString();
             // Update the user's reset token in the database
-            const updateUserVerficationCode = await user_model_1.default.updateOne({ email: email }, { $set: { verificationCode: verifiyCode } });
+            const updateUserVerficationCode = await user_model_1.default.updateOne({ email: email }, {
+                $set: {
+                    verificationCode: verifiyCode,
+                    verificationCode_expiration: verifiyCode_ExpirationTime,
+                },
+            });
             (0, nodemailer_1.default)({
                 from: process.env.EMAIL_USER || config_1.default.emailUser,
                 to: email,
@@ -298,23 +322,24 @@ exports.sendVerificationEmail = sendVerificationEmail;
 //--------------------------------------------------
 const verifyEmail = async (req, res) => {
     try {
-        const verifyCode = req.query.verifyCode;
+        const verifyCode = req.body.verifyCode;
         if (!verifyCode) {
             return res
                 .status(400)
                 .json({ success: false, msg: "data hasn't send propably" });
         }
-        // verify code
-        const secretKey = process.env.JWT_SECRET_KEY || config_1.default.secret_jwt;
-        let decode = jsonwebtoken_1.default.verify(verifyCode, secretKey);
-        // console.log(decode);
         // get user
         const user = await user_model_1.default.findOne({
-            email: decode.email,
             verificationCode: verifyCode,
         });
         if ((user === null || user === void 0 ? void 0 : user.verified) === false) {
-            const updatedUser = await user_model_1.default.findByIdAndUpdate({ _id: user._id }, { $set: { verificationCode: " ", verified: true } }, { new: true });
+            const updatedUser = await user_model_1.default.findByIdAndUpdate({ _id: user._id }, {
+                $set: {
+                    verificationCode: " ",
+                    verified: true,
+                    verificationCode_expiration: "",
+                },
+            }, { new: true });
             console.log(updatedUser);
             return res.status(200).json({
                 success: true,
@@ -338,10 +363,16 @@ const forgetPassword = async (req, res) => {
         const { email } = req.body;
         const user = await user_model_1.default.findOne({ email: email });
         if (user) {
-            const expirationTime = Math.floor(Date.now() / 1000) + 5 * 60; // 5 minutes from now
-            const resetToken = jsonwebtoken_1.default.sign({ exp: expirationTime, email }, process.env.JWT_SECRET_KEY || config_1.default.secret_jwt);
+            const tokenExpirationTime = Date.now() + 180000; // 3 minutes from now
+            const resetToken = crypto.randomInt(10000, 99999).toString();
+            console.log(tokenExpirationTime);
             // Update the user's reset token in the database
-            const setToken = await user_model_1.default.updateOne({ email: email }, { $set: { reset_token: resetToken } });
+            const setToken = await user_model_1.default.updateOne({ email: email }, {
+                $set: {
+                    reset_token: resetToken,
+                    reset_token_expiration: tokenExpirationTime,
+                },
+            });
             (0, nodemailer_1.default)({
                 from: process.env.EMAIL_USER || config_1.default.emailUser,
                 to: email,
@@ -350,16 +381,16 @@ const forgetPassword = async (req, res) => {
                 <h1>Hello ${user.name},</h1>
                 <p>Please use the verification code below to reset your password:</p>
                 <div style="background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 5px; padding: 10px; text-align: center; font-family: 'Courier New', monospace; font-size: 14px;">
-                    <strong style="font-size: 16px;margin-bottom:20px;">Verification Code:</strong>
-                    <br>
-                    <span id="verificationCode" style="background-color: #fff; border: 1px solid #ccc; font-size: 18px; padding: 5px 10px; user-select: text;">
-                        ${resetToken}
-                    </span>
+                  <strong style="font-size: 16px;margin-bottom:20px;">Verification Code:</strong>
+                  <br>
+                  <span id="verificationCode" style="background-color: #fff; border: 1px solid #ccc; font-size: 18px; padding: 5px 10px; user-select: text;">
+                    ${resetToken}
+                  </span>
                 </div>
-                <p>Please enter this code on the website to complete the reset password process.</p>
+                <p>This code will expire in 2 minutes. Please enter it on the website to complete the reset password process.</p>
                 <p>If you have any questions, feel free to reply to this email or contact us at support@yourwebsite.com.</p>
                 <p>Best,<br>Your Name</p>
-            </div>`,
+              </div>`,
             });
             return res.status(200).json({
                 success: true,
@@ -380,19 +411,23 @@ exports.forgetPassword = forgetPassword;
 const resetPassword = async (req, res) => {
     try {
         const newPassword = req.body.password;
-        const token = req.query.token;
+        const token = req.body.token;
         if (!newPassword || !token) {
             return res
                 .status(400)
                 .json({ success: false, msg: "data hasn't send propably" });
         }
         const user = await user_model_1.default.findOne({ reset_token: token });
-        const secretKey = process.env.JWT_SECRET_KEY || config_1.default.secret_jwt;
-        let decode = jsonwebtoken_1.default.verify(token, secretKey);
-        if (user && decode) {
+        if (user) {
             const salt = await bcryptjs_1.default.genSalt(10);
             const newHashPass = await bcryptjs_1.default.hash(newPassword, salt);
-            await user_model_1.default.findByIdAndUpdate({ _id: user._id }, { $set: { password: newHashPass, reset_token: "" } }, { new: true });
+            await user_model_1.default.findByIdAndUpdate({ _id: user._id }, {
+                $set: {
+                    password: newHashPass,
+                    reset_token: "",
+                    reset_token_expiration: "",
+                },
+            }, { new: true });
             return res.status(200).json({
                 success: true,
                 msg: "Password reset successful",
