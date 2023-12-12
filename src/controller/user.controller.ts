@@ -53,7 +53,7 @@ export const registerUser = async (
             registrationMethod: "email",
             email: email,
             password: hashPass,
-            verificationCode: verificationCode,
+            verificationCode: "",
             avatar,
         });
         user = await user.save();
