@@ -7,6 +7,7 @@ import { validationResult } from "express-validator";
 import config from "../config/config";
 import { generateRandomString } from "../utils/randomString";
 import sendMail from "../utils/nodemailer";
+import * as crypto from "crypto";
 
 export const registerUser = async (
     req: express.Request,
@@ -49,7 +50,7 @@ export const registerUser = async (
         // register user
         user = new User({
             name: name.toLowerCase(),
-            registrationMethod:"email",
+            registrationMethod: "email",
             email: email,
             password: hashPass,
             verificationCode: verificationCode,
@@ -166,7 +167,6 @@ export const googleLogin = async (
     }
 };
 
-
 export const loginUser = async (
     req: express.Request,
     res: express.Response,
@@ -180,7 +180,10 @@ export const loginUser = async (
         }
         console.log(req.body);
         const { email, password } = req.body;
-        const user: User | null = await User.findOne({ email: email ,registrationMethod:"email"});
+        const user: User | null = await User.findOne({
+            email: email,
+            registrationMethod: "email",
+        });
 
         if (!user) {
             return res
@@ -265,7 +268,6 @@ export const getUserData = async (
     }
 };
 
-
 //-------------------------------------------------------
 
 export const sendVerificationEmail = async (
@@ -275,7 +277,7 @@ export const sendVerificationEmail = async (
     try {
         const { email } = req.body;
         const user: User | null = await User.findOne({ email: email });
-        if(user?.verified === true){
+        if (user?.verified === true) {
             return res.status(200).json({
                 success: true,
                 msg: "This Email is already verified",
@@ -283,17 +285,17 @@ export const sendVerificationEmail = async (
         }
 
         if (user) {
-            
-            const expirationTime = Math.floor(Date.now() / 1000) + 120; // 2 minutes from now
-            const verifiyCode = jwt.sign(
-                { exp: expirationTime, email },
-                process.env.JWT_SECRET_KEY || config.secret_jwt,
-            );
-            console.log(verifiyCode);
+            const verifiyCode_ExpirationTime = Date.now() + 180000; // 3 minutes from now
+            const verifiyCode = crypto.randomInt(10000, 99999).toString();
             // Update the user's reset token in the database
             const updateUserVerficationCode = await User.updateOne(
                 { email: email },
-                { $set: { verificationCode: verifiyCode } },
+                {
+                    $set: {
+                        verificationCode: verifiyCode,
+                        verificationCode_expiration: verifiyCode_ExpirationTime,
+                    },
+                },
             );
 
             sendMail({
@@ -334,32 +336,28 @@ export const sendVerificationEmail = async (
     }
 };
 
-
-
 //--------------------------------------------------
 export const verifyEmail = async (
     req: express.Request,
     res: express.Response,
 ) => {
     try {
-        const verifyCode: any | string = req.query.verifyCode;
+        const verifyCode: any | string = req.body.verifyCode;
         if (!verifyCode) {
             return res
                 .status(400)
                 .json({ success: false, msg: "data hasn't send propably" });
-            }
-            // verify code
-            const secretKey: string | any = process.env.JWT_SECRET_KEY || config.secret_jwt;
-            let decode : any = jwt.verify(verifyCode, secretKey);
-                // console.log(decode);
-
+        }
+        
         // get user
-        const user: User | null = await User.findOne({ email:decode.email ,verificationCode: verifyCode });
+        const user: User | null = await User.findOne({
+            verificationCode: verifyCode,
+        });
 
         if (user?.verified === false) {
             const updatedUser = await User.findByIdAndUpdate(
                 { _id: user._id },
-                { $set: { verificationCode: " ", verified: true } },
+                { $set: { verificationCode: " ", verified: true ,verificationCode_expiration:""} },
                 { new: true },
             );
             console.log(updatedUser);
@@ -387,19 +385,19 @@ export const forgetPassword = async (
         const user: User | null = await User.findOne({ email: email });
 
         if (user) {
-            
-            const expirationTime = Math.floor(Date.now() / 1000) + 120; // 2 minutes from now
-            const resetToken = jwt.sign(
-                { exp: expirationTime ,email},
-                process.env.JWT_SECRET_KEY || config.secret_jwt,
-            );
-
+            const tokenExpirationTime = Date.now() + 180000; // 3 minutes from now
+            const resetToken = crypto.randomInt(10000, 99999).toString();
+            console.log(tokenExpirationTime);
             // Update the user's reset token in the database
             const setToken = await User.updateOne(
                 { email: email },
-                { $set: { reset_token: resetToken } },
+                {
+                    $set: {
+                        reset_token: resetToken,
+                        reset_token_expiration: tokenExpirationTime,
+                    },
+                },
             );
-
             sendMail({
                 from: process.env.EMAIL_USER || config.emailUser,
                 to: email,
@@ -408,16 +406,16 @@ export const forgetPassword = async (
                 <h1>Hello ${user.name},</h1>
                 <p>Please use the verification code below to reset your password:</p>
                 <div style="background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 5px; padding: 10px; text-align: center; font-family: 'Courier New', monospace; font-size: 14px;">
-                    <strong style="font-size: 16px;margin-bottom:20px;">Verification Code:</strong>
-                    <br>
-                    <span id="verificationCode" style="background-color: #fff; border: 1px solid #ccc; font-size: 18px; padding: 5px 10px; user-select: text;">
-                        ${resetToken}
-                    </span>
+                  <strong style="font-size: 16px;margin-bottom:20px;">Verification Code:</strong>
+                  <br>
+                  <span id="verificationCode" style="background-color: #fff; border: 1px solid #ccc; font-size: 18px; padding: 5px 10px; user-select: text;">
+                    ${resetToken}
+                  </span>
                 </div>
-                <p>Please enter this code on the website to complete the reset password process.</p>
+                <p>This code will expire in 2 minutes. Please enter it on the website to complete the reset password process.</p>
                 <p>If you have any questions, feel free to reply to this email or contact us at support@yourwebsite.com.</p>
                 <p>Best,<br>Your Name</p>
-            </div>`,
+              </div>`,
             });
 
             return res.status(200).json({
@@ -440,21 +438,25 @@ export const resetPassword = async (
 ) => {
     try {
         const newPassword = req.body.password;
-        const token : string | any = req.query.token;
+        const token: string | any = req.body.token;
         if (!newPassword || !token) {
             return res
                 .status(400)
                 .json({ success: false, msg: "data hasn't send propably" });
         }
         const user: User | null = await User.findOne({ reset_token: token });
-        const secretKey: string | any = process.env.JWT_SECRET_KEY || config.secret_jwt;
-        let decode : any = jwt.verify(token, secretKey);
-        if (user && decode) {
+        if (user) {
             const salt = await bcrypt.genSalt(10);
             const newHashPass = await bcrypt.hash(newPassword, salt);
             await User.findByIdAndUpdate(
                 { _id: user._id },
-                { $set: { password: newHashPass, reset_token: "" } },
+                {
+                    $set: {
+                        password: newHashPass,
+                        reset_token: "",
+                        reset_token_expiration: "",
+                    },
+                },
                 { new: true },
             );
             return res.status(200).json({
@@ -470,7 +472,6 @@ export const resetPassword = async (
     } catch (error) {
         return res.status(500).json({ success: false, msg: error });
     }
-    
 };
 
 export const logoutUser = async (
@@ -483,4 +484,3 @@ export const logoutUser = async (
 
     return res.status(200).json({ success: true, msg: "Logout successful" });
 };
-

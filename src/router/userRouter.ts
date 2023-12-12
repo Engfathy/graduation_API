@@ -1,5 +1,5 @@
 import express from "express";
-import tokenVerifier from "../middleware/tokenVerifier";
+import jwtTokenVerifier from "../middleware/jwtTokenVerifier";
 import { body, validationResult } from "express-validator";
 import {
     forgetPassword,
@@ -13,8 +13,8 @@ import {
     sendVerificationEmail,
     verifyEmail,
 } from "../controller/user.controller";
-
-
+import tokenVerifier from "../middleware/resetTokenVerifier";
+import verifyEmailVerifier from "../middleware/verifyEmailVerifier";
 
 // let upload = multer();
 const userRouter: express.Router = express.Router();
@@ -84,30 +84,30 @@ userRouter.post(
     googleLogin,
 );
 
-userRouter.get("/profile", tokenVerifier, getUserData);
+userRouter.get("/profile", jwtTokenVerifier, getUserData);
 userRouter.get("/test", async (req: express.Request, res: express.Response) => {
     res.status(200).json({ msg: "fuck you" });
 });
 userRouter.post("/logout", logoutUser);
 
-
 userRouter.post(
     "/sendEmail-verify",
     [body("email").isEmail().escape().withMessage("email is not valid")],
-    
+
     sendVerificationEmail,
 );
 userRouter.post(
     "/verify-email",
     [body("email").isEmail().escape().withMessage("email is not valid")],
-    
+
+    verifyEmailVerifier,
     verifyEmail,
 );
 
 userRouter.post(
     "/forget-password",
     [body("email").isEmail().escape().withMessage("email is not valid")],
-    
+
     forgetPassword,
 );
 
@@ -119,7 +119,8 @@ userRouter.post(
             .escape()
             .withMessage("min 5 characters required for password"),
     ],
-    
+
+    tokenVerifier,
     resetPassword,
 );
 
