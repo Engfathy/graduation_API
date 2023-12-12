@@ -10,7 +10,6 @@ const jwtTokenVerifier = (req: express.Request, res: express.Response, next: exp
                 msg: "No token provided. Access denied.",
             });
         }
-        
         const secretKey: string | any = process.env.JWT_SECRET_KEY || config.secret_jwt;
         let decode: any;
         
