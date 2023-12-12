@@ -4,9 +4,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const tokenVerifier_1 = __importDefault(require("../middleware/tokenVerifier"));
+const jwtTokenVerifier_1 = __importDefault(require("../middleware/jwtTokenVerifier"));
 const express_validator_1 = require("express-validator");
 const user_controller_1 = require("../controller/user.controller");
+const resetTokenVerifier_1 = __importDefault(require("../middleware/resetTokenVerifier"));
+const verifyEmailVerifier_1 = __importDefault(require("../middleware/verifyEmailVerifier"));
 // let upload = multer();
 const userRouter = express_1.default.Router();
 // userRouter.use(upload.array());
@@ -55,19 +57,19 @@ userRouter.post("/google-login", [
         .isLength({ min: 1 })
         .withMessage("Google ID is required"),
 ], user_controller_1.googleLogin);
-userRouter.get("/profile", tokenVerifier_1.default, user_controller_1.getUserData);
+userRouter.get("/profile", jwtTokenVerifier_1.default, user_controller_1.getUserData);
 userRouter.get("/test", async (req, res) => {
     res.status(200).json({ msg: "fuck you" });
 });
 userRouter.post("/logout", user_controller_1.logoutUser);
 userRouter.post("/sendEmail-verify", [(0, express_validator_1.body)("email").isEmail().escape().withMessage("email is not valid")], user_controller_1.sendVerificationEmail);
-userRouter.post("/verify-email", [(0, express_validator_1.body)("email").isEmail().escape().withMessage("email is not valid")], user_controller_1.verifyEmail);
+userRouter.post("/verify-email", [(0, express_validator_1.body)("email").isEmail().escape().withMessage("email is not valid")], verifyEmailVerifier_1.default, user_controller_1.verifyEmail);
 userRouter.post("/forget-password", [(0, express_validator_1.body)("email").isEmail().escape().withMessage("email is not valid")], user_controller_1.forgetPassword);
 userRouter.post("/reset-password", [
     (0, express_validator_1.body)("password")
         .isLength({ min: 5 })
         .escape()
         .withMessage("min 5 characters required for password"),
-], user_controller_1.resetPassword);
+], resetTokenVerifier_1.default, user_controller_1.resetPassword);
 exports.default = userRouter;
 //# sourceMappingURL=userRouter.js.map

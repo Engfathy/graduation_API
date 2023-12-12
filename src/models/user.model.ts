@@ -9,7 +9,7 @@ interface User extends Document {
     name: string;
     email: string;
     password: string;
-    verificationCode?: string;
+    verificationCode: string;
     verificationCode_expiration: string;
     verified?: boolean;
     avatar: string;
