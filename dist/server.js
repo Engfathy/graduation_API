@@ -17,6 +17,7 @@ const http_1 = __importDefault(require("http"));
 const socket_io_1 = require("socket.io");
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
+const moduleRouter_1 = __importDefault(require("../src/router/moduleRouter"));
 const io = new socket_io_1.Server(server);
 app.set("trust proxy", 0);
 // middleware
@@ -34,6 +35,7 @@ app.use((0, hpp_1.default)());
 //connect database
 dbCon_1.default.ConnectDb();
 app.use("/api/v1/user", reqLimiter_1.defaultLimiter, userRouter_1.default);
+app.use("/api/v1/module", reqLimiter_1.defaultLimiter, moduleRouter_1.default);
 dotenv_1.default.config({ path: "./../config.env" });
 const hostName = process.env.HOST_NAME || "0.0.0.0";
 const port = Number(process.env.PORT) || 5500;
