@@ -12,9 +12,11 @@ import http from "http";
 import { Server } from "socket.io";
 import uuid from "uuid";
 import { Socket } from "dgram";
+import moduleRouter from './router/moduleRouter';
+
+
 const app: express.Application = express();
 const server = http.createServer(app);
-import moduleRouter from '../src/router/moduleRouter';
 
 const io = new Server(server);
 
