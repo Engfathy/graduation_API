@@ -73,7 +73,7 @@ const registerUser = async (req, res) => {
             registrationMethod: "email",
             email: email,
             password: hashPass,
-            verificationCode: verificationCode,
+            verificationCode: "",
             avatar,
         });
         user = await user.save();
@@ -216,7 +216,8 @@ const loginUser = async (req, res) => {
                 name: user.name,
             },
         };
-        const token = jsonwebtoken_1.default.sign(payLoad, secretKey);
+        const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
+        const token = jsonwebtoken_1.default.sign({ exp: expirationTime, payLoad }, secretKey);
         res.setHeader("authorization", token);
         res.cookie("userName", user.name);
         res.cookie("userId", user.id);
@@ -239,8 +240,11 @@ const getUserData = async (req, res) => {
                 .json({ success: false, msg: "User header is missing." });
         }
         const user = await user_model_1.default.findOne({
-            _id: requestedUser.id,
-        }).select("-password");
+            $or: [
+                { _id: requestedUser.id },
+                { name: requestedUser.name },
+            ],
+        }).select("-password verificationCode reset_token");
         if (!user) {
             return res
                 .status(401)
@@ -333,13 +337,7 @@ const verifyEmail = async (req, res) => {
             verificationCode: verifyCode,
         });
         if ((user === null || user === void 0 ? void 0 : user.verified) === false) {
-            const updatedUser = await user_model_1.default.findByIdAndUpdate({ _id: user._id }, {
-                $set: {
-                    verificationCode: " ",
-                    verified: true,
-                    verificationCode_expiration: "",
-                },
-            }, { new: true });
+            const updatedUser = await user_model_1.default.findByIdAndUpdate({ _id: user._id }, { $set: { verificationCode: " ", verified: true, verificationCode_expiration: "" } }, { new: true });
             console.log(updatedUser);
             return res.status(200).json({
                 success: true,

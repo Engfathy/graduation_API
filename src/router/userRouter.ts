@@ -1,5 +1,5 @@
 import express from "express";
-import tokenVerifier from "../middleware/tokenVerifier";
+import tokenVerifier from "../middleware/jwtTokenVerifier";
 import { body, validationResult } from "express-validator";
 import {
     forgetPassword,

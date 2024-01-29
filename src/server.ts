@@ -10,6 +10,7 @@ import hpp from "hpp";
 import ExpressMongoSanitize from "express-mongo-sanitize";
 import http from "http";
 import { Server } from "socket.io";
+
 // import uuid from "uuid";
 // import { Socket } from "dgram";
 const app: express.Application = express();
@@ -27,6 +28,7 @@ app.use(express.json({ limit: "50kb" }));
 app.use(cookieParser());
 
 app.use(bodyParser.urlencoded({ extended: true }));
+//The extended: true option allows for parsing complex objects and arrays.
 
 //----------*******sanatize data********------------
 //middle ware to prevent xss attack
@@ -36,6 +38,7 @@ app.use(ExpressMongoSanitize());
 
 //----------*****************************------------
 // middleware to protect against HTTP Parameter Pollution attacks  put after parsing process
+//It prevents multiple values for the same parameter,
 app.use(hpp());
 
 //connect database

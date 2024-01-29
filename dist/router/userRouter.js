@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const tokenVerifier_1 = __importDefault(require("../middleware/tokenVerifier"));
+const jwtTokenVerifier_1 = __importDefault(require("../middleware/jwtTokenVerifier"));
 const express_validator_1 = require("express-validator");
 const user_controller_1 = require("../controller/user.controller");
 const reqLimiter_1 = require("../middleware/reqLimiter");
@@ -59,7 +59,7 @@ userRouter.post("/login", [
         .escape()
         .withMessage("min 5 characters required for password"),
 ], user_controller_1.loginUser);
-userRouter.get("/profile", tokenVerifier_1.default, user_controller_1.getUserData);
+userRouter.get("/profile", jwtTokenVerifier_1.default, user_controller_1.getUserData);
 userRouter.get("/test", async (req, res) => {
     res.status(200).json({ msg: "fuck you" });
 });
@@ -72,6 +72,6 @@ userRouter.post("/reset-password", [
         .isLength({ min: 5 })
         .escape()
         .withMessage("min 5 characters required for password"),
-], reqLimiter_1.ResetPasswordLimiter, tokenVerifier_1.default, user_controller_1.resetPassword);
+], reqLimiter_1.ResetPasswordLimiter, jwtTokenVerifier_1.default, user_controller_1.resetPassword);
 exports.default = userRouter;
 //# sourceMappingURL=userRouter.js.map

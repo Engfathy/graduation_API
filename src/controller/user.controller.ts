@@ -53,7 +53,7 @@ export const registerUser = async (
             registrationMethod: "email",
             email: email,
             password: hashPass,
-            verificationCode: verificationCode,
+            verificationCode: "",
             avatar,
         });
         user = await user.save();
@@ -214,7 +214,8 @@ export const loginUser = async (
             },
         };
 
-        const token = jwt.sign(payLoad, secretKey);
+        const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
+        const token = jwt.sign({ exp: expirationTime, payLoad }, secretKey);
         res.setHeader("authorization", token);
         res.cookie("userName", user.name);
         res.cookie("userId", user.id);
@@ -247,8 +248,11 @@ export const getUserData = async (
         }
 
         const user: User | null | any = await User.findOne({
-            _id: requestedUser.id,
-        }).select("-password");
+            $or: [
+        { _id: requestedUser.id },
+        { name: requestedUser.name },
+    ],
+        }).select("-password verificationCode reset_token");
 
         if (!user) {
             return res
@@ -348,7 +352,7 @@ export const verifyEmail = async (
                 .status(400)
                 .json({ success: false, msg: "data hasn't send propably" });
         }
-
+        
         // get user
         const user: User | null = await User.findOne({
             verificationCode: verifyCode,
@@ -357,13 +361,7 @@ export const verifyEmail = async (
         if (user?.verified === false) {
             const updatedUser = await User.findByIdAndUpdate(
                 { _id: user._id },
-                {
-                    $set: {
-                        verificationCode: " ",
-                        verified: true,
-                        verificationCode_expiration: "",
-                    },
-                },
+                { $set: { verificationCode: " ", verified: true ,verificationCode_expiration:""} },
                 { new: true },
             );
             console.log(updatedUser);

@@ -2,7 +2,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import config from "../config/config";
 
-const tokenVerifier = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+const jwtTokenVerifier = (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
         const token = req.headers["authorization"];
         if (!token) {
@@ -10,7 +10,6 @@ const tokenVerifier = (req: express.Request, res: express.Response, next: expres
                 msg: "No token provided. Access denied.",
             });
         }
-        
         const secretKey: string | any = process.env.JWT_SECRET_KEY || config.secret_jwt;
         let decode: any;
         
@@ -32,4 +31,4 @@ const tokenVerifier = (req: express.Request, res: express.Response, next: expres
     }
 };
 
-export default tokenVerifier;
+export default jwtTokenVerifier;
