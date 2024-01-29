@@ -58,9 +58,6 @@ userRouter.post("/google-login", [
         .withMessage("Google ID is required"),
 ], user_controller_1.googleLogin);
 userRouter.get("/profile", jwtTokenVerifier_1.default, user_controller_1.getUserData);
-userRouter.get("/test", async (req, res) => {
-    res.status(200).json({ msg: "fuck you" });
-});
 userRouter.post("/logout", user_controller_1.logoutUser);
 userRouter.post("/sendEmail-verify", [(0, express_validator_1.body)("email").isEmail().escape().withMessage("email is not valid")], user_controller_1.sendVerificationEmail);
 userRouter.post("/verify-email", [(0, express_validator_1.body)("email").isEmail().escape().withMessage("email is not valid")], verifyEmailVerifier_1.default, user_controller_1.verifyEmail);

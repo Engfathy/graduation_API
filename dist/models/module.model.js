@@ -25,9 +25,18 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const pinSchema = new mongoose_1.Schema({
-    pinMode: { type: String, required: true },
+    pinMode: {
+        type: String,
+        required: true,
+        enum: [
+            "output_analog",
+            "output_digital",
+            "input_analog",
+            "input_digital",
+        ],
+    },
     type: { type: String },
-    pinNumber: { type: String, required: true },
+    pinNumber: { type: String, required: true, uppercase: true },
 });
 const moduleSchema = new mongoose_1.Schema({
     moduleName: { type: String, required: true },

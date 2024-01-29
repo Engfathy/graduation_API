@@ -84,7 +84,8 @@ export const updateModuleById = async (
             req.params.id,
             req.body,
             {
-                new: true,
+                new: true,//The new: true option is set to return the modified
+                // document rather than the original one.
             },
         );
         if (!updatedModule) {

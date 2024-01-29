@@ -15,9 +15,18 @@ interface Module {
 
 interface ModuleDocument extends Module, Document {}
 const pinSchema = new Schema<Pin>({
-    pinMode: { type: String, required: true },
+    pinMode: {
+        type: String,
+        required: true,
+        enum: [
+            "output_analog",
+            "output_digital",
+            "input_analog",
+            "input_digital",
+        ],
+    },
     type: { type: String },
-    pinNumber: { type: String, required: true },
+    pinNumber: { type: String, required: true, uppercase: true },
 });
 
 const moduleSchema = new Schema<ModuleDocument>({

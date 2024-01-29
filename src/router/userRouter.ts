@@ -85,9 +85,7 @@ userRouter.post(
 );
 
 userRouter.get("/profile", jwtTokenVerifier, getUserData);
-userRouter.get("/test", async (req: express.Request, res: express.Response) => {
-    res.status(200).json({ msg: "fuck you" });
-});
+
 userRouter.post("/logout", logoutUser);
 
 userRouter.post(

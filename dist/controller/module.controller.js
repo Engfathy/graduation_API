@@ -73,7 +73,8 @@ const updateModuleById = async (req, res) => {
     }
     try {
         const updatedModule = await module_model_1.default.findByIdAndUpdate(req.params.id, req.body, {
-            new: true,
+            new: true, //The new: true option is set to return the modified
+            // document rather than the original one.
         });
         if (!updatedModule) {
             return res

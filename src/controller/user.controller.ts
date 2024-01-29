@@ -214,7 +214,8 @@ export const loginUser = async (
             },
         };
 
-        const token = jwt.sign(payLoad, secretKey);
+        const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
+        const token = jwt.sign({ exp: expirationTime, payLoad }, secretKey);
         res.setHeader("authorization", token);
         res.cookie("userName", user.name);
         res.cookie("userId", user.id);
@@ -247,8 +248,11 @@ export const getUserData = async (
         }
 
         const user: User | null | any = await User.findOne({
-            _id: requestedUser.id,
-        }).select("-password");
+            $or: [
+        { _id: requestedUser.id },
+        { name: requestedUser.name },
+    ],
+        }).select("-password verificationCode reset_token");
 
         if (!user) {
             return res
