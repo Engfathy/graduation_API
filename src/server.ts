@@ -12,8 +12,7 @@ import http from "http";
 import { Server } from "socket.io";
 import uuid from "uuid";
 import { Socket } from "dgram";
-import moduleRouter from './router/moduleRouter';
-
+import moduleRouter from "./router/moduleRouter";
 
 const app: express.Application = express();
 const server = http.createServer(app);
@@ -40,7 +39,7 @@ app.use(ExpressMongoSanitize());
 
 //----------*****************************------------
 // middleware to protect against HTTP Parameter Pollution attacks  put after parsing process
-//It prevents multiple values for the same parameter, 
+//It prevents multiple values for the same parameter,
 app.use(hpp());
 
 //connect database

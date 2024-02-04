@@ -32,7 +32,7 @@ app.use(body_parser_1.default.urlencoded({ extended: true }));
 app.use((0, express_mongo_sanitize_1.default)());
 //----------*****************************------------
 // middleware to protect against HTTP Parameter Pollution attacks  put after parsing process
-//It prevents multiple values for the same parameter, 
+//It prevents multiple values for the same parameter,
 app.use((0, hpp_1.default)());
 //connect database
 dbCon_1.default.ConnectDb();

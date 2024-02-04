@@ -99,8 +99,7 @@ const googleRegister = async (req, res) => {
         let { name, email, googleId } = req.body;
         //check if user is exist with google id
         let user = await user_model_1.default.findOne({
-            $or: [{ googleId }, { email }],
-            registrationMethod: "google",
+            $or: [{ googleId }, { email }]
         });
         if (user) {
             return res
