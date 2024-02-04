@@ -119,6 +119,7 @@ const googleRegister = async (req, res) => {
             email: email,
             googleId: googleId,
             avatar: avatar,
+            verified: true
         });
         user = await user.save();
         console.log(user);
