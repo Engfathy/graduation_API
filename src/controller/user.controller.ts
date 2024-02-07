@@ -233,27 +233,22 @@ export const getUserData = async (
     res: express.Response,
 ) => {
     try {
-        interface UserHeader {
-            id: string;
-            name: string;
-        }
-        const requestedUser: UserHeader | undefined = req.headers["user"] as
-            | UserHeader
-            | undefined;
+        const userName = req.headers.user;
+        const userId = req.headers.id;
+        console.log(userName,userId);
 
-        if (!requestedUser) {
+        if (!userName || !userId) {
             return res
                 .status(400)
-                .json({ success: false, msg: "User header is missing." });
+                .json({ success: false, msg: "User headers are missing." });
         }
 
-        const user: User | null | any = await User.findOne({
+        const user = await User.findOne({
             $or: [
-        { _id: requestedUser.id },
-        { name: requestedUser.name },
-    ],
-        }).select("-password verificationCode reset_token");
-
+                { _id: userId },
+                { name: userName },
+            ],
+        }).select('-password -reset_token -verificationCode -reset_token_expiration -verificationCode_expiration');
         if (!user) {
             return res
                 .status(401)

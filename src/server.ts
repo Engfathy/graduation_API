@@ -13,6 +13,7 @@ import { Server } from "socket.io";
 import uuid from "uuid";
 import { Socket } from "dgram";
 import moduleRouter from "./router/moduleRouter";
+import projectRouter from "./router/projectRouter";
 
 const app: express.Application = express();
 const server = http.createServer(app);
@@ -47,6 +48,7 @@ Db.ConnectDb();
 
 app.use("/api/v1/user", defaultLimiter, userRouter);
 app.use("/api/v1/module", defaultLimiter, moduleRouter);
+app.use("/api/v1/project", defaultLimiter, projectRouter);
 
 dotEnv.config({ path: "./../config.env" });
 const hostName: string | any = process.env.HOST_NAME || "0.0.0.0";

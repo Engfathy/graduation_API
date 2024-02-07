@@ -233,18 +233,20 @@ const loginUser = async (req, res) => {
 exports.loginUser = loginUser;
 const getUserData = async (req, res) => {
     try {
-        const requestedUser = req.headers["user"];
-        if (!requestedUser) {
+        const userName = req.headers.user;
+        const userId = req.headers.id;
+        console.log(userName, userId);
+        if (!userName || !userId) {
             return res
                 .status(400)
-                .json({ success: false, msg: "User header is missing." });
+                .json({ success: false, msg: "User headers are missing." });
         }
         const user = await user_model_1.default.findOne({
             $or: [
-                { _id: requestedUser.id },
-                { name: requestedUser.name },
+                { _id: userId },
+                { name: userName },
             ],
-        }).select("-password verificationCode reset_token");
+        }).select('-password -reset_token -verificationCode -reset_token_expiration -verificationCode_expiration');
         if (!user) {
             return res
                 .status(401)

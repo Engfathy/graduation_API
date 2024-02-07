@@ -30,6 +30,10 @@ const userSchema: Schema = new mongoose.Schema<User>(
         name: { type: String, required: true, unique: true },
         email: { type: String, required: true, unique: true },
         googleId: { type: String, sparse: true },
+        //In this case, the googleId field is probably optional,
+        // and not all documents may have a value for googleId. 
+        //The sparse: true option ensures that the index doesn't include documents 
+        //where googleId is missing.
         password: { type: String },
         verificationCode: { type: String, default: "" },
         verificationCode_expiration: { type: String, default: "" },

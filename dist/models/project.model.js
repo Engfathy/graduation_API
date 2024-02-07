@@ -23,29 +23,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.moduleSchema = exports.pinSchema = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-exports.pinSchema = new mongoose_1.Schema({
-    pinMode: {
-        type: String,
-        required: true,
-        enum: [
-            "output_analog",
-            "output_digital",
-            "input_analog",
-            "input_digital",
-            "output_pwm"
-        ],
-    },
-    type: { type: String },
-    pinNumber: { type: String, required: true, uppercase: true },
+const module_model_1 = require("../models/module.model");
+const projectSchema = new mongoose_1.Schema({
+    name: { type: String, required: true },
+    projectName: { type: String, required: true },
+    description: { type: String, required: true },
+    modules: [module_model_1.moduleSchema],
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
 });
-exports.moduleSchema = new mongoose_1.Schema({
-    moduleName: { type: String, required: true },
-    alternateName: { type: String },
-    relationModule: { type: String },
-    pins: [exports.pinSchema],
-});
-const ModuleModel = mongoose_1.default.model("Module", exports.moduleSchema);
-exports.default = ModuleModel;
-//# sourceMappingURL=module.model.js.map
+const ProjectModel = mongoose_1.default.model("Project", projectSchema);
+exports.default = ProjectModel;
+//# sourceMappingURL=project.model.js.map

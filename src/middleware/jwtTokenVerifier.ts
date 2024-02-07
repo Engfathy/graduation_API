@@ -15,17 +15,19 @@ const jwtTokenVerifier = (req: express.Request, res: express.Response, next: exp
         
         try {
             decode = jwt.verify(token, secretKey);
-            console.log(decode);
+            // console.log(decode);
         } catch (error) {
             return res.status(401).json({
                 msg: "Token verification failed. Access denied.",
             });
         }
 
-        req.headers["user"] = decode.user;
+        req.headers["user"] = decode["payLoad"]["user"].name;
+        req.headers["id"] = decode["payLoad"]["user"].id;
+        // console.log(req.headers)
         next();
     } catch (error) {
-        return res.status(500).json({
+        return res.status(501).json({
             msg: "Internal server error.",
         });
     }

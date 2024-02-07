@@ -1,5 +1,4 @@
 import ModuleModel from "../models/module.model";
-import ModuleDocument from "../models/module.model";
 import { validationResult } from "express-validator";
 import express from "express";
 
@@ -69,45 +68,45 @@ export const createModule = async (
     }
 };
 
-// update module by id
+    // update module by id
 
-export const updateModuleById = async (
-    req: express.Request,
-    res: express.Response,
-) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ success: false, errors: errors.array() });
-    }
-    try {
-        const updatedModule = await ModuleModel.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            {
-                new: true,//The new: true option is set to return the modified
-                // document rather than the original one.
-            },
-        );
-        if (!updatedModule) {
-            return res
-                .status(404)
-                .json({ success: false, error: "Module not found" });
-        } else {
-            return res
-                .status(200)
-                .json({
-                    success: true,
-                    msg: "module updated",
-                    data: updatedModule,
-                });
+    export const updateModuleById = async (
+        req: express.Request,
+        res: express.Response,
+    ) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
         }
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            error: "Internal Server Error",
-        });
-    }
-};
+        try {
+            const updatedModule = await ModuleModel.findByIdAndUpdate(
+                req.params.id,
+                req.body,
+                {
+                    new: true,//The new: true option is set to return the modified
+                    // document rather than the original one.
+                },
+            );
+            if (!updatedModule) {
+                return res
+                    .status(404)
+                    .json({ success: false, error: "Module not found" });
+            } else {
+                return res
+                    .status(200)
+                    .json({
+                        success: true,
+                        msg: "module updated",
+                        data: updatedModule,        
+                    });
+            }
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                error: "Internal Server Error",
+            });
+        }
+    };
 
 // delete module by id
 export const deleteModuleById = async (

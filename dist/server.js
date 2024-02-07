@@ -16,6 +16,7 @@ const express_mongo_sanitize_1 = __importDefault(require("express-mongo-sanitize
 const http_1 = __importDefault(require("http"));
 const socket_io_1 = require("socket.io");
 const moduleRouter_1 = __importDefault(require("./router/moduleRouter"));
+const projectRouter_1 = __importDefault(require("./router/projectRouter"));
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 const io = new socket_io_1.Server(server);
@@ -38,6 +39,7 @@ app.use((0, hpp_1.default)());
 dbCon_1.default.ConnectDb();
 app.use("/api/v1/user", reqLimiter_1.defaultLimiter, userRouter_1.default);
 app.use("/api/v1/module", reqLimiter_1.defaultLimiter, moduleRouter_1.default);
+app.use("/api/v1/project", reqLimiter_1.defaultLimiter, projectRouter_1.default);
 dotenv_1.default.config({ path: "./../config.env" });
 const hostName = process.env.HOST_NAME || "0.0.0.0";
 const port = Number(process.env.PORT) || 5500;

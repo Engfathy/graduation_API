@@ -1,20 +1,20 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-interface Pin {
+export interface Pin {
     pinMode: string;
     type?: string;
     pinNumber: string;
 }
 
-interface Module {
+export interface Module {
     moduleName: string;
     alternateName?: string;
     relationModule?: string;
     pins: Pin[];
 }
 
-interface ModuleDocument extends Module, Document {}
-const pinSchema = new Schema<Pin>({
+export interface ModuleDocument extends Module, Document {}
+export const pinSchema = new Schema<Pin>({
     pinMode: {
         type: String,
         required: true,
@@ -23,13 +23,14 @@ const pinSchema = new Schema<Pin>({
             "output_digital",
             "input_analog",
             "input_digital",
+            "output_pwm"
         ],
     },
     type: { type: String },
     pinNumber: { type: String, required: true, uppercase: true },
 });
 
-const moduleSchema = new Schema<ModuleDocument>({
+export const moduleSchema = new Schema<ModuleDocument>({
     moduleName: { type: String, required: true },
     alternateName: { type: String },
     relationModule: { type: String },

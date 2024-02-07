@@ -7,14 +7,14 @@ import {
     getModuleById,
     updateModuleById,
 } from "../controller/module.controller";
-import { deleteModel } from "mongoose";
+import jwtTokenVerifier from "../middleware/jwtTokenVerifier";
 
 const moduleRouter: express.Router = express.Router();
 
-moduleRouter.get("/", getAllModules);
-moduleRouter.get("/:id", getModuleById);
-moduleRouter.post("/create", createModule);
-moduleRouter.put("/update/:id", updateModuleById);
-moduleRouter.delete("/delete/:id", deleteModuleById);
+moduleRouter.get("/", jwtTokenVerifier,getAllModules);
+moduleRouter.get("/:id",jwtTokenVerifier, getModuleById);
+moduleRouter.post("/create", jwtTokenVerifier,createModule);
+moduleRouter.put("/update/:id", jwtTokenVerifier,updateModuleById);
+moduleRouter.delete("/delete/:id", jwtTokenVerifier,deleteModuleById);
 
 export default moduleRouter;
