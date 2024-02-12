@@ -227,19 +227,19 @@ const loginUser = async (req, res) => {
         res.header("Access-Control-Allow-Credentials", "true");
         res.cookie("userName", user.name, {
             domain: ".onrender.com",
-            sameSite: "lax", // Use with caution, consider alternatives for broader use
+            sameSite: "none", // Use with caution, consider alternatives for broader use
             // secure: true, // Send only over HTTPS (except for development)
         });
         res.cookie("userId", user.id, {
             domain: ".onrender.com",
-            sameSite: "lax", // Use with caution, consider alternatives for broader use
+            sameSite: "none", // Use with caution, consider alternatives for broader use
             // secure: true, // Send only over HTTPS (except for development)
         });
         res.cookie("access_token", token, {
             httpOnly: true,
             maxAge: 2 * 24 * 60 * 60 * 1000,
             domain: ".onrender.com",
-            sameSite: "lax", // Use with caution, consider alternatives for broader use
+            sameSite: "none", // Use with caution, consider alternatives for broader use
             // secure: true, // Send only over HTTPS (except for development)
         });
         console.log("logged");

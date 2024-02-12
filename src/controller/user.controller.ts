@@ -226,16 +226,16 @@ export const loginUser = async (
 
         res.header("Access-Control-Allow-Origin", "http://localhost:3000");
         res.header("Access-Control-Allow-Credentials", "true");
-        
+
         res.cookie("userName", user.name, {
             domain: ".onrender.com", // Broader domain for OnRender
-            sameSite: "lax", // Use with caution, consider alternatives for broader use
+            sameSite: "none", // Use with caution, consider alternatives for broader use
             // secure: true, // Send only over HTTPS (except for development)
         });
 
         res.cookie("userId", user.id, {
             domain: ".onrender.com", // Broader domain for OnRender
-            sameSite: "lax", // Use with caution, consider alternatives for broader use
+            sameSite: "none", // Use with caution, consider alternatives for broader use
             // secure: true, // Send only over HTTPS (except for development)
         });
 
@@ -243,7 +243,7 @@ export const loginUser = async (
             httpOnly: true,
             maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
             domain: ".onrender.com", // Broader domain for OnRender
-            sameSite: "lax", // Use with caution, consider alternatives for broader use
+            sameSite: "none", // Use with caution, consider alternatives for broader use
             // secure: true, // Send only over HTTPS (except for development)
         });
 

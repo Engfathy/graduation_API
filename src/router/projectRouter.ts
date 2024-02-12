@@ -19,11 +19,11 @@ const validateProjectData = [
     body("description").notEmpty().withMessage("Description is required"),
 ];
 
-projectRouter.get("/all",jwtTokenVerifier, getAllProjectsForUser);
-projectRouter.get("/",jwtTokenVerifier, getProjectByUserAndProjectName);
-projectRouter.get("/id/:id", jwtTokenVerifier,getProjectById);
-projectRouter.post("/create", validateProjectData, jwtTokenVerifier,createProject);
-projectRouter.put("/update/:id", validateProjectData,jwtTokenVerifier, updateProjectById);
-projectRouter.delete("/delete/:id", jwtTokenVerifier,deleteProjectById);
+projectRouter.get("/all",/*jwtTokenVerifier*/ getAllProjectsForUser);
+projectRouter.get("/",/*jwtTokenVerifier*/  getProjectByUserAndProjectName);
+projectRouter.get("/id/:id", /*jwtTokenVerifier*/ getProjectById);
+projectRouter.post("/create", validateProjectData, /*jwtTokenVerifier*/ createProject);
+projectRouter.put("/update/:id", validateProjectData,/*jwtTokenVerifier*/  updateProjectById);
+projectRouter.delete("/delete/:id", /*jwtTokenVerifier*/ deleteProjectById);
 
 export default projectRouter;
