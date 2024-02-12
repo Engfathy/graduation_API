@@ -228,13 +228,13 @@ export const loginUser = async (
         res.header("Access-Control-Allow-Credentials", "true");
 
         res.cookie("userName", user.name, {
-            domain: ".onrender.com", // Broader domain for OnRender
+            domain: "graduation-api-zaj9.onrender.com", // Broader domain for OnRender
             sameSite: "none", // Use with caution, consider alternatives for broader use
             // secure: true, // Send only over HTTPS (except for development)
         });
 
         res.cookie("userId", user.id, {
-            domain: ".onrender.com", // Broader domain for OnRender
+            domain: "graduation-api-zaj9.onrender.com", // Broader domain for OnRender
             sameSite: "none", // Use with caution, consider alternatives for broader use
             // secure: true, // Send only over HTTPS (except for development)
         });
@@ -242,7 +242,7 @@ export const loginUser = async (
         res.cookie("access_token", token, {
             httpOnly: true,
             maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
-            domain: ".onrender.com", // Broader domain for OnRender
+            domain: "graduation-api-zaj9.onrender.com", // Broader domain for OnRender
             sameSite: "none", // Use with caution, consider alternatives for broader use
             // secure: true, // Send only over HTTPS (except for development)
         });
