@@ -71,7 +71,7 @@ const getAllProjectsForUser = async (req, res) => {
 exports.getAllProjectsForUser = getAllProjectsForUser;
 // get project by user and project name
 const getProjectByUserAndProjectName = async (req, res) => {
-    const userName = req.headers.user;
+    const userName = req.query.user;
     console.log(userName);
     if (!userName) {
         return res
@@ -79,7 +79,7 @@ const getProjectByUserAndProjectName = async (req, res) => {
             .json({ success: false, msg: "User header is missing." });
     }
     const projectName = req.query.projectName;
-    console.log(projectName);
+    // console.log(projectName);
     try {
         const project = await project_model_1.default.findOne({
             name: userName,

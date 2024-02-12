@@ -79,7 +79,7 @@ export const getProjectByUserAndProjectName = async (
     req: express.Request,
     res: express.Response,
 ) => {
-    const userName = req.headers.user;
+    const userName = req.query.user;
     console.log(userName);
     if (!userName) {
         return res
@@ -87,7 +87,7 @@ export const getProjectByUserAndProjectName = async (
             .json({ success: false, msg: "User header is missing." });
     }
     const projectName = req.query.projectName;
-    console.log(projectName);
+    // console.log(projectName);
 
     try {
         const project = await ProjectModel.findOne({
