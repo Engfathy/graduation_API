@@ -154,10 +154,17 @@ export const googleLogin = async (
         };
         const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
         const token = jwt.sign({ exp: expirationTime, payLoad }, secretKey);
+
+        // Set the token as an HTTP-only cookie
+        res.cookie("access_token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production", // Set to true in production for HTTPS
+            maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
+        });
         res.setHeader("authorization", token);
         res.cookie("userName", user.name);
         res.cookie("userId", user.id);
-        res.cookie("googleId", user.googleId);
+        
         console.log("logged");
         return res
             .status(200)
@@ -216,9 +223,14 @@ export const loginUser = async (
 
         const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
         const token = jwt.sign({ exp: expirationTime, payLoad }, secretKey);
-        res.setHeader("authorization", token);
+        res.cookie("access_token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production", // Set to true in production for HTTPS
+            maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
+        });
         res.cookie("userName", user.name);
         res.cookie("userId", user.id);
+        res.cookie("googleId", user.googleId);
         console.log("logged");
         return res
             .status(200)
@@ -233,8 +245,8 @@ export const getUserData = async (
     res: express.Response,
 ) => {
     try {
-        const userName = req.headers.user;
-        const userId = req.headers.id;
+        const userName = req.cookies["userName"];
+        const userId = req.cookies["userId"];
         console.log(userName,userId);
 
         if (!userName || !userId) {
@@ -477,9 +489,11 @@ export const logoutUser = async (
     req: express.Request,
     res: express.Response,
 ) => {
-    res.setHeader("authorization", "");
     res.clearCookie("userName");
     res.clearCookie("userId");
+    res.clearCookie("googleId");
+    res.clearCookie("googleId");
+    res.clearCookie("access_token");
 
     return res.status(200).json({ success: true, msg: "Logout successful" });
 };

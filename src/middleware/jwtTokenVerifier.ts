@@ -4,7 +4,7 @@ import config from "../config/config";
 
 const jwtTokenVerifier = (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
-        const token = req.headers["authorization"];
+        const token = req.cookies["access_token"]; // Retrieve token from the HTTP-only cookie
         if (!token) {
             return res.status(401).json({
                 msg: "No token provided. Access denied.",
@@ -22,8 +22,8 @@ const jwtTokenVerifier = (req: express.Request, res: express.Response, next: exp
             });
         }
 
-        req.headers["user"] = decode["payLoad"]["user"].name;
-        req.headers["id"] = decode["payLoad"]["user"].id;
+        // req.headers["user"] = decode["payLoad"]["user"].name;
+        // req.headers["id"] = decode["payLoad"]["user"].id;
         // console.log(req.headers)
         next();
     } catch (error) {
