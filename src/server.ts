@@ -23,9 +23,10 @@ const io = new Server(server);
 app.set("trust proxy", 0);
 
 // middleware
-app.use(
-    cors(),
-);
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+  }));
 
 app.use(express.json({ limit: "50kb" }));
 

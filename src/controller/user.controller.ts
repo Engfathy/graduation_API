@@ -223,18 +223,20 @@ export const loginUser = async (
 
         const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
         const token = jwt.sign({ exp: expirationTime, payLoad }, secretKey);
-       
 
+        res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+        res.header("Access-Control-Allow-Credentials", "true");
+        
         res.cookie("userName", user.name, {
             domain: ".onrender.com", // Broader domain for OnRender
             sameSite: "lax", // Use with caution, consider alternatives for broader use
-            secure: true, // Send only over HTTPS (except for development)
+            // secure: true, // Send only over HTTPS (except for development)
         });
 
         res.cookie("userId", user.id, {
             domain: ".onrender.com", // Broader domain for OnRender
             sameSite: "lax", // Use with caution, consider alternatives for broader use
-            secure: true, // Send only over HTTPS (except for development)
+            // secure: true, // Send only over HTTPS (except for development)
         });
 
         res.cookie("access_token", token, {
@@ -242,7 +244,7 @@ export const loginUser = async (
             maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
             domain: ".onrender.com", // Broader domain for OnRender
             sameSite: "lax", // Use with caution, consider alternatives for broader use
-            secure: true, // Send only over HTTPS (except for development)
+            // secure: true, // Send only over HTTPS (except for development)
         });
 
         console.log("logged");
