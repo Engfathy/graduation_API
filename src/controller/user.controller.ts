@@ -80,7 +80,7 @@ export const googleRegister = async (
         let { name, email, googleId } = req.body;
         //check if user is exist with google id
         let user = await User.findOne({
-            $or: [{ googleId }, { email }]
+            $or: [{ googleId }, { email }],
         });
         if (user) {
             return res
@@ -101,7 +101,7 @@ export const googleRegister = async (
             email: email,
             googleId: googleId,
             avatar: avatar,
-            verified: true
+            verified: true,
         });
         user = await user.save();
         console.log(user);
@@ -164,7 +164,7 @@ export const googleLogin = async (
         res.setHeader("authorization", token);
         res.cookie("userName", user.name);
         res.cookie("userId", user.id);
-        
+
         console.log("logged");
         return res
             .status(200)
@@ -223,16 +223,15 @@ export const loginUser = async (
 
         const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
         const token = jwt.sign({ exp: expirationTime, payLoad }, secretKey);
+        res.cookie("userName", user.name);
+        res.cookie("userId", user.id);
+        res.cookie("googleId", user.googleId);
         res.cookie("access_token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production", // Set to true in production for HTTPS
             maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
             domain: "",
-            
         });
-        res.cookie("userName", user.name);
-        res.cookie("userId", user.id);
-        res.cookie("googleId", user.googleId);
         console.log("logged");
         return res
             .status(200)
@@ -249,7 +248,7 @@ export const getUserData = async (
     try {
         const userName = req.cookies["userName"];
         const userId = req.cookies["userId"];
-        console.log(userName,userId);
+        console.log(userName, userId);
 
         if (!userName || !userId) {
             return res
@@ -258,11 +257,10 @@ export const getUserData = async (
         }
 
         const user = await User.findOne({
-            $or: [
-                { _id: userId },
-                { name: userName },
-            ],
-        }).select('-password -reset_token -verificationCode -reset_token_expiration -verificationCode_expiration');
+            $or: [{ _id: userId }, { name: userName }],
+        }).select(
+            "-password -reset_token -verificationCode -reset_token_expiration -verificationCode_expiration",
+        );
         if (!user) {
             return res
                 .status(401)
@@ -361,7 +359,7 @@ export const verifyEmail = async (
                 .status(400)
                 .json({ success: false, msg: "data hasn't send propably" });
         }
-        
+
         // get user
         const user: User | null = await User.findOne({
             verificationCode: verifyCode,
@@ -370,7 +368,13 @@ export const verifyEmail = async (
         if (user?.verified === false) {
             const updatedUser = await User.findByIdAndUpdate(
                 { _id: user._id },
-                { $set: { verificationCode: " ", verified: true ,verificationCode_expiration:""} },
+                {
+                    $set: {
+                        verificationCode: " ",
+                        verified: true,
+                        verificationCode_expiration: "",
+                    },
+                },
                 { new: true },
             );
             console.log(updatedUser);

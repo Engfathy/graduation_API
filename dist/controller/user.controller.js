@@ -99,7 +99,7 @@ const googleRegister = async (req, res) => {
         let { name, email, googleId } = req.body;
         //check if user is exist with google id
         let user = await user_model_1.default.findOne({
-            $or: [{ googleId }, { email }]
+            $or: [{ googleId }, { email }],
         });
         if (user) {
             return res
@@ -119,7 +119,7 @@ const googleRegister = async (req, res) => {
             email: email,
             googleId: googleId,
             avatar: avatar,
-            verified: true
+            verified: true,
         });
         user = await user.save();
         console.log(user);
@@ -223,15 +223,15 @@ const loginUser = async (req, res) => {
         };
         const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
         const token = jsonwebtoken_1.default.sign({ exp: expirationTime, payLoad }, secretKey);
+        res.cookie("userName", user.name);
+        res.cookie("userId", user.id);
+        res.cookie("googleId", user.googleId);
         res.cookie("access_token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             maxAge: 2 * 24 * 60 * 60 * 1000,
             domain: "",
         });
-        res.cookie("userName", user.name);
-        res.cookie("userId", user.id);
-        res.cookie("googleId", user.googleId);
         console.log("logged");
         return res
             .status(200)
@@ -253,11 +253,8 @@ const getUserData = async (req, res) => {
                 .json({ success: false, msg: "User headers are missing." });
         }
         const user = await user_model_1.default.findOne({
-            $or: [
-                { _id: userId },
-                { name: userName },
-            ],
-        }).select('-password -reset_token -verificationCode -reset_token_expiration -verificationCode_expiration');
+            $or: [{ _id: userId }, { name: userName }],
+        }).select("-password -reset_token -verificationCode -reset_token_expiration -verificationCode_expiration");
         if (!user) {
             return res
                 .status(401)
@@ -350,7 +347,13 @@ const verifyEmail = async (req, res) => {
             verificationCode: verifyCode,
         });
         if ((user === null || user === void 0 ? void 0 : user.verified) === false) {
-            const updatedUser = await user_model_1.default.findByIdAndUpdate({ _id: user._id }, { $set: { verificationCode: " ", verified: true, verificationCode_expiration: "" } }, { new: true });
+            const updatedUser = await user_model_1.default.findByIdAndUpdate({ _id: user._id }, {
+                $set: {
+                    verificationCode: " ",
+                    verified: true,
+                    verificationCode_expiration: "",
+                },
+            }, { new: true });
             console.log(updatedUser);
             return res.status(200).json({
                 success: true,
