@@ -223,14 +223,22 @@ const loginUser = async (req, res) => {
         };
         const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
         const token = jsonwebtoken_1.default.sign({ exp: expirationTime, payLoad }, secretKey);
-        res.cookie("userName", user.name, { domain: ".localhost", sameSite: "none" });
-        res.cookie("userId", user.id, { domain: ".localhost", sameSite: "none" });
-        res.cookie("googleId", user.googleId, { domain: ".localhost", sameSite: "none" });
+        res.cookie("userName", user.name, {
+            domain: ".onrender.com",
+            sameSite: "lax",
+            secure: true, // Send only over HTTPS (except for development)
+        });
+        res.cookie("userId", user.id, {
+            domain: ".onrender.com",
+            sameSite: "lax",
+            secure: true, // Send only over HTTPS (except for development)
+        });
         res.cookie("access_token", token, {
             httpOnly: true,
             maxAge: 2 * 24 * 60 * 60 * 1000,
-            domain: ".localhost",
-            sameSite: "none"
+            domain: ".onrender.com",
+            sameSite: "lax",
+            secure: true, // Send only over HTTPS (except for development)
         });
         console.log("logged");
         return res
