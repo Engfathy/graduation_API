@@ -58,6 +58,9 @@ const port: number = Number(process.env.PORT) || 5500;
 //-------------------------------------------------------
 
 app.get("/1", (req: express.Request, res: express.Response) => {
+    res.cookie("userName", 1);
+        res.cookie("userId", 2);
+        res.cookie("googleId", 3);
     res.send("welcome server is running").status(200);
 });
 
