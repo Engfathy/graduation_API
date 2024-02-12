@@ -223,14 +223,15 @@ export const loginUser = async (
 
         const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
         const token = jwt.sign({ exp: expirationTime, payLoad }, secretKey);
-        res.cookie("userName", user.name);
-        res.cookie("userId", user.id);
-        res.cookie("googleId", user.googleId);
+        res.cookie("userName", user.name, { domain: "onrender.com" });
+        res.cookie("userId", user.id, { domain: "onrender.com" });
+        res.cookie("googleId", user.googleId, { domain: "onrender.com" });
+
         res.cookie("access_token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production", // Set to true in production for HTTPS
             maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
-            domain: "",
+            domain: "onrender.com",
         });
         console.log("logged");
         return res
