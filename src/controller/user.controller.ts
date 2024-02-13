@@ -240,13 +240,26 @@ export const loginUser = async (
         res.header("Access-Control-Allow-Origin", "http://localhost:3000");
         res.header("Access-Control-Allow-Credentials", "true");
 
-        res.cookie("userName", user.name);
-
-        res.cookie("userId", user.id);
-
+        res.setHeader('Set-Cookie', [
+            `access_token=${token}; HttpOnly; Secure; SameSite=None; Max-Age=${2 * 24 * 60 * 60}`,
+            `userName=${user.name}; Secure; SameSite=None`,
+            `userId=${user.id}; Secure; SameSite=None`,
+        ]);
+        
         res.cookie("access_token", token, {
             httpOnly: true,
-            maxAge: 2 * 24 * 60 * 60 * 1000, 
+            sameSite:"none",
+            secure: true,
+            maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
+        });
+        res.setHeader("authorization", token);
+        res.cookie("userName", user.name,{
+            sameSite:"none",
+            secure: true,
+        });
+        res.cookie("userId", user.id,{
+            sameSite:"none",
+            secure: true,
         });
 
         console.log("logged");
