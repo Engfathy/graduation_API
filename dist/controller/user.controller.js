@@ -462,7 +462,6 @@ const logoutUser = async (req, res) => {
     res.clearCookie("userName");
     res.clearCookie("userId");
     res.clearCookie("googleId");
-    res.clearCookie("googleId");
     res.clearCookie("access_token");
     return res.status(200).json({ success: true, msg: "Logout successful" });
 };

@@ -61,6 +61,7 @@ const port: number = Number(process.env.PORT) || 5500;
 //-------------------------------------------------------
 
 app.get("/1", (req: express.Request, res: express.Response) => {
+    res.setHeader('Set-Cookie', 'isLoggedin=true; Max-Age=60');
     res.cookie("userName", 1);
     res.cookie("userId", 2);
     res.cookie("googleId", 3);

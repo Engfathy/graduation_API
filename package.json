@@ -45,7 +45,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@types/cookie-parser": "^1.4.4",
+    "@types/cookie-parser": "^1.4.6",
     "@types/uuid": "^9.0.6"
   },
   "optionalDependencies": {

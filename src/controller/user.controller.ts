@@ -502,7 +502,6 @@ export const logoutUser = async (
     res.clearCookie("userName");
     res.clearCookie("userId");
     res.clearCookie("googleId");
-    res.clearCookie("googleId");
     res.clearCookie("access_token");
 
     return res.status(200).json({ success: true, msg: "Logout successful" });
