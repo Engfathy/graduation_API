@@ -246,18 +246,18 @@ export const loginUser = async (
             httpOnly: true,
             sameSite: "lax",
             domain:undefined,
-            secure: false,
+            secure: true,
             maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
         });
         res.cookie("userName", user.name, {
             sameSite: "lax",
             domain:undefined,
-            secure: false,
+            secure: true,
         });
         res.cookie("userId", user.id, {
             sameSite: "lax",
             domain:undefined,
-            secure: false,
+            secure: true,
         });
 
         console.log("logged");
