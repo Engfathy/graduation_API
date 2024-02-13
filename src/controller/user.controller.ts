@@ -158,12 +158,19 @@ export const googleLogin = async (
         // Set the token as an HTTP-only cookie
         res.cookie("access_token", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production", // Set to true in production for HTTPS
+            sameSite:"none",
+            secure: true,
             maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
         });
         res.setHeader("authorization", token);
-        res.cookie("userName", user.name);
-        res.cookie("userId", user.id);
+        res.cookie("userName", user.name,{
+            sameSite:"none",
+            secure: true,
+        });
+        res.cookie("userId", user.id,{
+            sameSite:"none",
+            secure: true,
+        });
 
         console.log("logged");
         return res

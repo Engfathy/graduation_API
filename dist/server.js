@@ -49,7 +49,10 @@ const port = Number(process.env.PORT) || 5500;
 //-------------------------------------------------------
 app.get("/1", (req, res) => {
     res.setHeader('Set-Cookie', 'isLoggedin=true; Max-Age=60');
-    res.cookie("userName", 1);
+    res.cookie("userName", 1, {
+        sameSite: "none",
+        secure: true,
+    });
     res.cookie("userId", 2);
     res.cookie("googleId", 3);
     res.send("welcome server is running").status(200);
