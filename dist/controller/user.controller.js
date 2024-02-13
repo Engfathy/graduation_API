@@ -241,19 +241,19 @@ const loginUser = async (req, res) => {
         res.header("Access-Control-Allow-Credentials", "true");
         res.cookie("access_token", token, {
             httpOnly: true,
-            sameSite: "lax",
+            sameSite: "none",
             domain: undefined,
             secure: true,
             maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
         });
         res.cookie("userName", user.name, {
             sameSite: "lax",
-            domain: undefined,
+            domain: ".localhost",
             secure: true,
         });
         res.cookie("userId", user.id, {
             sameSite: "lax",
-            domain: undefined,
+            domain: ".onrender",
             secure: true,
         });
         console.log("logged");
