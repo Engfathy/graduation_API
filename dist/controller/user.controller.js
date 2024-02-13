@@ -247,13 +247,13 @@ const loginUser = async (req, res) => {
             maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
         });
         res.cookie("userName", user.name, {
-            sameSite: "lax",
-            domain: ".localhost",
+            sameSite: "none",
+            domain: undefined,
             secure: true,
         });
         res.cookie("userId", user.id, {
-            sameSite: "lax",
-            domain: ".onrender",
+            sameSite: "none",
+            domain: undefined,
             secure: true,
         });
         console.log("logged");
