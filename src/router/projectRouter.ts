@@ -19,7 +19,7 @@ const validateProjectData = [
     body("description").notEmpty().withMessage("Description is required"),
 ];
 
-projectRouter.get("/all",/* jwtTokenVerifier,*/ getAllProjectsForUser);
+projectRouter.get("/all", jwtTokenVerifier, getAllProjectsForUser);
 projectRouter.get("", jwtTokenVerifier, getProjectByUserAndProjectName);
 projectRouter.get("/id/:id", jwtTokenVerifier, getProjectById);
 projectRouter.post(
