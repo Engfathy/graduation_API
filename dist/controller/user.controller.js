@@ -168,18 +168,25 @@ const googleLogin = async (req, res) => {
         // Set the token as an HTTP-only cookie
         res.cookie("access_token", token, {
             httpOnly: true,
-            sameSite: "none",
-            secure: true,
+            sameSite: "lax",
+            domain: undefined,
+            secure: false,
             maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
         });
-        res.setHeader("authorization", token);
         res.cookie("userName", user.name, {
-            sameSite: "none",
-            secure: true,
+            sameSite: "lax",
+            domain: undefined,
+            secure: false,
         });
         res.cookie("userId", user.id, {
-            sameSite: "none",
-            secure: true,
+            sameSite: "lax",
+            domain: undefined,
+            secure: false,
+        });
+        res.cookie("googleId", user.googleId, {
+            sameSite: "lax",
+            domain: undefined,
+            secure: false,
         });
         console.log("logged");
         return res
@@ -234,20 +241,20 @@ const loginUser = async (req, res) => {
         res.header("Access-Control-Allow-Credentials", "true");
         res.cookie("access_token", token, {
             httpOnly: true,
-            sameSite: "none",
-            domain: ".localhost",
-            secure: true,
+            sameSite: "lax",
+            domain: undefined,
+            secure: false,
             maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
         });
         res.cookie("userName", user.name, {
-            sameSite: "none",
-            domain: ".localhost",
-            secure: true,
+            sameSite: "lax",
+            domain: undefined,
+            secure: false,
         });
         res.cookie("userId", user.id, {
-            sameSite: "none",
-            domain: ".localhost",
-            secure: true,
+            sameSite: "lax",
+            domain: undefined,
+            secure: false,
         });
         console.log("logged");
         return res
