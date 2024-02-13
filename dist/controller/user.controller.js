@@ -242,18 +242,18 @@ const loginUser = async (req, res) => {
         res.cookie("access_token", token, {
             httpOnly: true,
             sameSite: "none",
-            domain: undefined,
+            domain: ".localhost",
             secure: true,
             maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
         });
         res.cookie("userName", user.name, {
             sameSite: "none",
-            domain: undefined,
+            domain: ".localhost",
             secure: true,
         });
         res.cookie("userId", user.id, {
             sameSite: "none",
-            domain: undefined,
+            domain: "localhost",
             secure: true,
         });
         console.log("logged");

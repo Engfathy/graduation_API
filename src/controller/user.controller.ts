@@ -160,23 +160,23 @@ export const googleLogin = async (
         res.cookie("access_token", token, {
             httpOnly: true,
             sameSite: "lax",
-            domain:undefined,
+            domain: undefined,
             secure: false,
             maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
         });
         res.cookie("userName", user.name, {
             sameSite: "lax",
-            domain:undefined,
+            domain: undefined,
             secure: false,
         });
         res.cookie("userId", user.id, {
             sameSite: "lax",
-            domain:undefined,
+            domain: undefined,
             secure: false,
         });
         res.cookie("googleId", user.googleId, {
             sameSite: "lax",
-            domain:undefined,
+            domain: undefined,
             secure: false,
         });
 
@@ -245,18 +245,18 @@ export const loginUser = async (
         res.cookie("access_token", token, {
             httpOnly: true,
             sameSite: "none",
-            domain:undefined,
+            domain: ".localhost",
             secure: true,
             maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
         });
         res.cookie("userName", user.name, {
             sameSite: "none",
-            domain:undefined,
+            domain: ".localhost",
             secure: true,
         });
         res.cookie("userId", user.id, {
             sameSite: "none",
-            domain:undefined,
+            domain: "localhost",
             secure: true,
         });
 
