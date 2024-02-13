@@ -23,8 +23,8 @@ const io = new socket_io_1.Server(server);
 app.set("trust proxy", 0);
 // middleware
 app.use((0, cors_1.default)({
-    origin: 'http://localhost:3000',
-    credentials: true
+    origin: "http://localhost:3000",
+    credentials: true,
 }));
 app.use(express_1.default.json({ limit: "50kb" }));
 app.use((0, cookie_parser_1.default)());
@@ -48,7 +48,24 @@ const hostName = process.env.HOST_NAME || "0.0.0.0";
 const port = Number(process.env.PORT) || 5500;
 //-------------------------------------------------------
 app.get("/1", (req, res) => {
+    res.cookie("access_token", 1, {
+        httpOnly: true,
+        sameSite: "lax",
+        domain: undefined,
+        secure: true,
+        maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
+    });
     res.send("welcome server is running").status(200);
+});
+app.get("/2", (req, res) => {
+    const token = req.cookies["access_token"];
+    console.log(token);
+    if (token == 1) {
+        return res.send("token correct").status(200);
+    }
+    else {
+        return res.send("no token").status(200);
+    }
 });
 app.get("/socket", (req, res) => {
     res.sendFile(__dirname + "/index.html");
