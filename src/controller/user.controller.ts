@@ -245,18 +245,15 @@ export const loginUser = async (
         res.cookie("access_token", token, {
             httpOnly: true,
             sameSite: "none",
-            domain: ".localhost",
             secure: true,
             maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
         });
         res.cookie("userName", user.name, {
             sameSite: "none",
-            domain: ".localhost",
             secure: true,
         });
         res.cookie("userId", user.id, {
             sameSite: "none",
-            domain: "localhost",
             secure: true,
         });
 
