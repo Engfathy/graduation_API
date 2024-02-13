@@ -5,6 +5,7 @@ import config from "../config/config";
 const jwtTokenVerifier = (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
         const token = req.cookies["access_token"]; // Retrieve token from the HTTP-only cookie
+        console.log(token);
         if (!token) {
             return res.status(401).json({
                 msg: "No token provided. Access denied.",

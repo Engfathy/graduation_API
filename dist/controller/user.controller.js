@@ -166,11 +166,6 @@ const googleLogin = async (req, res) => {
         const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
         const token = jsonwebtoken_1.default.sign({ exp: expirationTime, payLoad }, secretKey);
         // Set the token as an HTTP-only cookie
-        res.setHeader('Set-Cookie', [
-            `access_token=${token}; HttpOnly; Secure; SameSite=None; Max-Age=${2 * 24 * 60 * 60}`,
-            `userName=${user.name}; Secure; SameSite=None`,
-            `userId=${user.id}; Secure; SameSite=None`,
-        ]);
         res.cookie("access_token", token, {
             httpOnly: true,
             sameSite: "none",
@@ -237,11 +232,6 @@ const loginUser = async (req, res) => {
         const token = jsonwebtoken_1.default.sign({ exp: expirationTime, payLoad }, secretKey);
         res.header("Access-Control-Allow-Origin", "http://localhost:3000");
         res.header("Access-Control-Allow-Credentials", "true");
-        res.setHeader('Set-Cookie', [
-            `access_token=${token}; HttpOnly; Secure; SameSite=None; Max-Age=${2 * 24 * 60 * 60}`,
-            `userName=${user.name}; Secure; SameSite=None`,
-            `userId=${user.id}; Secure; SameSite=None`,
-        ]);
         res.cookie("access_token", token, {
             httpOnly: true,
             sameSite: "none",

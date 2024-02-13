@@ -8,6 +8,7 @@ const config_1 = __importDefault(require("../config/config"));
 const jwtTokenVerifier = (req, res, next) => {
     try {
         const token = req.cookies["access_token"]; // Retrieve token from the HTTP-only cookie
+        console.log(token);
         if (!token) {
             return res.status(401).json({
                 msg: "No token provided. Access denied.",
