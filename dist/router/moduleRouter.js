@@ -7,7 +7,7 @@ const express_1 = __importDefault(require("express"));
 const module_controller_1 = require("../controller/module.controller");
 const jwtTokenVerifier_1 = __importDefault(require("../middleware/jwtTokenVerifier"));
 const moduleRouter = express_1.default.Router();
-moduleRouter.get("/", jwtTokenVerifier_1.default, module_controller_1.getAllModules);
+moduleRouter.get("/all", jwtTokenVerifier_1.default, module_controller_1.getAllModules);
 moduleRouter.get("/:id", jwtTokenVerifier_1.default, module_controller_1.getModuleById);
 moduleRouter.post("/create", jwtTokenVerifier_1.default, module_controller_1.createModule);
 moduleRouter.put("/update/:id", jwtTokenVerifier_1.default, module_controller_1.updateModuleById);

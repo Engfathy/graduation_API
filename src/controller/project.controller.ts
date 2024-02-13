@@ -32,17 +32,16 @@ export const createProject = async (
                 msg: "project created",
                 data: savedProject,
             });
-            
         } else {
             return res
                 .status(400)
-                .json({ errors: [{ msg: "Project name already exists" }] });
+                .json({ success: false, msg: "Project name already exists" });
         }
     } catch (error) {
-        console.error(error);  // Log the error
+        console.error(error); // Log the error
         return res.status(500).json({
             success: false,
-            error: "Internal Server Error",
+            msg: "Internal Server Error",
         });
     }
 };
@@ -69,7 +68,7 @@ export const getAllProjectsForUser = async (
         console.error(error);
         return res
             .status(500)
-            .json({ success: false, error: "Internal Server Error" });
+            .json({ success: false, msg: "Internal Server Error" });
     }
 };
 
@@ -98,7 +97,7 @@ export const getProjectByUserAndProjectName = async (
         if (!project) {
             return res
                 .status(404)
-                .json({ success: false, error: "Project not found" });
+                .json({ success: false, msg: "Project not found" });
         } else {
             return res.status(200).json({ success: true, data: project });
         }
@@ -126,14 +125,14 @@ export const getProjectById = async (
         if (!project) {
             return res
                 .status(404)
-                .json({ success: false, error: "project not found" });
+                .json({ success: false, msg: "project not found" });
         } else {
             return res.status(200).json({ success: true, data: project });
         }
     } catch (error) {
         return res.status(500).json({
             success: false,
-            error: "Internal Server Error",
+            msg: "Internal Server Error",
         });
     }
 };
@@ -154,14 +153,15 @@ export const updateProjectById = async (
         // Get existing project
         const existing = await ProjectModel.findById(req.params.id);
         if (existing === null) {
-            return res.status(400).json({
-                errors: [{ msg: "no project with this id" }],
-            });
+            return res
+                .status(400)
+                .json({ success: false, msg: "no project with this id" });
         } else {
             // Check if trying to change name
             if (req.body.name !== existing.name) {
                 return res.status(400).json({
-                    errors: [{ msg: "Cannot update project name" }],
+                    success: false,
+                    msg: "Cannot update project name",
                 });
             }
             // New name
@@ -173,7 +173,8 @@ export const updateProjectById = async (
             });
             if (nameExists) {
                 return res.status(400).json({
-                    errors: [{ msg: "Project name already exists" }],
+                    success: false,
+                    msg: "Project name already exists",
                 });
             }
             const updatedProject = await ProjectModel.findByIdAndUpdate(
@@ -191,7 +192,8 @@ export const updateProjectById = async (
         }
     } catch (err) {
         return res.status(500).json({
-            errors: [{ msg: "internel server error" }],
+            success: false,
+            msg: "internel server error",
         });
     }
 };
@@ -219,7 +221,7 @@ export const deleteProjectById = async (
     } catch (error) {
         return res.status(500).json({
             success: false,
-            error: "Internal Server Error",
+            msg: "Internal Server Error",
         });
     }
 };

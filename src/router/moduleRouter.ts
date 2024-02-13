@@ -11,7 +11,7 @@ import jwtTokenVerifier from "../middleware/jwtTokenVerifier";
 
 const moduleRouter: express.Router = express.Router();
 
-moduleRouter.get("/", jwtTokenVerifier,getAllModules);
+moduleRouter.get("/all", jwtTokenVerifier,getAllModules);
 moduleRouter.get("/:id",jwtTokenVerifier, getModuleById);
 moduleRouter.post("/create", jwtTokenVerifier,createModule);
 moduleRouter.put("/update/:id", jwtTokenVerifier,updateModuleById);
