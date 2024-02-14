@@ -23,7 +23,7 @@ const io = new socket_io_1.Server(server);
 app.set("trust proxy", 0);
 // middleware
 app.use((0, cors_1.default)({
-    origin: "http://localhost:3000",
+    origin: "*",
     credentials: true,
 }));
 app.use(express_1.default.json({ limit: "50kb" }));
