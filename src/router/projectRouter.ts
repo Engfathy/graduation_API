@@ -20,7 +20,7 @@ const validateProjectData = [
 ];
 
 projectRouter.get("/all", jwtTokenVerifier, getAllProjectsForUser);
-projectRouter.get("", jwtTokenVerifier, getProjectByUserAndProjectName);
+projectRouter.get("",getProjectByUserAndProjectName);
 projectRouter.get("/id/:id", jwtTokenVerifier, getProjectById);
 projectRouter.post(
     "/create",

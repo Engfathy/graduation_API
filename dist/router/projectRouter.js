@@ -15,7 +15,7 @@ const validateProjectData = [
     (0, express_validator_1.body)("description").notEmpty().withMessage("Description is required"),
 ];
 projectRouter.get("/all", jwtTokenVerifier_1.default, project_controller_1.getAllProjectsForUser);
-projectRouter.get("", jwtTokenVerifier_1.default, project_controller_1.getProjectByUserAndProjectName);
+projectRouter.get("", project_controller_1.getProjectByUserAndProjectName);
 projectRouter.get("/id/:id", jwtTokenVerifier_1.default, project_controller_1.getProjectById);
 projectRouter.post("/create", validateProjectData, jwtTokenVerifier_1.default, project_controller_1.createProject);
 projectRouter.put("/update/:id", validateProjectData, jwtTokenVerifier_1.default, project_controller_1.updateProjectById);
