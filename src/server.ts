@@ -26,7 +26,7 @@ app.set("trust proxy", 0);
 app.use(
     cors({
         origin: "*",
-        credentials: true,
+        
     }),
 );
 
