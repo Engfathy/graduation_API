@@ -68,5 +68,6 @@ userRouter.post("/reset-password", [
         .escape()
         .withMessage("min 5 characters required for password"),
 ], resetTokenVerifier_1.default, user_controller_1.resetPassword);
+userRouter.post("/refresh-token", user_controller_1.refreshToken);
 exports.default = userRouter;
 //# sourceMappingURL=userRouter.js.map

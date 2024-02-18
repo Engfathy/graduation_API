@@ -6,8 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = __importDefault(require("../config/config"));
 const jwtTokenVerifier = (req, res, next) => {
+    var _a, _b;
     try {
-        const token = req.cookies["access_token"]; // Retrieve token from the HTTP-only cookie
+        const token = ((_a = req.cookies) === null || _a === void 0 ? void 0 : _a.access_token) || ((_b = req.header("Authorization")) === null || _b === void 0 ? void 0 : _b.replace("Bearer", "")); // Retrieve token from the HTTP-only cookie
         console.log(token);
         if (!token) {
             return res.status(401).json({
@@ -25,8 +26,8 @@ const jwtTokenVerifier = (req, res, next) => {
                 msg: "Token verification failed. Access denied.",
             });
         }
-        // req.headers["user"] = decode["payLoad"]["user"].name;
-        // req.headers["id"] = decode["payLoad"]["user"].id;
+        req.headers["user"] = decode["payLoad"]["user"].name;
+        req.headers["id"] = decode["payLoad"]["user"].id;
         // console.log(req.headers)
         next();
     }

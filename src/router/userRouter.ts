@@ -8,6 +8,7 @@ import {
     googleRegister,
     loginUser,
     logoutUser,
+    refreshToken,
     registerUser,
     resetPassword,
     sendVerificationEmail,
@@ -120,6 +121,10 @@ userRouter.post(
 
     tokenVerifier,
     resetPassword,
+);
+userRouter.post(
+    "/refresh-token",
+    refreshToken,
 );
 
 export default userRouter;

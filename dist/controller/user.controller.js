@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logoutUser = exports.resetPassword = exports.forgetPassword = exports.verifyEmail = exports.sendVerificationEmail = exports.getUserData = exports.loginUser = exports.googleLogin = exports.googleRegister = exports.registerUser = void 0;
+exports.refreshToken = exports.logoutUser = exports.resetPassword = exports.forgetPassword = exports.verifyEmail = exports.sendVerificationEmail = exports.getUserData = exports.loginUser = exports.googleLogin = exports.googleRegister = exports.registerUser = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const gravatar_1 = __importDefault(require("gravatar"));
@@ -77,7 +77,46 @@ const registerUser = async (req, res) => {
             avatar,
         });
         user = await user.save();
-        console.log(user);
+        const secretKey = process.env.JWT_SECRET_KEY || config_1.default.secret_jwt;
+        if (!secretKey) {
+            return res
+                .status(500)
+                .json({ success: false, msg: "JWT secret key not available" });
+        }
+        const payLoad = {
+            user: {
+                googleId: "",
+                id: user.id,
+                name: user.name,
+            },
+        };
+        const access_expirationTime = Math.floor(Date.now() / 1000) + 1 * 60 * 60; // 1 hour from now
+        const refresh_expirationTime = Math.floor(Date.now() / 1000) + 10 * 24 * 60 * 60; // 10 days from now
+        const access_token = jsonwebtoken_1.default.sign({ exp: access_expirationTime, payLoad }, secretKey);
+        const refresh_token = jsonwebtoken_1.default.sign({ exp: refresh_expirationTime, payLoad }, secretKey);
+        res.header("access_token", access_token);
+        res.header("refresh_token", refresh_token);
+        // Set the token as an HTTP-only cookie
+        // res.cookie("access_token", access_token, {
+        //     httpOnly: true,
+        //     domain: undefined,
+        //     secure: false,
+        //     maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
+        // });
+        // res.cookie("userName", user.name, {
+        //     domain: undefined,
+        //     secure: false,
+        // });
+        // res.cookie("userId", user.id, {
+        //     sameSite: "lax",
+        //     domain: undefined,
+        //     secure: false,
+        // });
+        // res.cookie("googleId", user.googleId, {
+        //     sameSite: "lax",
+        //     domain: undefined,
+        //     secure: false,
+        // });
         return res.status(200).json({
             success: true,
             msg: "Registration is sucess",
@@ -122,7 +161,48 @@ const googleRegister = async (req, res) => {
             verified: true,
         });
         user = await user.save();
-        console.log(user);
+        const secretKey = process.env.JWT_SECRET_KEY || config_1.default.secret_jwt;
+        if (!secretKey) {
+            return res
+                .status(500)
+                .json({ success: false, msg: "JWT secret key not available" });
+        }
+        const payLoad = {
+            user: {
+                googleId: user.googleId,
+                id: user.id,
+                name: user.name,
+            },
+        };
+        const access_expirationTime = Math.floor(Date.now() / 1000) + 1 * 60 * 60; // 1 hour from now
+        const refresh_expirationTime = Math.floor(Date.now() / 1000) + 10 * 24 * 60 * 60; // 10 days from now
+        const access_token = jsonwebtoken_1.default.sign({ exp: access_expirationTime, payLoad }, secretKey);
+        const refresh_token = jsonwebtoken_1.default.sign({ exp: refresh_expirationTime, payLoad }, secretKey);
+        res.header("access_token", access_token);
+        res.header("refresh_token", refresh_token);
+        // Set the token as an HTTP-only cookie
+        // res.cookie("access_token", token, {
+        //     httpOnly: true,
+        //     sameSite: "lax",
+        //     domain: undefined,
+        //     secure: false,
+        //     maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
+        // });
+        // res.cookie("userName", user.name, {
+        //     sameSite: "lax",
+        //     domain: undefined,
+        //     secure: false,
+        // });
+        // res.cookie("userId", user.id, {
+        //     sameSite: "lax",
+        //     domain: undefined,
+        //     secure: false,
+        // });
+        // res.cookie("googleId", user.googleId, {
+        //     sameSite: "lax",
+        //     domain: undefined,
+        //     secure: false,
+        // });
         return res.status(200).json({
             success: true,
             msg: "Registration is sucess",
@@ -163,35 +243,39 @@ const googleLogin = async (req, res) => {
                 name: user.name,
             },
         };
-        const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
-        const token = jsonwebtoken_1.default.sign({ exp: expirationTime, payLoad }, secretKey);
+        const access_expirationTime = Math.floor(Date.now() / 1000) + 1 * 60 * 60; // 1 hour from now
+        const refresh_expirationTime = Math.floor(Date.now() / 1000) + 10 * 24 * 60 * 60; // 10 days from now
+        const access_token = jsonwebtoken_1.default.sign({ exp: access_expirationTime, payLoad }, secretKey);
+        const refresh_token = jsonwebtoken_1.default.sign({ exp: refresh_expirationTime, payLoad }, secretKey);
+        res.header("access_token", access_token);
+        res.header("refresh_token", refresh_token);
         // Set the token as an HTTP-only cookie
-        res.cookie("access_token", token, {
-            httpOnly: true,
-            sameSite: "lax",
-            domain: undefined,
-            secure: false,
-            maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
-        });
-        res.cookie("userName", user.name, {
-            sameSite: "lax",
-            domain: undefined,
-            secure: false,
-        });
-        res.cookie("userId", user.id, {
-            sameSite: "lax",
-            domain: undefined,
-            secure: false,
-        });
-        res.cookie("googleId", user.googleId, {
-            sameSite: "lax",
-            domain: undefined,
-            secure: false,
-        });
+        // res.cookie("access_token", token, {
+        //     httpOnly: true,
+        //     sameSite: "lax",
+        //     domain: undefined,
+        //     secure: false,
+        //     maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
+        // });
+        // res.cookie("userName", user.name, {
+        //     sameSite: "lax",
+        //     domain: undefined,
+        //     secure: false,
+        // });
+        // res.cookie("userId", user.id, {
+        //     sameSite: "lax",
+        //     domain: undefined,
+        //     secure: false,
+        // });
+        // res.cookie("googleId", user.googleId, {
+        //     sameSite: "lax",
+        //     domain: undefined,
+        //     secure: false,
+        // });
         console.log("logged");
         return res
             .status(200)
-            .json({ success: true, msg: "Login is successful", token: token });
+            .json({ success: true, msg: "Login is successful", token: access_token });
     }
     catch (error) {
         return res.status(500).json({ success: false, msg: error });
@@ -231,32 +315,33 @@ const loginUser = async (req, res) => {
         }
         const payLoad = {
             user: {
+                googleId: "",
                 id: user.id,
                 name: user.name,
             },
         };
-        const expirationTime = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // 2 days from now
-        const token = jsonwebtoken_1.default.sign({ exp: expirationTime, payLoad }, secretKey);
-        res.header("Access-Control-Allow-Origin", "http://localhost:3000");
-        res.header("Access-Control-Allow-Credentials", "true");
-        res.cookie("access_token", token, {
-            httpOnly: true,
-            sameSite: "none",
-            secure: true,
-            maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
-        });
-        res.cookie("userName", user.name, {
-            sameSite: "none",
-            secure: true,
-        });
-        res.cookie("userId", user.id, {
-            sameSite: "none",
-            secure: true,
-        });
+        const access_expirationTime = Math.floor(Date.now() / 1000) + 1 * 60 * 60; // 1 hour from now
+        const refresh_expirationTime = Math.floor(Date.now() / 1000) + 10 * 24 * 60 * 60; // 10 days from now
+        const access_token = jsonwebtoken_1.default.sign({ exp: access_expirationTime, payLoad }, secretKey);
+        const refresh_token = jsonwebtoken_1.default.sign({ exp: refresh_expirationTime, payLoad }, secretKey);
+        res.header("access_token", access_token);
+        res.header("refresh_token", refresh_token);
+        // res.cookie("access_token", token, {
+        //     httpOnly: true,
+        //     secure: true,
+        //     maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
+        // });
+        // res.cookie("userName", user.name, {
+        //     secure: true,
+        // });
+        // res.cookie("userId", user.id, {
+        //     httpOnly: true,
+        //     secure: true,
+        // });
         console.log("logged");
         return res
             .status(200)
-            .json({ success: true, msg: "Login is successful", token: token });
+            .json({ success: true, msg: "Login is successful", token: access_token });
     }
     catch (error) {
         return res.status(500).json({ success: false, msg: error });
@@ -265,8 +350,8 @@ const loginUser = async (req, res) => {
 exports.loginUser = loginUser;
 const getUserData = async (req, res) => {
     try {
-        const userName = req.cookies["userName"];
-        const userId = req.cookies["userId"];
+        const userName = req.cookies["userName"] || req.headers["user"];
+        const userId = req.cookies["userId"] || req.headers["id"];
         console.log(userName, userId);
         if (!userName || !userId) {
             return res
@@ -488,4 +573,40 @@ const logoutUser = async (req, res) => {
     return res.status(200).json({ success: true, msg: "Logout successful" });
 };
 exports.logoutUser = logoutUser;
+const refreshToken = async (req, res) => {
+    const refresh_token = req.body.refreshToken;
+    if (!exports.refreshToken) {
+        return res.status(400).json({
+            success: false,
+            message: "Refresh token is missing."
+        });
+    }
+    const secretKey = process.env.JWT_SECRET_KEY || config_1.default.secret_jwt;
+    let decode;
+    try {
+        decode = jsonwebtoken_1.default.verify(refresh_token, secretKey);
+        const payLoad = {
+            user: {
+                googleId: decode["payLoad"]["user"].googleId ? decode["payLoad"]["user"].googleId : "",
+                id: decode["payLoad"]["user"].name,
+                name: decode["payLoad"]["user"].name,
+            },
+        };
+        // decode["payLoad"]["user"].name
+        const access_expirationTime = Math.floor(Date.now() / 1000) + 1 * 60 * 60; // 1 hour from now
+        const new_access_token = jsonwebtoken_1.default.sign({ exp: access_expirationTime, payLoad }, secretKey);
+        res.header("new_access_token", new_access_token);
+        return res.status(200).json({
+            success: true,
+            new_access_token: new_access_token,
+        });
+    }
+    catch (error) {
+        return res.status(401).json({
+            success: false,
+            msg: "Ops something went wrong",
+        });
+    }
+};
+exports.refreshToken = refreshToken;
 //# sourceMappingURL=user.controller.js.map

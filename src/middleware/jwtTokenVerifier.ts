@@ -4,7 +4,7 @@ import config from "../config/config";
 
 const jwtTokenVerifier = (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
-        const token = req.cookies["access_token"]; // Retrieve token from the HTTP-only cookie
+        const token = req.cookies?.access_token || req.header("Authorization")?.replace("Bearer",""); // Retrieve token from the HTTP-only cookie
         console.log(token);
         if (!token) {
             return res.status(401).json({
@@ -23,8 +23,8 @@ const jwtTokenVerifier = (req: express.Request, res: express.Response, next: exp
             });
         }
 
-        // req.headers["user"] = decode["payLoad"]["user"].name;
-        // req.headers["id"] = decode["payLoad"]["user"].id;
+        req.headers["user"] = decode["payLoad"]["user"].name;
+        req.headers["id"] = decode["payLoad"]["user"].id;
         // console.log(req.headers)
         next();
     } catch (error) {

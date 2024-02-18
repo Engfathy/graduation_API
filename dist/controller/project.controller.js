@@ -51,7 +51,7 @@ exports.createProject = createProject;
 // get all projects
 const getAllProjectsForUser = async (req, res) => {
     try {
-        const userName = req.cookies["userName"];
+        const userName = req.cookies["userName"] || req.headers["user"];
         // console.log(userName);
         if (!userName) {
             return res
@@ -136,7 +136,7 @@ const updateProjectById = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const userName = req.cookies["userName"];
+        const userName = req.cookies["userName"] || req.headers["user"];
         // Get existing project
         const existing = await project_model_1.default.findById(req.params.id);
         if (existing === null) {
