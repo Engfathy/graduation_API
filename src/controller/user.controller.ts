@@ -113,7 +113,8 @@ export const registerUser = async (
         return res.status(200).json({
             success: true,
             msg: "Registration is sucess",
-            hashedpass: hashPass,
+            refresh_token: refresh_token,
+            token: access_token,
         });
     } catch (error) {
         return res.status(500).json({ success: false, msg: error });
@@ -214,6 +215,8 @@ export const googleRegister = async (
         return res.status(200).json({
             success: true,
             msg: "Registration is sucess",
+            refresh_token: refresh_token,
+            token: access_token,
         });
     } catch (error) {
         return res.status(500).json({ success: false, msg: error });
@@ -300,9 +303,12 @@ export const googleLogin = async (
         // });
 
         console.log("logged");
-        return res
-            .status(200)
-            .json({ success: true, msg: "Login is successful", token: access_token });
+        return res.status(200).json({
+            success: true,
+            msg: "Login is successful",
+            token: access_token,
+            refresh_token: refresh_token,
+        });
     } catch (error) {
         return res.status(500).json({ success: false, msg: error });
     }
@@ -386,9 +392,12 @@ export const loginUser = async (
         // });
 
         console.log("logged");
-        return res
-            .status(200)
-            .json({ success: true, msg: "Login is successful", token: access_token });
+        return res.status(200).json({
+            success: true,
+            msg: "Login is successful",
+            token: access_token,
+            refresh_token: refresh_token,
+        });
     } catch (error) {
         return res.status(500).json({ success: false, msg: error });
     }
@@ -662,9 +671,10 @@ export const refreshToken = async (
     const refresh_token = req.body.refreshToken;
 
     if (!refreshToken) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             success: false,
-            message: "Refresh token is missing." });
+            message: "Refresh token is missing.",
+        });
     }
     const secretKey: string | any =
         process.env.JWT_SECRET_KEY || config.secret_jwt;
@@ -674,19 +684,25 @@ export const refreshToken = async (
         decode = jwt.verify(refresh_token, secretKey);
         const payLoad = {
             user: {
-                googleId: decode["payLoad"]["user"].googleId?decode["payLoad"]["user"].googleId:"",
+                googleId: decode["payLoad"]["user"].googleId
+                    ? decode["payLoad"]["user"].googleId
+                    : "",
                 id: decode["payLoad"]["user"].name,
                 name: decode["payLoad"]["user"].name,
             },
         };
         // decode["payLoad"]["user"].name
-        const access_expirationTime = Math.floor(Date.now() / 1000) + 1 * 60 * 60; // 1 hour from now
-        const new_access_token = jwt.sign({ exp: access_expirationTime, payLoad }, secretKey);
+        const access_expirationTime =
+            Math.floor(Date.now() / 1000) + 1 * 60 * 60; // 1 hour from now
+        const new_access_token = jwt.sign(
+            { exp: access_expirationTime, payLoad },
+            secretKey,
+        );
 
         res.header("new_access_token", new_access_token);
         return res.status(200).json({
             success: true,
-            new_access_token:new_access_token,
+            new_access_token: new_access_token,
         });
     } catch (error) {
         return res.status(401).json({

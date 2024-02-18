@@ -120,7 +120,8 @@ const registerUser = async (req, res) => {
         return res.status(200).json({
             success: true,
             msg: "Registration is sucess",
-            hashedpass: hashPass,
+            refresh_token: refresh_token,
+            token: access_token,
         });
     }
     catch (error) {
@@ -206,6 +207,8 @@ const googleRegister = async (req, res) => {
         return res.status(200).json({
             success: true,
             msg: "Registration is sucess",
+            refresh_token: refresh_token,
+            token: access_token,
         });
     }
     catch (error) {
@@ -273,9 +276,12 @@ const googleLogin = async (req, res) => {
         //     secure: false,
         // });
         console.log("logged");
-        return res
-            .status(200)
-            .json({ success: true, msg: "Login is successful", token: access_token });
+        return res.status(200).json({
+            success: true,
+            msg: "Login is successful",
+            token: access_token,
+            refresh_token: refresh_token,
+        });
     }
     catch (error) {
         return res.status(500).json({ success: false, msg: error });
@@ -339,9 +345,12 @@ const loginUser = async (req, res) => {
         //     secure: true,
         // });
         console.log("logged");
-        return res
-            .status(200)
-            .json({ success: true, msg: "Login is successful", token: access_token });
+        return res.status(200).json({
+            success: true,
+            msg: "Login is successful",
+            token: access_token,
+            refresh_token: refresh_token,
+        });
     }
     catch (error) {
         return res.status(500).json({ success: false, msg: error });
@@ -578,7 +587,7 @@ const refreshToken = async (req, res) => {
     if (!exports.refreshToken) {
         return res.status(400).json({
             success: false,
-            message: "Refresh token is missing."
+            message: "Refresh token is missing.",
         });
     }
     const secretKey = process.env.JWT_SECRET_KEY || config_1.default.secret_jwt;
@@ -587,7 +596,9 @@ const refreshToken = async (req, res) => {
         decode = jsonwebtoken_1.default.verify(refresh_token, secretKey);
         const payLoad = {
             user: {
-                googleId: decode["payLoad"]["user"].googleId ? decode["payLoad"]["user"].googleId : "",
+                googleId: decode["payLoad"]["user"].googleId
+                    ? decode["payLoad"]["user"].googleId
+                    : "",
                 id: decode["payLoad"]["user"].name,
                 name: decode["payLoad"]["user"].name,
             },
