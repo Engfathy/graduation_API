@@ -90,7 +90,7 @@ app.post("/api/v1/connect-data", async (req, res) => {
         });
     }
 });
-app.get("/socket", (req, res) => {
+app.get("/test", (req, res) => {
     res.sendFile(__dirname + "/test.html");
 });
 app.get("/socket1", (req, res) => {
