@@ -17,6 +17,7 @@ const http_1 = __importDefault(require("http"));
 const socket_io_1 = require("socket.io");
 const moduleRouter_1 = __importDefault(require("./router/moduleRouter"));
 const projectRouter_1 = __importDefault(require("./router/projectRouter"));
+const project_model_1 = __importDefault(require("./models/project.model"));
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 const io = new socket_io_1.Server(server);
@@ -47,28 +48,160 @@ dotenv_1.default.config({ path: "./../config.env" });
 const hostName = process.env.HOST_NAME || "0.0.0.0";
 const port = Number(process.env.PORT) || 5500;
 //-------------------------------------------------------
-app.get("/1", (req, res) => {
-    res.cookie("access_token", 1, {
-        httpOnly: true,
-        sameSite: "lax",
-        domain: undefined,
-        secure: true,
-        maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days in milliseconds
-    });
-    res.send("welcome server is running").status(200);
-});
-app.get("/2", (req, res) => {
-    const token = req.cookies["access_token"];
-    console.log(token);
-    if (token == 1) {
-        return res.send("token correct").status(200);
+app.post("/api/v1/connect-data", async (req, res) => {
+    const projectName = req.body.projectName;
+    const userName = req.body.user;
+    if (!userName) {
+        return res
+            .status(400)
+            .json({ success: false, msg: "User name is missing.👀👀" });
     }
-    else {
-        return res.send("no token").status(200);
+    if (!projectName) {
+        return res
+            .status(400)
+            .json({ success: false, msg: "project name is missing.👀👀" });
+    }
+    try {
+        // Your logic to find the project in the database
+        const project = await project_model_1.default.findOne({
+            name: userName,
+            projectName: projectName,
+        });
+        if (!project) {
+            return res
+                .status(404)
+                .json({ success: false, msg: "Project not found 😢😢" });
+        }
+        else {
+            const moduleId = project.modules[0]._id.toString();
+            const moduleId2 = project.modules[1]._id.toString();
+            // Emit an event to join the room with moduleId
+            // io.to(socket.id).emit('joinRoom', moduleId);
+            // io.to(socket.id).emit('joinRoom', moduleId2);
+            return res
+                .status(200)
+                .json({ success: true, msg: "done 👍👍", data: project });
+        }
+    }
+    catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: "Internal Server Error",
+        });
     }
 });
 app.get("/socket", (req, res) => {
+    res.sendFile(__dirname + "/test.html");
+});
+app.get("/socket1", (req, res) => {
     res.sendFile(__dirname + "/index.html");
+});
+let names = ["fathy", "alice", "mohamed"];
+// io.of("/admin").on("connection", (socket) => {
+//     // admin users
+//   });
+io.on("connection", async (socket) => {
+    console.log(`user ${io.engine.clientsCount} connected`);
+    socket.on("roomsIds", (roomsIds) => {
+        roomsIds.forEach((roomId) => {
+            socket.to(roomId);
+            console.log(`Room ${roomId} created`);
+        });
+    });
+    socket.on("joinRooms", (roomsIds) => {
+        // Join the socket to the specified room
+        roomsIds.forEach((roomId) => {
+            socket.join(roomId);
+            console.log(`User: ${socket.id} joined room ${roomId}`);
+        });
+        console.log(socket.rooms);
+    });
+    socket.on("joinRoom", (roomId) => {
+        // Join the socket to the specified room
+        socket.join(roomId);
+        console.log(`User: ${socket.id} joined room ${roomId}`);
+    });
+    socket.on("message", (msg) => {
+        console.log(msg.value, msg.status, msg.roomId);
+        socket.to(msg.roomId).emit("message", msg.value);
+    });
+    // socket.on("data", () => {
+    //     io.emit("data", "This is a text response");
+    // });
+    // socket.on("getNumber", () => {
+    //     const randomNumber = Math.random() * 100; // Replace with your logic
+    //     io.emit("numberData", randomNumber);
+    // });
+    // socket.on("getBoolean", () => {
+    //     const randomBoolean = Math.random() < 0.5; // Replace with your logic
+    //     io.emit("booleanData", randomBoolean);
+    // });
+    // io.engine.generateId = (req) => {
+    //     return uuid.v4(); // Generate a unique identifier for each socket connection
+    // };
+    // socket.broadcast.emit send to everyone expect the sender
+    // io.sockets.in("room1").emit("message","fuck you"); => send msg to specific room
+    // const sockets = await io.fetchSockets();
+    // console.log(sockets);
+    // for (const socket of sockets) {
+    //     console.log(socket.id);
+    //     console.log(socket.data);
+    //   }
+    io.emit("user numbers", io.engine.clientsCount);
+    // display number of user connected
+    // console.log(io.engine.clientsCount);
+    // console.log(io.engine.eventNames);
+    // console.log(socket.handshake);
+    // console.log(socket.rooms);
+    // console.log(socket.data);
+    // numver of users in specific route
+    // console.log(io.of("/").sockets.size, "of name space");
+    socket.on("disconnect", () => {
+        console.log("User disconnected");
+        io.emit("user numbers", io.engine.clientsCount);
+        io.emit("user leave", "user diconnected");
+    });
+    // io.engine.on("initial_headers", (headers, req) => {
+    //     headers["test"] = "123";
+    //     headers["set-cookie"] = "mycookie=456";
+    //     headers["id"] = socket.id;
+    // });
+});
+io.engine.on("connection_error", (err) => {
+    console.log(err.req); // the request object
+    console.log(err.code); // the error code, for example 1
+    console.log(err.message); // the error message, for example "Session ID unknown"
+    console.log(err.context); // some additional error context
+});
+app.post("/api/v1/connect-data", async (req, res) => {
+    const projectName = req.body.projectName;
+    const userName = req.body.user;
+    if (!userName) {
+        return res
+            .status(400)
+            .json({ success: false, msg: "User name is missing." });
+    }
+    try {
+        const project = await project_model_1.default.findOne({
+            name: userName,
+            projectName: projectName,
+        });
+        if (!project) {
+            return res
+                .status(404)
+                .json({ success: false, msg: " Project not found" });
+        }
+        else {
+            console.log(project.modules[0]._id.toString());
+            return res.status(200).json({ success: true, data: project });
+        }
+    }
+    catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: "Internal Server Error",
+        });
+    }
 });
 app.get("/ip", (request, response) => {
     console.log(request.ip);

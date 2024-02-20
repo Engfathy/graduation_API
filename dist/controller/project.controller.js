@@ -76,7 +76,7 @@ const getProjectByUserAndProjectName = async (req, res) => {
     if (!userName) {
         return res
             .status(400)
-            .json({ success: false, msg: "User header is missing." });
+            .json({ success: false, msg: "User name is missing." });
     }
     const projectName = req.query.projectName;
     // console.log(projectName);
