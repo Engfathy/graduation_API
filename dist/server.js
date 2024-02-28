@@ -96,22 +96,36 @@ app.get("/test", (req, res) => {
 app.get("/socket1", (req, res) => {
     res.sendFile(__dirname + "/index.html");
 });
+app.get("/socket2", (req, res) => {
+    res.sendFile(__dirname + "/index2.html");
+});
 let names = ["fathy", "alice", "mohamed"];
 // io.of("/admin").on("connection", (socket) => {
 //     // admin users
 //   });
+// const chatNamespace = io.of('/chat');
+// chatNamespace.on('connection', (socket) => {
+//   console.log('A user connected to the chat namespace');
+//   io.emit("message_log", "user conected");
+//   // Handle events within the namespace
+//   socket.on('disconnect', () => {
+//     console.log('A user disconnected from the chat namespace');
+//     io.emit("message_log", "user disconected");
+//   });
+// });
 io.on("connection", async (socket) => {
     console.log(`user ${io.engine.clientsCount} connected`);
-    socket.on("roomsIds", (roomsIds) => {
+    socket.on("createRooms", (roomsIds) => {
         roomsIds.forEach((roomId) => {
             socket.to(roomId);
+            io.emit("created rooms", `Room:${roomId} created`);
             console.log(`Room ${roomId} created`);
         });
     });
     socket.on("joinRooms", (roomsIds) => {
         // Join the socket to the specified room
         roomsIds.forEach((roomId) => {
-            socket.join(roomId);
+            socket.join("65c3d7718207afe6baac68f6");
             console.log(`User: ${socket.id} joined room ${roomId}`);
         });
         console.log(socket.rooms);
@@ -119,23 +133,47 @@ io.on("connection", async (socket) => {
     socket.on("joinRoom", (roomId) => {
         // Join the socket to the specified room
         socket.join(roomId);
+        io.emit("rooms status", `User: ${socket.id} joined room ${roomId}`);
         console.log(`User: ${socket.id} joined room ${roomId}`);
     });
     socket.on("message", (msg) => {
         console.log(msg.value, msg.status, msg.roomId);
-        socket.to(msg.roomId).emit("message", msg.value);
+        if (!isNaN(parseInt(msg.value))) {
+            let numericValue = parseInt(msg.value);
+            switch (true) {
+                case numericValue > 30 && msg.value <= 38:
+                    io.emit("message_log", "Temperature is going high");
+                    break;
+                case numericValue < 20:
+                    io.emit("message_log", "Temperature is very low");
+                    break;
+                case numericValue >= 20 && msg.value <= 30:
+                    io.emit("message_log", "Temperature is moderate");
+                    break;
+                case numericValue >= 38 && msg.value <= 50:
+                    io.emit("message_log", "fan is on automatic");
+                    break;
+                case numericValue > 50:
+                    io.emit("message_log", "die in peace my brother ☠☠☠");
+                    break;
+                default:
+                    io.emit("message_log", `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`);
+            }
+        }
+        if (isNaN(parseInt(msg.value))) {
+            switch (msg.value) {
+                case "led on":
+                    io.emit("message_log", "Led is on now");
+                    break;
+                case "led off":
+                    io.emit("message_log", "Led is off now");
+                    break;
+                default:
+                    io.emit("message_log", `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`);
+            }
+        }
+        socket.to(msg.roomId).emit("message", msg);
     });
-    // socket.on("data", () => {
-    //     io.emit("data", "This is a text response");
-    // });
-    // socket.on("getNumber", () => {
-    //     const randomNumber = Math.random() * 100; // Replace with your logic
-    //     io.emit("numberData", randomNumber);
-    // });
-    // socket.on("getBoolean", () => {
-    //     const randomBoolean = Math.random() < 0.5; // Replace with your logic
-    //     io.emit("booleanData", randomBoolean);
-    // });
     // io.engine.generateId = (req) => {
     //     return uuid.v4(); // Generate a unique identifier for each socket connection
     // };

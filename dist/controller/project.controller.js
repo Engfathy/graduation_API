@@ -1,9 +1,20 @@
 "use strict";
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteProjectById = exports.updateProjectById = exports.getProjectById = exports.getProjectByUserAndProjectName = exports.getAllProjectsForUser = exports.createProject = void 0;
+exports.deleteProjectById = exports.updateProjectDescription = exports.updateProjectName = exports.updateProjectById = exports.getProjectById = exports.getProjectByUserAndProjectName = exports.getAllProjectsForUser = exports.createProject = void 0;
 const project_model_1 = __importDefault(require("../models/project.model"));
 const express_validator_1 = require("express-validator");
 // create new project
@@ -139,41 +150,20 @@ const updateProjectById = async (req, res) => {
         const userName = req.cookies["userName"] || req.headers["user"];
         // Get existing project
         const existing = await project_model_1.default.findById(req.params.id);
-        if (existing === null) {
-            return res
-                .status(400)
-                .json({ success: false, msg: "no project with this id" });
-        }
-        else {
-            // Check if trying to change name
-            if (req.body.name !== existing.name) {
-                return res.status(400).json({
-                    success: false,
-                    msg: "Cannot update project name",
-                });
-            }
-            // New name
-            const newName = req.body.projectName;
-            // Check if new name exists
-            const nameExists = await project_model_1.default.findOne({
-                name: userName,
-                projectName: newName,
-            });
-            if (nameExists) {
-                return res.status(400).json({
-                    success: false,
-                    msg: "Project name already exists",
-                });
-            }
-            const updatedProject = await project_model_1.default.findByIdAndUpdate(req.params.id, {
-                $set: req.body,
-            }, { new: true });
-            return res.status(200).json({
-                success: true,
-                msg: "project updated",
-                data: updatedProject,
+        if (!existing) {
+            return res.status(404).json({
+                msg: "Project not found",
             });
         }
+        // Ignore name property
+        const _a = req.body, { name, description, projectName } = _a, updateData = __rest(_a, ["name", "description", "projectName"]);
+        Object.assign(existing, updateData);
+        const updated = await existing.save();
+        return res.status(200).json({
+            success: true,
+            msg: "project updated",
+            data: updated,
+        });
     }
     catch (err) {
         return res.status(500).json({
@@ -183,6 +173,62 @@ const updateProjectById = async (req, res) => {
     }
 };
 exports.updateProjectById = updateProjectById;
+// update project name
+const updateProjectName = async (req, res) => {
+    const { id } = req.params;
+    const newName = req.body.projectName;
+    try {
+        const existing = await project_model_1.default.findById(id);
+        if (!existing) {
+            return res
+                .status(404)
+                .json({ success: false, msg: "Project not found" });
+        }
+        const nameExists = await project_model_1.default.findOne({
+            name: existing.name,
+            projectName: newName,
+        });
+        if (nameExists) {
+            return res
+                .status(400)
+                .json({ success: false, msg: "Project name already exists" });
+        }
+        existing.projectName = newName;
+        const updated = await existing.save();
+        return res.json({ success: false, msg: "project name updated" });
+    }
+    catch (err) {
+        return res.status(500).json({ success: false, msg: "Server error" });
+    }
+};
+exports.updateProjectName = updateProjectName;
+// Update project description
+const updateProjectDescription = async (req, res) => {
+    // Get id from params
+    const { id } = req.params;
+    // Get new description from body
+    const { description } = req.body;
+    try {
+        // Find existing project
+        const existing = await project_model_1.default.findById(id);
+        // Check if exists
+        if (!existing) {
+            return res
+                .status(404)
+                .json({ success: false, msg: "Project not found" });
+        }
+        // Update description
+        existing.description = description;
+        // Save updated doc
+        const updated = await existing.save();
+        // Return response
+        return res.json({ success: false, msg: "description updated" });
+    }
+    catch (error) {
+        return res.status(500).json({ success: false, msg: "Server error" });
+    }
+};
+exports.updateProjectDescription = updateProjectDescription;
 // delete project by id
 const deleteProjectById = async (req, res) => {
     try {
