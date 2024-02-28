@@ -152,49 +152,101 @@ export const updateProjectById = async (
         const userName = req.cookies["userName"] || req.headers["user"];
         // Get existing project
         const existing = await ProjectModel.findById(req.params.id);
-        if (existing === null) {
-            return res
-                .status(400)
-                .json({ success: false, msg: "no project with this id" });
-        } else {
-            // Check if trying to change name
-            if (req.body.name !== existing.name) {
-                return res.status(400).json({
-                    success: false,
-                    msg: "Cannot update project name",
-                });
-            }
-            // New name
-            const newName = req.body.projectName;
-            // Check if new name exists
-            const nameExists = await ProjectModel.findOne({
-                name: userName,
-                projectName: newName,
-            });
-            if (nameExists) {
-                return res.status(400).json({
-                    success: false,
-                    msg: "Project name already exists",
-                });
-            }
-            const updatedProject = await ProjectModel.findByIdAndUpdate(
-                req.params.id,
-                {
-                    $set: req.body,
-                },
-                { new: true },
-            );
-            return res.status(200).json({
-                success: true,
-                msg: "project updated",
-                data: updatedProject,
+        if (!existing) {
+            return res.status(404).json({
+                msg: "Project not found",
             });
         }
+        // Ignore name property
+        const { name,description,projectName, ...updateData } = req.body;
+
+        Object.assign(existing, updateData);
+
+        const updated = await existing.save();
+
+        return res.status(200).json({
+            success: true,
+            msg: "project updated",
+            data: updated,
+        });
     } catch (err) {
         return res.status(500).json({
             success: false,
             msg: "internel server error",
         });
+    }
+};
+
+// update project name
+export const updateProjectName = async (
+    req: express.Request,
+    res: express.Response,
+) => {
+    const { id } = req.params;
+    const newName = req.body.projectName;
+
+    try {
+        const existing = await ProjectModel.findById(id);
+
+        if (!existing) {
+            return res
+                .status(404)
+                .json({ success: false, msg: "Project not found" });
+        }
+
+        const nameExists = await ProjectModel.findOne({
+            name: existing.name,
+            projectName: newName,
+        });
+
+        if (nameExists) {
+            return res
+                .status(400)
+                .json({ success: false, msg: "Project name already exists" });
+        }
+
+        existing.projectName = newName;
+
+        const updated = await existing.save();
+
+        return res.json({ success: false, msg: "project name updated" });
+    } catch (err) {
+        return res.status(500).json({ success: false, msg: "Server error" });
+    }
+};
+
+// Update project description
+export const updateProjectDescription = async (
+    req: express.Request,
+    res: express.Response,
+) => {
+    // Get id from params
+    const { id } = req.params;
+
+    // Get new description from body
+    const { description } = req.body;
+
+    try {
+        // Find existing project
+        const existing = await ProjectModel.findById(id);
+
+        // Check if exists
+        if (!existing) {
+            return res
+                .status(404)
+                .json({ success: false, msg: "Project not found" });
+        }
+
+        // Update description
+        existing.description = description;
+
+        // Save updated doc
+        const updated = await existing.save();
+
+        // Return response
+        return res.json({ success: false, msg: "description updated" });
+    } catch (error) {
+        return res.status(500).json({ success: false, msg: "Server error" });
     }
 };
 

@@ -163,7 +163,7 @@
                     <input type="test" id="userName" name="userName">
                     <label>User Name</label>
                 </div><center>
-                    <a href="#" onclick="getProject()"">
+                    <a href="#" onclick="getProject()">
                         SEND
                         <span></span>
                     </a></center>
@@ -212,7 +212,7 @@
                         console.log('modules:', moduleIds);
                         
                         Swal.fire(data.msg);
-                        socket.emit("roomsIds",moduleIds);
+                        socket.emit("createRooms",moduleIds);
                         socket.emit("joinRooms",moduleIds);
                             const dataToSend = {
                             roomId: '65c3d7718207afe6baac68f6',
@@ -225,13 +225,33 @@ socket.emit('message', dataToSend);
 //---------------------------------------------------------------                        
                         
 socket.on("message", (msg) => {
+  console.log("Room ID:",data.roomId);
+    console.log("Room status:",data.status);
         console.log('Received data from the server:', msg);
     });
+//     socket.on("message", (msg) => {
+//     console.log('Received data from the server:', msg);
+//     // Check if the message has a roomId property
+//     if (msg.roomId) {
+//         // Check if the client is in the same room
+//         if (socket.rooms.has(msg.roomId)) {
+//             // Log the message value if it belongs to the client's room
+//             console.log('Message from your room:', msg.value);
+//         } else {
+//             console.log('Message from a different room:', msg.value);
+//         }
+//     }
+// });
+
   socket.on('connect', function () {
         console.log('Connected to Socket.IO server');
     });
+    socket.on('disconnect', function () {
+    console.log('Disconnected from Socket.IO server');
+});
+
  
-                    </script>
+      </script>
     </body>
 
 </html>

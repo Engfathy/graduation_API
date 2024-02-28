@@ -7,6 +7,8 @@ import {
     createProject,
     updateProjectById,
     deleteProjectById,
+    updateProjectName,
+    updateProjectDescription,
 } from "../controller/project.controller"; // Import your project controller functions
 import jwtTokenVerifier from "../middleware/jwtTokenVerifier";
 
@@ -33,6 +35,18 @@ projectRouter.put(
     validateProjectData,
     jwtTokenVerifier,
     updateProjectById,
+);
+projectRouter.put(
+    "/update-project-name/:id",
+    validateProjectData,
+    jwtTokenVerifier,
+    updateProjectName,
+);
+projectRouter.put(
+    "/update-project-description/:id",
+    validateProjectData,
+    jwtTokenVerifier,
+    updateProjectDescription,
 );
 projectRouter.delete("/delete/:id", jwtTokenVerifier, deleteProjectById);
 
