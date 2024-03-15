@@ -54,6 +54,14 @@ export const createModule = async (
     if (!errors.isEmpty()) {
         return res.status(400).json({ success: false, errors: errors.array() });
     }
+    // Check if the module with the same name already exists
+    const moduleName = req.body.name; // Adjust this based on your request body structure
+    const existingModule = await ModuleModel.findOne({ name: moduleName });
+
+    if (existingModule) {
+        return res.status(409).json({ success: false, error: 'Module already exists' });
+    }
+
     try {
         const newModule = new ModuleModel(req.body);
         const savedModule = await newModule.save();

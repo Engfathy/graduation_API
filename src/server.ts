@@ -120,6 +120,9 @@ app.get("/socket1", (req, res) => {
 app.get("/socket2", (req, res) => {
     res.sendFile(__dirname + "/index2.html");
 });
+app.get("/socket3", (req, res) => {
+    res.sendFile(__dirname + "/index3.html");
+});
 
 let names = ["fathy", "alice", "mohamed"];
 // io.of("/admin").on("connection", (socket) => {
@@ -139,7 +142,6 @@ let names = ["fathy", "alice", "mohamed"];
 //   });
 // });
 
-
 io.on("connection", async (socket) => {
     console.log(`user ${io.engine.clientsCount} connected`);
 
@@ -153,8 +155,10 @@ io.on("connection", async (socket) => {
 
     socket.on("joinRooms", (roomsIds) => {
         // Join the socket to the specified room
+        console.log(roomsIds);
         roomsIds.forEach((roomId: string[]) => {
-            socket.join("65c3d7718207afe6baac68f6");
+            socket.join(roomId);
+            io.emit("rooms status", `User: ${socket.id} joined room ${roomId}`);
             console.log(`User: ${socket.id} joined room ${roomId}`);
         });
         console.log(socket.rooms);
@@ -167,55 +171,70 @@ io.on("connection", async (socket) => {
         io.emit("rooms status", `User: ${socket.id} joined room ${roomId}`);
         console.log(`User: ${socket.id} joined room ${roomId}`);
     });
-
-    socket.on("message", (msg: any) => {
-        console.log(msg.value, msg.status, msg.roomId);
-        if (!isNaN(parseInt(msg.value))) {
-            let numericValue = parseInt(msg.value);
-            switch (true) {
-                case numericValue > 30 && msg.value <= 38:
-                    io.emit("message_log", "Temperature is going high");
-                    break;
-
-                case numericValue < 20:
-                    io.emit("message_log", "Temperature is very low");
-                    break;
-
-                case numericValue >= 20 && msg.value <= 30:
-                    io.emit("message_log", "Temperature is moderate");
-                    break;
-                case numericValue >= 38 && msg.value <= 50:
-                    io.emit("message_log", "fan is on automatic");
-                    break;
-                case numericValue > 50:
-                    io.emit("message_log", "die in peace my brother ☠☠☠");
-                    break;
-
-                default:
-                    io.emit(
-                        "message_log",
-                        `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`,
-                    );
-            }
-        }
-        if (isNaN(parseInt(msg.value))) {
-            switch (msg.value) {
-                case "led on":
-                    io.emit("message_log", "Led is on now");
-                    break;
-
-                case "led off":
-                    io.emit("message_log", "Led is off now");
-                    break;
-                default:
-                    io.emit(
-                        "message_log",
-                        `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`,
-                    );
-            }
-        }
-
+    socket.on("message1", (msg) => {
+        console.log(msg);
+        io.emit(msg);
+    });
+    socket.on("test", (msg) => {
+        console.log(`User ${socket.id} sent message event with data:`, msg);
+        console.log(socket.rooms);
+        // Do something with the received data, emit an event back if needed
+        io.emit("test response", `User ${socket.id} sent message: ${msg}`);
+    });
+    socket.on("messageToRoom", (msg: any) => {
+        console.log(msg);
+        io.emit(
+            "message_log",
+            `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`,
+        );
         socket.to(msg.roomId).emit("message", msg);
+
+        socket.to(msg.roomId).emit("message1",  `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`);
+        // console.log(msg.value, msg.status, msg.roomId);
+        // if (!isNaN(parseInt(msg.value))) {
+        //     let numericValue = parseInt(msg.value);
+        //     switch (true) {
+        //         case numericValue > 30 && msg.value <= 38:
+        //             io.emit("message_log", "Temperature is going high");
+        //             break;
+
+        //         case numericValue < 20:
+        //             io.emit("message_log", "Temperature is very low");
+        //             break;
+
+        //         case numericValue >= 20 && msg.value <= 30:
+        //             io.emit("message_log", "Temperature is moderate");
+        //             break;
+        //         case numericValue >= 38 && msg.value <= 50:
+        //             io.emit("message_log", "fan is on automatic");
+        //             break;
+        //         case numericValue > 50:
+        //             io.emit("message_log", "die in peace my brother ☠☠☠");
+        //             break;
+
+        //         default:
+        //             io.emit(
+        //                 "message_log",
+        //                 `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`,
+        //             );
+        //     }
+        // }
+        // if (isNaN(parseInt(msg.value))) {
+        //     switch (msg.value) {
+        //         case "led on":
+        //             io.emit("message_log", "Led is on now");
+        //             break;
+
+        //         case "led off":
+        //             io.emit("message_log", "Led is off now");
+        //             break;
+        //         default:
+        //             io.emit(
+        //                 "message_log",
+        //                 `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`,
+        //             );
+        //     }
+        // }
     });
     // io.engine.generateId = (req) => {
     //     return uuid.v4(); // Generate a unique identifier for each socket connection

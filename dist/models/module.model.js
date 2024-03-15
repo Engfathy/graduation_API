@@ -44,6 +44,7 @@ exports.moduleSchema = new mongoose_1.Schema({
     moduleName: { type: String, required: true },
     alternateName: { type: String },
     relationModule: { type: String },
+    type: { type: String },
     pins: [exports.pinSchema],
 });
 const ModuleModel = mongoose_1.default.model("Module", exports.moduleSchema);

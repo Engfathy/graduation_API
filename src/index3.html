@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>2nd room</title>
+        <title>3rd room chat</title>
         <style>
       body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
@@ -35,7 +35,7 @@
   var input = document.getElementById('input');
   const typingIndicator = document.getElementById('typing-indicator');
 
-  const roomId = '65c3d7718207afe6baac68f8';
+  const roomId = '65c3d7718207afe6baac68fa';
 
 // Function to join the room when the page loads
 function joinRoomOnLoad() {
@@ -60,7 +60,7 @@ window.onload = joinRoomOnLoad;
     //   console.log(input.value);
     //   const messageObject = JSON.parse(input.value);
     //   console.log(messageObject);
-      let object ={ roomId: '65c3d7718207afe6baac68f8',value: input.value,status: true }
+      let object ={ roomId: '65c3d7718207afe6baac68fa',value: input.value,status: true }
       socket.emit('messageToRoom', object);
       input.value = '';
     }

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Socket.IO chat</title>
+    <title>1st room</title>
     <style>
       body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
@@ -61,7 +61,7 @@ window.onload = joinRoomOnLoad;
     //   const messageObject = JSON.parse(input.value);
     //   console.log(messageObject);
       let object ={ roomId: '65c3d7718207afe6baac68f6',value: input.value,status: true }
-      socket.emit('message', object);
+      socket.emit('messageToRoom', object);
       input.value = '';
     }
   );
@@ -73,6 +73,10 @@ window.onload = joinRoomOnLoad;
     item.textContent = "other :"+data.value;
     messages.appendChild(item);
     window.scrollTo(0, document.body.scrollHeight);
+  });
+  socket.on('message1', function(data) {
+    console.log(data);
+   
   });
   socket.on('user numbers', function(msg) {
     numberOfUsers.innerText = `${msg} user are connected`;

@@ -9,6 +9,7 @@ export interface Pin {
 export interface Module {
     moduleName: string;
     alternateName?: string;
+    type: string;
     relationModule?: string;
     pins: Pin[];
 }
@@ -34,6 +35,7 @@ export const moduleSchema = new Schema<ModuleDocument>({
     moduleName: { type: String, required: true },
     alternateName: { type: String },
     relationModule: { type: String },
+    type: { type: String },
     pins: [pinSchema],
 });
 
