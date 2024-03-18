@@ -28,7 +28,12 @@
     <script src="/socket.io/socket.io.js"></script>
 
     <script defer>
-                var socket = io('http://localhost:5500');
+      const serverIP = '140.238.91.110';
+    const serverPort = 44533;
+
+    // Create a new Socket.io client instance
+    var socket = io(`http://${serverIP}:${serverPort}`);
+                // var socket = io('140.238.91.110:44533');
   var messages = document.getElementById('messages');
   var form = document.getElementById('form');
   var numberOfUsers = document.getElementById('numberOfUsers');

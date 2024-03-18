@@ -18,16 +18,24 @@ import { DefaultEventsMap } from "socket.io/dist/typed-events";
 
 const app: express.Application = express();
 const server = http.createServer(app);
-// middleware
-app.use(
-    cors()
-);
-const io = new Server(server);
+const io = new Server(server,{
+    cors: {
+        origin: "*", // Replace with the client's origin
+        credentials: true
+      }
+});
 
 app.set("trust proxy", 0);
 
 
-
+// // middleware
+// app.use(
+//     cors({
+//         origin: false, // Replace with the client's origin
+//         credentials: true
+//     })
+//     );
+    
 app.use(express.json({ limit: "50kb" }));
 
 app.use(cookieParser());
@@ -59,7 +67,25 @@ const hostName: string | any = process.env.HOST_NAME || "0.0.0.0";
 const port: number = Number(process.env.PORT) || 5500;
 
 //-------------------------------------------------------
+// app.use(function (req, res, next) {
 
+//     // Website you wish to allow to connect
+//     res.setHeader('Access-Control-Allow-Origin', '*');
+
+//     // Request methods you wish to allow
+//     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+//     // Request headers you wish to allow
+//     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+//     res.setHeader('Access-Control-Allow-Origin', '*');
+
+//     // Set to true if you need the website to include cookies in the requests sent
+//     // to the API (e.g. in case you use sessions)
+//     res.setHeader('Access-Control-Allow-Credentials', "true");
+
+//     // Pass to next layer of middleware
+//     next();
+// });
 app.post(
     "/api/v1/connect-data",
     async (req: express.Request, res: express.Response) => {

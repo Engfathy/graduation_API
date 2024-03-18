@@ -4,7 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const userRouter_1 = __importDefault(require("./router/userRouter"));
 const dbCon_1 = __importDefault(require("./database/dbCon"));
@@ -20,10 +19,20 @@ const projectRouter_1 = __importDefault(require("./router/projectRouter"));
 const project_model_1 = __importDefault(require("./models/project.model"));
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
-// middleware
-app.use((0, cors_1.default)());
-const io = new socket_io_1.Server(server);
+const io = new socket_io_1.Server(server, {
+    cors: {
+        origin: "*",
+        credentials: true
+    }
+});
 app.set("trust proxy", 0);
+// // middleware
+// app.use(
+//     cors({
+//         origin: false, // Replace with the client's origin
+//         credentials: true
+//     })
+//     );
 app.use(express_1.default.json({ limit: "50kb" }));
 app.use((0, cookie_parser_1.default)());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
@@ -45,6 +54,20 @@ dotenv_1.default.config({ path: "./../config.env" });
 const hostName = process.env.HOST_NAME || "0.0.0.0";
 const port = Number(process.env.PORT) || 5500;
 //-------------------------------------------------------
+// app.use(function (req, res, next) {
+//     // Website you wish to allow to connect
+//     res.setHeader('Access-Control-Allow-Origin', '*');
+//     // Request methods you wish to allow
+//     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+//     // Request headers you wish to allow
+//     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+//     res.setHeader('Access-Control-Allow-Origin', '*');
+//     // Set to true if you need the website to include cookies in the requests sent
+//     // to the API (e.g. in case you use sessions)
+//     res.setHeader('Access-Control-Allow-Credentials', "true");
+//     // Pass to next layer of middleware
+//     next();
+// });
 app.post("/api/v1/connect-data", async (req, res) => {
     const projectName = req.body.projectName;
     const userName = req.body.user;
