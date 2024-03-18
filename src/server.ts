@@ -18,15 +18,15 @@ import { DefaultEventsMap } from "socket.io/dist/typed-events";
 
 const app: express.Application = express();
 const server = http.createServer(app);
-
-const io = new Server(server);
-
-app.set("trust proxy", 0);
-
 // middleware
 app.use(
     cors()
 );
+const io = new Server(server);
+
+app.set("trust proxy", 0);
+
+
 
 app.use(express.json({ limit: "50kb" }));
 
