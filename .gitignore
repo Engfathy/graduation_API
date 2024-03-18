@@ -1,4 +1,4 @@
 node_modules/
 config.env
-config/config.ts
+src/config/config.ts
 APIDOCS.md

@@ -26,7 +26,7 @@ app.set("trust proxy", 0);
 // middleware
 app.use(
     cors({
-        origin: true,
+        origin: "*",
         credentials: true,
     }),
 );
