@@ -24,17 +24,15 @@ const io = new Server(server,{
         credentials: true
       }
 });
-
+app.use(
+    cors({
+        origin: '*', // Allow requests from all origins
+        credentials: true
+    })
+);
 app.set("trust proxy", 0);
 
 
-// // middleware
-// app.use(
-//     cors({
-//         origin: false, // Replace with the client's origin
-//         credentials: true
-//     })
-//     );
     
 app.use(express.json({ limit: "50kb" }));
 

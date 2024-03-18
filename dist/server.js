@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const userRouter_1 = __importDefault(require("./router/userRouter"));
 const dbCon_1 = __importDefault(require("./database/dbCon"));
@@ -25,14 +26,11 @@ const io = new socket_io_1.Server(server, {
         credentials: true
     }
 });
+app.use((0, cors_1.default)({
+    origin: '*',
+    credentials: true
+}));
 app.set("trust proxy", 0);
-// // middleware
-// app.use(
-//     cors({
-//         origin: false, // Replace with the client's origin
-//         credentials: true
-//     })
-//     );
 app.use(express_1.default.json({ limit: "50kb" }));
 app.use((0, cookie_parser_1.default)());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
