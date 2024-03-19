@@ -27,7 +27,7 @@ const io = new socket_io_1.Server(server, {
     }
 });
 app.use((0, cors_1.default)({
-    origin: '*',
+    origin: true,
     credentials: true
 }));
 app.set("trust proxy", 0);
@@ -138,8 +138,7 @@ io.on("connection", async (socket) => {
     console.log(`user ${io.engine.clientsCount} connected`);
     socket.on("createRooms", (roomsIds) => {
         roomsIds.forEach((roomId) => {
-            socket.to(roomId);
-            io.emit("created rooms", `Room:${roomId} created`);
+            io.to(roomId).emit("init", `initate room`);
             console.log(`Room ${roomId} created`);
         });
     });
@@ -153,6 +152,16 @@ io.on("connection", async (socket) => {
         });
         console.log(socket.rooms);
     });
+    socket.on("leaveRooms", (roomsIds) => {
+        // Join the socket to the specified room
+        console.log(roomsIds);
+        roomsIds.forEach((roomId) => {
+            socket.leave(roomId);
+            io.emit("rooms status", `User: ${socket.id} leaved room ${roomId}`);
+            console.log(`User: ${socket.id} left room ${roomId}`);
+        });
+        console.log(socket.rooms);
+    });
     socket.on("joinRoom", (roomId) => {
         // Join the socket to the specified room
         socket.join(roomId);
@@ -161,7 +170,7 @@ io.on("connection", async (socket) => {
     });
     socket.on("message1", (msg) => {
         console.log(msg);
-        io.emit(msg);
+        io.emit("message1", msg);
     });
     socket.on("test", (msg) => {
         console.log(`User ${socket.id} sent message event with data:`, msg);
@@ -170,10 +179,15 @@ io.on("connection", async (socket) => {
         io.emit("test response", `User ${socket.id} sent message: ${msg}`);
     });
     socket.on("messageToRoom", (msg) => {
+        // console.log(msg.roomId);
+        // console.log(msg.value);
         console.log(msg);
-        io.emit("message_log", `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`);
-        socket.to(msg.roomId).emit("message", msg);
-        socket.to(msg.roomId).emit("message1", `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`);
+        // io.emit(
+        //     "message_log",
+        //     `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`,
+        // );
+        socket.to(msg.roomId).emit("roomMessage", msg);
+        // socket.to(msg.roomId).emit("message1",  `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`);
         // console.log(msg.value, msg.status, msg.roomId);
         // if (!isNaN(parseInt(msg.value))) {
         //     let numericValue = parseInt(msg.value);
