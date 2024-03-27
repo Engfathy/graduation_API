@@ -44,6 +44,7 @@ exports.moduleSchema = new mongoose_1.Schema({
     moduleName: { type: String, required: true },
     alternateName: { type: String },
     relationModule: { type: String },
+    lastValue: { type: mongoose_1.default.Schema.Types.Mixed },
     type: { type: String },
     pins: [exports.pinSchema],
 });

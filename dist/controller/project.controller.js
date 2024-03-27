@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteProjectById = exports.updateProjectDescription = exports.updateProjectName = exports.updateProjectById = exports.getProjectById = exports.getProjectByUserAndProjectName = exports.getAllProjectsForUser = exports.createProject = void 0;
+exports.updateProjectModulesValues = exports.deleteProjectById = exports.updateProjectDescription = exports.updateProjectName = exports.updateProjectById = exports.getProjectById = exports.getProjectByUserAndProjectName = exports.getAllProjectsForUser = exports.createProject = void 0;
 const project_model_1 = __importDefault(require("../models/project.model"));
 const express_validator_1 = require("express-validator");
 // create new project
@@ -252,4 +252,38 @@ const deleteProjectById = async (req, res) => {
     }
 };
 exports.deleteProjectById = deleteProjectById;
+// save last values in project
+const updateProjectModulesValues = async (req, res) => {
+    try {
+        const { projectID, modules } = req.body;
+        // Find and validate the project
+        const existingProject = await project_model_1.default.findById(projectID);
+        if (!existingProject) {
+            return res.status(404).json({
+                msg: "Project not found",
+            });
+        }
+        for (const moduleData of modules) {
+            const { id, value } = moduleData;
+            const moduleToUpdate = existingProject.modules.find((module) => module._id.toString() === id);
+            if (moduleToUpdate) {
+                moduleToUpdate.lastValue = value;
+            }
+        }
+        // Save the updated project
+        const updatedProject = await existingProject.save();
+        return res.status(200).json({
+            success: true,
+            msg: "Modules updated successfully",
+            data: updatedProject,
+        });
+    }
+    catch (err) {
+        return res.status(500).json({
+            success: false,
+            msg: "Internal server error",
+        });
+    }
+};
+exports.updateProjectModulesValues = updateProjectModulesValues;
 //# sourceMappingURL=project.controller.js.map

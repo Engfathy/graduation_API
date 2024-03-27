@@ -15,22 +15,26 @@ const hpp_1 = __importDefault(require("hpp"));
 const express_mongo_sanitize_1 = __importDefault(require("express-mongo-sanitize"));
 const http_1 = __importDefault(require("http"));
 const socket_io_1 = require("socket.io");
+// import uuid from "uuid";
+const axios_1 = __importDefault(require("axios"));
 const moduleRouter_1 = __importDefault(require("./router/moduleRouter"));
 const projectRouter_1 = __importDefault(require("./router/projectRouter"));
 const project_model_1 = __importDefault(require("./models/project.model"));
+const helmet_1 = __importDefault(require("helmet"));
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 const io = new socket_io_1.Server(server, {
     cors: {
         origin: "*",
-        credentials: true
-    }
+        credentials: true,
+    },
 });
 app.use((0, cors_1.default)({
     origin: true,
-    credentials: true
+    credentials: true,
 }));
 app.set("trust proxy", 0);
+app.use((0, helmet_1.default)());
 app.use(express_1.default.json({ limit: "50kb" }));
 app.use((0, cookie_parser_1.default)());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
@@ -51,21 +55,6 @@ app.use("/api/v1/project", reqLimiter_1.defaultLimiter, projectRouter_1.default)
 dotenv_1.default.config({ path: "./../config.env" });
 const hostName = process.env.HOST_NAME || "0.0.0.0";
 const port = Number(process.env.PORT) || 5500;
-//-------------------------------------------------------
-// app.use(function (req, res, next) {
-//     // Website you wish to allow to connect
-//     res.setHeader('Access-Control-Allow-Origin', '*');
-//     // Request methods you wish to allow
-//     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-//     // Request headers you wish to allow
-//     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-//     res.setHeader('Access-Control-Allow-Origin', '*');
-//     // Set to true if you need the website to include cookies in the requests sent
-//     // to the API (e.g. in case you use sessions)
-//     res.setHeader('Access-Control-Allow-Credentials', "true");
-//     // Pass to next layer of middleware
-//     next();
-// });
 app.post("/api/v1/connect-data", async (req, res) => {
     const projectName = req.body.projectName;
     const userName = req.body.user;
@@ -162,6 +151,16 @@ io.on("connection", async (socket) => {
         });
         console.log(socket.rooms);
     });
+    socket.on("updateValues", async (data) => {
+        try {
+            // Send POST request to API
+            const response = await axios_1.default.post("http://localhost:5500/api/v1/project/update-values", data);
+            console.log("Response from API:", response.data);
+        }
+        catch (error) {
+            console.error("Error sending POST request to API:", error);
+        }
+    });
     socket.on("joinRoom", (roomId) => {
         // Join the socket to the specified room
         socket.join(roomId);
@@ -179,8 +178,8 @@ io.on("connection", async (socket) => {
         io.emit("test response", `User ${socket.id} sent message: ${msg}`);
     });
     socket.on("messageToRoom", (msg) => {
-        // console.log(msg.roomId);
-        // console.log(msg.value);
+        console.log(msg.roomId);
+        console.log(msg.value);
         console.log(msg);
         // io.emit(
         //     "message_log",
