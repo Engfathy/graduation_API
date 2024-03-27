@@ -9,6 +9,7 @@ import {
     deleteProjectById,
     updateProjectName,
     updateProjectDescription,
+    updateProjectModulesValues,
 } from "../controller/project.controller"; // Import your project controller functions
 import jwtTokenVerifier from "../middleware/jwtTokenVerifier";
 
@@ -22,6 +23,7 @@ const validateProjectData = [
 ];
 
 projectRouter.get("/all", jwtTokenVerifier, getAllProjectsForUser);
+projectRouter.post("/update-values", updateProjectModulesValues);
 projectRouter.get("",getProjectByUserAndProjectName);
 projectRouter.get("/id/:id", jwtTokenVerifier, getProjectById);
 projectRouter.post(

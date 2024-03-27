@@ -158,7 +158,7 @@ export const updateProjectById = async (
             });
         }
         // Ignore name property
-        const { name,description,projectName, ...updateData } = req.body;
+        const { name, description, projectName, ...updateData } = req.body;
 
         Object.assign(existing, updateData);
 
@@ -274,6 +274,48 @@ export const deleteProjectById = async (
         return res.status(500).json({
             success: false,
             msg: "Internal Server Error",
+        });
+    }
+};
+
+// save last values in project
+
+export const updateProjectModulesValues = async (
+    req: express.Request,
+    res: express.Response,
+) => {
+    try {
+        const { projectID, modules } = req.body;
+
+        // Find and validate the project
+        const existingProject = await ProjectModel.findById(projectID);
+        if (!existingProject) {
+            return res.status(404).json({
+                msg: "Project not found",
+            });
+        }
+        for (const moduleData of modules) {
+            const { id, value } = moduleData;
+            const moduleToUpdate = existingProject.modules.find(
+                (module) => module._id.toString() === id,
+            );
+            if (moduleToUpdate) {
+                moduleToUpdate.lastValue = value;
+            }
+        }
+
+        // Save the updated project
+        const updatedProject = await existingProject.save();
+
+        return res.status(200).json({
+            success: true,
+            msg: "Modules updated successfully",
+            data: updatedProject,
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            msg: "Internal server error",
         });
     }
 };

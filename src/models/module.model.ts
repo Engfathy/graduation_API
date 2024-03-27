@@ -7,14 +7,18 @@ export interface Pin {
 }
 
 export interface Module {
+    _id: mongoose.Types.ObjectId;
     moduleName: string;
     alternateName?: string;
     type: string;
     relationModule?: string;
+    lastValue?: string | number;
     pins: Pin[];
 }
 
-export interface ModuleDocument extends Module, Document {}
+export interface ModuleDocument extends Module, Document {
+    _id: mongoose.Types.ObjectId; 
+}
 export const pinSchema = new Schema<Pin>({
     pinMode: {
         type: String,
@@ -35,6 +39,7 @@ export const moduleSchema = new Schema<ModuleDocument>({
     moduleName: { type: String, required: true },
     alternateName: { type: String },
     relationModule: { type: String },
+    lastValue: { type: mongoose.Schema.Types.Mixed},
     type: { type: String },
     pins: [pinSchema],
 });

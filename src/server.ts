@@ -10,30 +10,32 @@ import hpp from "hpp";
 import ExpressMongoSanitize from "express-mongo-sanitize";
 import http from "http";
 import { Server, Socket } from "socket.io";
-import uuid from "uuid";
+// import uuid from "uuid";
+import axios from "axios";
 import moduleRouter from "./router/moduleRouter";
 import projectRouter from "./router/projectRouter";
 import ProjectModel from "./models/project.model";
 import { DefaultEventsMap } from "socket.io/dist/typed-events";
+import helmet from "helmet";
 
 const app: express.Application = express();
 const server = http.createServer(app);
-const io = new Server(server,{
+const io = new Server(server, {
     cors: {
         origin: "*", // Replace with the client's origin
-        credentials: true
-      }
+        credentials: true,
+    },
 });
 app.use(
     cors({
         origin: true, // Allow requests from all origins
-        credentials: true
-    })
+        credentials: true,
+    }),
 );
 app.set("trust proxy", 0);
 
+app.use(helmet());
 
-    
 app.use(express.json({ limit: "50kb" }));
 
 app.use(cookieParser());
@@ -64,26 +66,6 @@ const hostName: string | any = process.env.HOST_NAME || "0.0.0.0";
 
 const port: number = Number(process.env.PORT) || 5500;
 
-//-------------------------------------------------------
-// app.use(function (req, res, next) {
-
-//     // Website you wish to allow to connect
-//     res.setHeader('Access-Control-Allow-Origin', '*');
-
-//     // Request methods you wish to allow
-//     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-
-//     // Request headers you wish to allow
-//     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-//     res.setHeader('Access-Control-Allow-Origin', '*');
-
-//     // Set to true if you need the website to include cookies in the requests sent
-//     // to the API (e.g. in case you use sessions)
-//     res.setHeader('Access-Control-Allow-Credentials', "true");
-
-//     // Pass to next layer of middleware
-//     next();
-// });
 app.post(
     "/api/v1/connect-data",
     async (req: express.Request, res: express.Response) => {
@@ -176,7 +158,7 @@ io.on("connection", async (socket) => {
     socket.on("joinRooms", (roomsIds: string[]) => {
         // Join the socket to the specified room
         console.log(roomsIds);
-        
+
         roomsIds.forEach((roomId: string) => {
             socket.join(roomId);
             io.emit("rooms status", `User: ${socket.id} joined room ${roomId}`);
@@ -187,13 +169,25 @@ io.on("connection", async (socket) => {
     socket.on("leaveRooms", (roomsIds: string[]) => {
         // Join the socket to the specified room
         console.log(roomsIds);
-        
+
         roomsIds.forEach((roomId: string) => {
             socket.leave(roomId);
             io.emit("rooms status", `User: ${socket.id} leaved room ${roomId}`);
             console.log(`User: ${socket.id} left room ${roomId}`);
         });
         console.log(socket.rooms);
+    });
+    socket.on("updateValues", async (data) => {
+        try {
+            // Send POST request to API
+            const response = await axios.post(
+                "http://localhost:5500/api/v1/project/update-values",
+                data,
+            );
+            console.log("Response from API:", response.data);
+        } catch (error) {
+            console.error("Error sending POST request to API:", error);
+        }
     });
 
     socket.on("joinRoom", (roomId) => {
@@ -205,7 +199,7 @@ io.on("connection", async (socket) => {
     });
     socket.on("message1", (msg) => {
         console.log(msg);
-        io.emit("message1",msg);
+        io.emit("message1", msg);
     });
     socket.on("test", (msg) => {
         console.log(`User ${socket.id} sent message event with data:`, msg);
@@ -214,8 +208,8 @@ io.on("connection", async (socket) => {
         io.emit("test response", `User ${socket.id} sent message: ${msg}`);
     });
     socket.on("messageToRoom", (msg: any) => {
-        // console.log(msg.roomId);
-        // console.log(msg.value);
+        console.log(msg.roomId);
+        console.log(msg.value);
         console.log(msg);
         // io.emit(
         //     "message_log",
