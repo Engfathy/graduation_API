@@ -17,6 +17,7 @@ import projectRouter from "./router/projectRouter";
 import ProjectModel from "./models/project.model";
 import { DefaultEventsMap } from "socket.io/dist/typed-events";
 import helmet from "helmet";
+import filesRouter from "./router/pictureRouter";
 
 const app: express.Application = express();
 const server = http.createServer(app);
@@ -60,6 +61,7 @@ Db.ConnectDb();
 app.use("/api/v1/user", defaultLimiter, userRouter);
 app.use("/api/v1/module", defaultLimiter, moduleRouter);
 app.use("/api/v1/project", defaultLimiter, projectRouter);
+app.use("/api/v1/files", defaultLimiter, filesRouter);
 
 dotEnv.config({ path: "./../config.env" });
 const hostName: string | any = process.env.HOST_NAME || "0.0.0.0";
@@ -71,7 +73,7 @@ app.post(
     async (req: express.Request, res: express.Response) => {
         const projectName = req.body.projectName;
         const userName = req.body.user;
-
+        
         if (!userName) {
             return res
                 .status(400)
