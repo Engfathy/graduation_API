@@ -195,7 +195,7 @@ const updateProjectName = async (req, res) => {
         }
         existing.projectName = newName;
         const updated = await existing.save();
-        return res.json({ success: false, msg: "project name updated" });
+        return res.json({ success: true, msg: "project name updated" });
     }
     catch (err) {
         return res.status(500).json({ success: false, msg: "Server error" });
