@@ -14,12 +14,38 @@ export interface Module {
     relationModule?: string;
     lastValue?: string | number;
     pins: Pin[];
+    rules?: Rule[]; // Optional rules field
+}
+
+export interface Rule {
+    _id: mongoose.Types.ObjectId;
+    triggerModuleId: mongoose.Types.ObjectId;
+    condition: string;
+    conditionValue: string;
+    actionModuleId: mongoose.Types.ObjectId; 
+    action: { type: string; value?: string | number }; 
 }
 
 export interface ModuleDocument extends Module, Document {
     _id: mongoose.Types.ObjectId; 
 }
-export const pinSchema = new Schema<Pin>({
+
+const ruleSchema = new Schema<Rule>({
+    triggerModuleId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    condition: { type: String, required: true },
+    conditionValue: { type: String, required: true },
+    actionModuleId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    action: {
+        type: {
+            type: String,
+            required: true,
+            enum: ["on", "off", "number"] // Define possible types for action
+        },
+        value: { type: Schema.Types.Mixed } // Allow any value for 'value' field
+    }
+});
+
+const pinSchema = new Schema<Pin>({
     pinMode: {
         type: String,
         required: true,
@@ -42,6 +68,7 @@ export const moduleSchema = new Schema<ModuleDocument>({
     lastValue: { type: mongoose.Schema.Types.Mixed},
     type: { type: String },
     pins: [pinSchema],
+    rules: [ruleSchema], // Embedding Rule schema as subdocument array
 });
 
 const ModuleModel = mongoose.model<ModuleDocument>("Module", moduleSchema);

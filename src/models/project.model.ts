@@ -1,7 +1,6 @@
 
-
 import mongoose, {Document, Schema } from "mongoose";
-import { Module, moduleSchema, pinSchema} from "../models/module.model";
+import { Module, moduleSchema} from "../models/module.model";
 
 interface Project {
     name: string;

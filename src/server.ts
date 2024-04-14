@@ -10,7 +10,6 @@ import hpp from "hpp";
 import ExpressMongoSanitize from "express-mongo-sanitize";
 import http from "http";
 import { Server, Socket } from "socket.io";
-// import uuid from "uuid";
 import axios from "axios";
 import moduleRouter from "./router/moduleRouter";
 import projectRouter from "./router/projectRouter";
@@ -18,6 +17,7 @@ import ProjectModel from "./models/project.model";
 import { DefaultEventsMap } from "socket.io/dist/typed-events";
 import helmet from "helmet";
 import filesRouter from "./router/pictureRouter";
+import ruleRouter from "./router/ruleRouter";
 
 const app: express.Application = express();
 const server = http.createServer(app);
@@ -62,6 +62,7 @@ app.use("/api/v1/user", defaultLimiter, userRouter);
 app.use("/api/v1/module", defaultLimiter, moduleRouter);
 app.use("/api/v1/project", defaultLimiter, projectRouter);
 app.use("/api/v1/files", defaultLimiter, filesRouter);
+app.use("/api/v1/rule", defaultLimiter, ruleRouter);
 
 dotEnv.config({ path: "./../config.env" });
 const hostName: string | any = process.env.HOST_NAME || "0.0.0.0";
@@ -180,13 +181,13 @@ io.on("connection", async (socket) => {
         console.log(socket.rooms);
     });
     socket.on("updateValues", async (data) => {
+        console.log(data);
         try {
             // Send POST request to API
             const response = await axios.post(
                 "http://localhost:5500/api/v1/project/update-values",
                 data,
             );
-            console.log("Response from API:", response.data);
         } catch (error) {
             console.error("Error sending POST request to API:", error);
         }
@@ -344,9 +345,10 @@ app.post(
     },
 );
 
-app.get("/ip", (request, response) => {
-    console.log(request.ip);
-    response.send(request.ip);
+app.get("/ip", (req, res) => {
+    const realIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  console.log('Real IP:', realIP);
+  res.send(realIP);
 });
 
 if (hostName && port) {
