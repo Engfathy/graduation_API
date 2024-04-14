@@ -23,9 +23,23 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.moduleSchema = exports.pinSchema = void 0;
+exports.moduleSchema = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-exports.pinSchema = new mongoose_1.Schema({
+const ruleSchema = new mongoose_1.Schema({
+    triggerModuleId: { type: mongoose_1.default.Schema.Types.ObjectId, required: true },
+    condition: { type: String, required: true },
+    conditionValue: { type: String, required: true },
+    actionModuleId: { type: mongoose_1.default.Schema.Types.ObjectId, required: true },
+    action: {
+        type: {
+            type: String,
+            required: true,
+            enum: ["on", "off", "number"] // Define possible types for action
+        },
+        value: { type: mongoose_1.Schema.Types.Mixed } // Allow any value for 'value' field
+    }
+});
+const pinSchema = new mongoose_1.Schema({
     pinMode: {
         type: String,
         required: true,
@@ -46,7 +60,8 @@ exports.moduleSchema = new mongoose_1.Schema({
     relationModule: { type: String },
     lastValue: { type: mongoose_1.default.Schema.Types.Mixed },
     type: { type: String },
-    pins: [exports.pinSchema],
+    pins: [pinSchema],
+    rules: [ruleSchema], // Embedding Rule schema as subdocument array
 });
 const ModuleModel = mongoose_1.default.model("Module", exports.moduleSchema);
 exports.default = ModuleModel;

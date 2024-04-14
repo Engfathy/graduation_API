@@ -15,13 +15,13 @@ const hpp_1 = __importDefault(require("hpp"));
 const express_mongo_sanitize_1 = __importDefault(require("express-mongo-sanitize"));
 const http_1 = __importDefault(require("http"));
 const socket_io_1 = require("socket.io");
-// import uuid from "uuid";
 const axios_1 = __importDefault(require("axios"));
 const moduleRouter_1 = __importDefault(require("./router/moduleRouter"));
 const projectRouter_1 = __importDefault(require("./router/projectRouter"));
 const project_model_1 = __importDefault(require("./models/project.model"));
 const helmet_1 = __importDefault(require("helmet"));
 const pictureRouter_1 = __importDefault(require("./router/pictureRouter"));
+const ruleRouter_1 = __importDefault(require("./router/ruleRouter"));
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 const io = new socket_io_1.Server(server, {
@@ -54,6 +54,7 @@ app.use("/api/v1/user", reqLimiter_1.defaultLimiter, userRouter_1.default);
 app.use("/api/v1/module", reqLimiter_1.defaultLimiter, moduleRouter_1.default);
 app.use("/api/v1/project", reqLimiter_1.defaultLimiter, projectRouter_1.default);
 app.use("/api/v1/files", reqLimiter_1.defaultLimiter, pictureRouter_1.default);
+app.use("/api/v1/rule", reqLimiter_1.defaultLimiter, ruleRouter_1.default);
 dotenv_1.default.config({ path: "./../config.env" });
 const hostName = process.env.HOST_NAME || "0.0.0.0";
 const port = Number(process.env.PORT) || 5500;
@@ -154,10 +155,10 @@ io.on("connection", async (socket) => {
         console.log(socket.rooms);
     });
     socket.on("updateValues", async (data) => {
+        console.log(data);
         try {
             // Send POST request to API
             const response = await axios_1.default.post("http://localhost:5500/api/v1/project/update-values", data);
-            console.log("Response from API:", response.data);
         }
         catch (error) {
             console.error("Error sending POST request to API:", error);
@@ -298,9 +299,10 @@ app.post("/api/v1/connect-data", async (req, res) => {
         });
     }
 });
-app.get("/ip", (request, response) => {
-    console.log(request.ip);
-    response.send(request.ip);
+app.get("/ip", (req, res) => {
+    const realIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    console.log('Real IP:', realIP);
+    res.send(realIP);
 });
 if (hostName && port) {
     server.listen(port, hostName, () => {

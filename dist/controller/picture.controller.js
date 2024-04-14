@@ -3,11 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProjectPicture = exports.updateProjectPictures = void 0;
+exports.deletePictureById = exports.getProjectPictures = exports.uploadProjectPictures = void 0;
 const generateFileName_1 = require("../utils/generateFileName");
 const picture_model_1 = __importDefault(require("../models/picture.model"));
 const path_1 = __importDefault(require("path"));
-const updateProjectPictures = async (req, res) => {
+const uploadProjectPictures = async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: "No file uploaded" });
@@ -36,45 +36,77 @@ const updateProjectPictures = async (req, res) => {
         });
     }
 };
-exports.updateProjectPictures = updateProjectPictures;
+exports.uploadProjectPictures = uploadProjectPictures;
 // get project picture
-const getProjectPicture = async (req, res) => {
+const getProjectPictures = async (req, res) => {
     try {
         const projectId = req.params.projectId; // Assuming project ID is provided in the URL parameters
-        // Retrieve the picture data based on the project ID
-        const picture = await picture_model_1.default.findOne({ projectID: projectId });
-        if (!picture) {
+        // Retrieve the pictures data based on the project ID
+        const pictures = await picture_model_1.default.find({ projectID: projectId });
+        if (!pictures || pictures.length === 0) {
             return res
                 .status(404)
-                .json({ error: "Picture not found for the project" });
+                .json({ error: "Pictures not found for the project" });
         }
-        console.log(picture.fileName);
-        // Determine the content type based on the file extension
-        const ext = path_1.default.extname(picture.fileName).toLowerCase();
-        let contentType = "";
-        switch (ext) {
-            case ".jpg":
-            case ".jpeg":
-                contentType = "image/jpeg";
-                break;
-            case ".png":
-                contentType = "image/png";
-                break;
-            case ".gif":
-                contentType = "image/gif";
-                break;
-            // Add more cases for other image types if needed
-            default:
-                contentType = "application/octet-stream"; // Default to binary data
+        // Array to store picture data
+        const pictureData = [];
+        // Loop through each picture and extract the file data
+        for (const picture of pictures) {
+            // Determine the content type based on the file extension
+            const ext = path_1.default.extname(picture.fileName).toLowerCase();
+            let contentType = "";
+            switch (ext) {
+                case ".jpg":
+                case ".jpeg":
+                    contentType = "image/jpeg";
+                    break;
+                case ".png":
+                    contentType = "image/png";
+                    break;
+                case ".gif":
+                    contentType = "image/gif";
+                    break;
+                // Add more cases for other image types if needed
+                default:
+                    contentType = "application/octet-stream"; // Default to binary data
+            }
+            pictureData.push({
+                _id: picture._id,
+                contentType: contentType,
+                data: picture.fileData,
+            });
         }
-        // Send the picture data as a response
-        res.set("Content-Type", contentType); // Set appropriate content type
-        res.send(picture.fileData);
+        // Send the array of picture data as a response
+        res.json(pictureData);
     }
     catch (error) {
-        console.error("Error fetching project picture:", error);
+        console.error("Error fetching project pictures:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 };
-exports.getProjectPicture = getProjectPicture;
+exports.getProjectPictures = getProjectPictures;
+const deletePictureById = async (req, res) => {
+    try {
+        const pictureId = req.params.id;
+        // Check if the picture exists
+        const picture = await picture_model_1.default.findById(pictureId);
+        if (!picture) {
+            return res
+                .status(404)
+                .json({ success: false, msg: "Picture not found" });
+        }
+        // Delete the picture
+        await picture_model_1.default.findByIdAndDelete(pictureId);
+        return res
+            .status(200)
+            .json({ success: true, msg: "Picture deleted successfully" });
+    }
+    catch (error) {
+        console.error("Error deleting picture:", error);
+        return res
+            .status(500)
+            .json({ success: false, msg: "Internal Server Error" });
+    }
+};
+exports.deletePictureById = deletePictureById;
 //# sourceMappingURL=picture.controller.js.map
