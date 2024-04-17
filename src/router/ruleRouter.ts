@@ -3,13 +3,14 @@ import { body, validationResult } from "express-validator";
 import {
     createRuleInModule,
     deleteRuleInModule,
+    getRulesForProject,
     updateRuleInModule,
 } from "../controller/rule.controller";
 import jwtTokenVerifier from "../middleware/jwtTokenVerifier";
 
 const ruleRouter: express.Router = express.Router();
 
-ruleRouter.post("/all/:projectId", createRuleInModule);
+ruleRouter.get("/all/:projectId", getRulesForProject);
 ruleRouter.post("/create/:projectId/:moduleId", createRuleInModule);
 ruleRouter.put("/update/:projectId/:moduleId/:ruleId" ,updateRuleInModule);
 ruleRouter.delete("/delete/:projectId/:moduleId/:ruleId", deleteRuleInModule);

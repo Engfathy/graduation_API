@@ -5,16 +5,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteRuleInModule = exports.updateRuleInModule = exports.createRuleInModule = exports.getRulesForProject = void 0;
 const project_model_1 = __importDefault(require("../models/project.model")); // Import your Project model
-const module_model_1 = __importDefault(require("../models/module.model")); // Import your Module model
 const getRulesForProject = async (req, res) => {
     try {
         const projectId = req.params.projectId;
+        console.log(projectId);
         // Retrieve modules based on the project ID
-        const modules = await module_model_1.default.find({ projectId });
+        const project = await project_model_1.default.findById(projectId);
+        const modules = project.modules;
         if (!modules || modules.length === 0) {
             return res
                 .status(404)
-                .json({ error: "Modules not found for the project" });
+                .json({ success: false, msg: "project not found for the project" });
         }
         // Extract rules from modules
         const rules = [];
@@ -67,7 +68,7 @@ const createRuleInModule = async (req, res) => {
         await project.save();
         return res
             .status(201)
-            .json({ success: true, msg: "Rule added success", data: module });
+            .json({ success: true, msg: "Rule added success", data: module.rules });
     }
     catch (error) {
         console.error("Error creating rule:", error);
@@ -119,7 +120,7 @@ const updateRuleInModule = async (req, res) => {
             .json({
             success: true,
             msg: "Rule updated successfully",
-            data: updatedModule,
+            data: updatedModule.rules,
         });
     }
     catch (error) {
@@ -161,7 +162,7 @@ const deleteRuleInModule = async (req, res) => {
             .json({
             success: true,
             msg: "Rule deleted successfully",
-            data: updatedModule,
+            data: updatedModule.rules,
         });
     }
     catch (error) {

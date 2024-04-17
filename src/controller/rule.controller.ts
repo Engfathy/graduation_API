@@ -9,21 +9,23 @@ export const getRulesForProject = async (
 ) => {
     try {
         const projectId = req.params.projectId;
+        console.log(projectId);
 
         // Retrieve modules based on the project ID
-        const modules = await ModuleModel.find({ projectId });
-
+        const project:any = await ProjectModel.findById( projectId );
+        
+        const modules = project.modules;
         if (!modules || modules.length === 0) {
             return res
                 .status(404)
-                .json({ error: "Modules not found for the project" });
+                .json({success: false, msg: "project not found for the project" });
         }
 
         // Extract rules from modules
         const rules: any[] = [];
-        modules.forEach((module) => {
+        modules.forEach((module:any) => {
             if (module.rules) {
-                module.rules.forEach((rule) => {
+                module.rules.forEach((rule:any) => {
                     rules.push(rule);
                 });
             }
@@ -77,7 +79,7 @@ export const createRuleInModule = async (
 
         return res
             .status(201)
-            .json({ success: true, msg: "Rule added success", data: module });
+            .json({ success: true, msg: "Rule added success", data: module.rules });
     } catch (error) {
         console.error("Error creating rule:", error);
         return res
@@ -142,7 +144,7 @@ export const updateRuleInModule = async (
             .json({
                 success: true,
                 msg: "Rule updated successfully",
-                data: updatedModule,
+                data: updatedModule.rules,
             });
     } catch (error) {
         console.error("Error updating rule:", error);
@@ -197,7 +199,7 @@ export const deleteRuleInModule = async (
             .json({
                 success: true,
                 msg: "Rule deleted successfully",
-                data: updatedModule,
+                data: updatedModule.rules,
             });
     } catch (error) {
         console.error("Error deleting rule:", error);
