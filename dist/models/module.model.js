@@ -34,7 +34,7 @@ const ruleSchema = new mongoose_1.Schema({
         type: {
             type: String,
             required: true,
-            enum: ["on", "off", "number"] // Define possible types for action
+            enum: ["boolean", "number"] // Define possible types for action
         },
         value: { type: mongoose_1.Schema.Types.Mixed } // Allow any value for 'value' field
     }

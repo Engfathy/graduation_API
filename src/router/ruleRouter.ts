@@ -9,6 +9,7 @@ import jwtTokenVerifier from "../middleware/jwtTokenVerifier";
 
 const ruleRouter: express.Router = express.Router();
 
+ruleRouter.post("/all/:projectId", createRuleInModule);
 ruleRouter.post("/create/:projectId/:moduleId", createRuleInModule);
 ruleRouter.put("/update/:projectId/:moduleId/:ruleId" ,updateRuleInModule);
 ruleRouter.delete("/delete/:projectId/:moduleId/:ruleId", deleteRuleInModule);

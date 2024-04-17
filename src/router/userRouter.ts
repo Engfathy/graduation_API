@@ -16,6 +16,7 @@ import {
 } from "../controller/user.controller";
 import tokenVerifier from "../middleware/resetTokenVerifier";
 import verifyEmailVerifier from "../middleware/verifyEmailVerifier";
+import resetTokenVerifier from "../middleware/resetTokenVerifier";
 
 // let upload = multer();
 const userRouter: express.Router = express.Router();
@@ -119,7 +120,7 @@ userRouter.post(
             .withMessage("min 5 characters required for password"),
     ],
 
-    tokenVerifier,
+    resetTokenVerifier,
     resetPassword,
 );
 userRouter.post(

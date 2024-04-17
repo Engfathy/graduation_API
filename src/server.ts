@@ -74,7 +74,7 @@ app.post(
     async (req: express.Request, res: express.Response) => {
         const projectName = req.body.projectName;
         const userName = req.body.user;
-        
+
         if (!userName) {
             return res
                 .status(400)
@@ -152,33 +152,50 @@ io.on("connection", async (socket) => {
     console.log(`user ${io.engine.clientsCount} connected`);
 
     socket.on("createRooms", (roomsIds: string[]) => {
-        roomsIds.forEach((roomId) => {
-            io.to(roomId).emit("init", `initate room`);
-            console.log(`Room ${roomId} created`);
-        });
+        if(roomsIds.length ==0){
+            io.emit("rooms status", `no room sended`);
+        }else{
+            roomsIds.forEach((roomId) => {
+                io.to(roomId).emit("init", `initate room`);
+                console.log(`Room ${roomId} created`);
+            });
+
+        }
     });
 
     socket.on("joinRooms", (roomsIds: string[]) => {
         // Join the socket to the specified room
         console.log(roomsIds);
-
-        roomsIds.forEach((roomId: string) => {
-            socket.join(roomId);
-            io.emit("rooms status", `User: ${socket.id} joined room ${roomId}`);
-            console.log(`User: ${socket.id} joined room ${roomId}`);
-        });
-        console.log(socket.rooms);
+        if (roomsIds.length == 0) {
+            io.emit("rooms status", `no room sended`);
+        } else {
+            roomsIds.forEach((roomId: string) => {
+                socket.join(roomId);
+                io.emit(
+                    "rooms status",
+                    `User: ${socket.id} joined room ${roomId}`,
+                );
+                console.log(`User: ${socket.id} joined room ${roomId}`);
+            });
+            console.log(socket.rooms);
+        }
     });
     socket.on("leaveRooms", (roomsIds: string[]) => {
         // Join the socket to the specified room
         console.log(roomsIds);
-
-        roomsIds.forEach((roomId: string) => {
-            socket.leave(roomId);
-            io.emit("rooms status", `User: ${socket.id} leaved room ${roomId}`);
-            console.log(`User: ${socket.id} left room ${roomId}`);
-        });
-        console.log(socket.rooms);
+        if (roomsIds.length == 0) {
+            io.emit("rooms status", `no room sended`);
+        } else {
+            roomsIds.forEach((roomId: string) => {
+                socket.leave(roomId);
+                io.emit(
+                    "rooms status",
+                    `User: ${socket.id} leaved room ${roomId}`,
+                );
+                console.log(`User: ${socket.id} left room ${roomId}`);
+            });
+            console.log(socket.rooms);
+        }
     });
     socket.on("updateValues", async (data) => {
         console.log(data);
@@ -281,14 +298,6 @@ io.on("connection", async (socket) => {
     //   }
 
     io.emit("user numbers", io.engine.clientsCount);
-
-    // display number of user connected
-    // console.log(io.engine.clientsCount);
-    // console.log(io.engine.eventNames);
-    // console.log(socket.handshake);
-    // console.log(socket.rooms);
-    // console.log(socket.data);
-    // numver of users in specific route
     // console.log(io.of("/").sockets.size, "of name space");
 
     socket.on("disconnect", () => {
@@ -298,12 +307,6 @@ io.on("connection", async (socket) => {
 
         io.emit("user leave", "user diconnected");
     });
-
-    // io.engine.on("initial_headers", (headers, req) => {
-    //     headers["test"] = "123";
-    //     headers["set-cookie"] = "mycookie=456";
-    //     headers["id"] = socket.id;
-    // });
 });
 
 io.engine.on("connection_error", (err) => {
@@ -346,9 +349,10 @@ app.post(
 );
 
 app.get("/ip", (req, res) => {
-    const realIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  console.log('Real IP:', realIP);
-  res.send(realIP);
+    const realIP =
+        req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+    console.log("Real IP:", realIP);
+    res.send(realIP);
 });
 
 if (hostName && port) {

@@ -39,7 +39,7 @@ const ruleSchema = new Schema<Rule>({
         type: {
             type: String,
             required: true,
-            enum: ["on", "off", "number"] // Define possible types for action
+            enum: ["boolean", "number"] // Define possible types for action
         },
         value: { type: Schema.Types.Mixed } // Allow any value for 'value' field
     }

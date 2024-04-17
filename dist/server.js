@@ -129,30 +129,45 @@ let names = ["fathy", "alice", "mohamed"];
 io.on("connection", async (socket) => {
     console.log(`user ${io.engine.clientsCount} connected`);
     socket.on("createRooms", (roomsIds) => {
-        roomsIds.forEach((roomId) => {
-            io.to(roomId).emit("init", `initate room`);
-            console.log(`Room ${roomId} created`);
-        });
+        if (roomsIds.length == 0) {
+            io.emit("rooms status", `no room sended`);
+        }
+        else {
+            roomsIds.forEach((roomId) => {
+                io.to(roomId).emit("init", `initate room`);
+                console.log(`Room ${roomId} created`);
+            });
+        }
     });
     socket.on("joinRooms", (roomsIds) => {
         // Join the socket to the specified room
         console.log(roomsIds);
-        roomsIds.forEach((roomId) => {
-            socket.join(roomId);
-            io.emit("rooms status", `User: ${socket.id} joined room ${roomId}`);
-            console.log(`User: ${socket.id} joined room ${roomId}`);
-        });
-        console.log(socket.rooms);
+        if (roomsIds.length == 0) {
+            io.emit("rooms status", `no room sended`);
+        }
+        else {
+            roomsIds.forEach((roomId) => {
+                socket.join(roomId);
+                io.emit("rooms status", `User: ${socket.id} joined room ${roomId}`);
+                console.log(`User: ${socket.id} joined room ${roomId}`);
+            });
+            console.log(socket.rooms);
+        }
     });
     socket.on("leaveRooms", (roomsIds) => {
         // Join the socket to the specified room
         console.log(roomsIds);
-        roomsIds.forEach((roomId) => {
-            socket.leave(roomId);
-            io.emit("rooms status", `User: ${socket.id} leaved room ${roomId}`);
-            console.log(`User: ${socket.id} left room ${roomId}`);
-        });
-        console.log(socket.rooms);
+        if (roomsIds.length == 0) {
+            io.emit("rooms status", `no room sended`);
+        }
+        else {
+            roomsIds.forEach((roomId) => {
+                socket.leave(roomId);
+                io.emit("rooms status", `User: ${socket.id} leaved room ${roomId}`);
+                console.log(`User: ${socket.id} left room ${roomId}`);
+            });
+            console.log(socket.rooms);
+        }
     });
     socket.on("updateValues", async (data) => {
         console.log(data);
@@ -244,24 +259,12 @@ io.on("connection", async (socket) => {
     //     console.log(socket.data);
     //   }
     io.emit("user numbers", io.engine.clientsCount);
-    // display number of user connected
-    // console.log(io.engine.clientsCount);
-    // console.log(io.engine.eventNames);
-    // console.log(socket.handshake);
-    // console.log(socket.rooms);
-    // console.log(socket.data);
-    // numver of users in specific route
     // console.log(io.of("/").sockets.size, "of name space");
     socket.on("disconnect", () => {
         console.log("User disconnected");
         io.emit("user numbers", io.engine.clientsCount);
         io.emit("user leave", "user diconnected");
     });
-    // io.engine.on("initial_headers", (headers, req) => {
-    //     headers["test"] = "123";
-    //     headers["set-cookie"] = "mycookie=456";
-    //     headers["id"] = socket.id;
-    // });
 });
 io.engine.on("connection_error", (err) => {
     console.log(err.req); // the request object
@@ -300,8 +303,8 @@ app.post("/api/v1/connect-data", async (req, res) => {
     }
 });
 app.get("/ip", (req, res) => {
-    const realIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    console.log('Real IP:', realIP);
+    const realIP = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+    console.log("Real IP:", realIP);
     res.send(realIP);
 });
 if (hostName && port) {
