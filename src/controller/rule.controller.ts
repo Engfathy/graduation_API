@@ -12,36 +12,38 @@ export const getRulesForProject = async (
         console.log(projectId);
 
         // Retrieve modules based on the project ID
-        const project:any = await ProjectModel.findById( projectId );
-        
+        const project: any = await ProjectModel.findById(projectId);
+
         const modules = project.modules;
         if (!modules || modules.length === 0) {
-            return res
-                .status(404)
-                .json({success: false, msg: "project not found for the project" });
+            return res.status(404).json({
+                success: false,
+                msg: "project not found for the project",
+            });
         }
 
         // Extract rules from modules
         const rules: any[] = [];
-        modules.forEach((module:any) => {
+        modules.forEach((module: any) => {
             if (module.rules) {
-                module.rules.forEach((rule:any) => {
+                module.rules.forEach((rule: any) => {
                     rules.push(rule);
                 });
             }
         });
 
         if (rules.length === 0) {
-            return res
-                .status(404)
-                .json({success: false, msg: "Rules not found for the project" });
+            return res.status(404).json({
+                success: false,
+                msg: "Rules not found for the project",
+            });
         }
 
         // Send the rules as a response
-        res.json({success: true, msg: "Rule Retrieved success",data:rules});
+        res.json({ success: true, msg: "Rule Retrieved success", data: rules });
     } catch (error) {
         console.error("Error fetching rules for project:", error);
-        res.status(500).json({success: false, msg: "Internal Server Error" });
+        res.status(500).json({ success: false, msg: "Internal Server Error" });
     }
 };
 // Create rule in a module within a project
@@ -51,9 +53,7 @@ export const createRuleInModule = async (
 ) => {
     try {
         const projectId = req.params.projectId;
-        const moduleId = req.params.moduleId;
-        console.log(projectId);
-        console.log(moduleId);
+
         const project = await ProjectModel.findById(projectId);
 
         if (!project) {
@@ -62,26 +62,43 @@ export const createRuleInModule = async (
                 .json({ success: false, msg: "Project not found" });
         }
 
-        const module = project.modules.find((mod: any) => mod._id == moduleId);
+        const rulesData = req.body;
 
-        if (!module) {
-            return res
-                .status(404)
-                .json({
-                    success: false,
-                    msg: "Module not found in the project",
-                });
+        if (!Array.isArray(rulesData)) {
+            return res.status(400).json({
+                success: false,
+                msg: "Request body should contain an array of rules",
+            });
         }
 
-        const ruleData = req.body;
-        module.rules?.push(ruleData);
+        // Iterate over each rule object in the array
+        for (const ruleData of rulesData) {
+            // Find the corresponding module using the triggerModuleId
+            const module = project.modules.find(
+                (mod: any) => mod._id == ruleData.triggerModuleId,
+            );
+
+            if (!module) {
+                return res.status(400).json({
+                    success: false,
+                    msg: `Module not found for rule with triggerModuleId: ${ruleData.triggerModuleId}`,
+                });
+            }
+
+            // Push the rule to the module's rules array
+            module.rules?.push(ruleData);
+        }
+
+        // Save the project
         await project.save();
 
-        return res
-            .status(201)
-            .json({ success: true, msg: "Rule added success", data: module.rules });
+        return res.status(201).json({
+            success: true,
+            msg: "Rules added successfully",
+            data: project.modules, // Return all modules with updated rules
+        });
     } catch (error) {
-        console.error("Error creating rule:", error);
+        console.error("Error creating rules:", error);
         return res
             .status(500)
             .json({ success: false, msg: "Internal Server Error" });
@@ -130,22 +147,18 @@ export const updateRuleInModule = async (
 
         // Check if the module was not found in the updated project
         if (!updatedModule) {
-            return res
-                .status(404)
-                .json({
-                    success: false,
-                    msg: "Module not found in the project",
-                });
+            return res.status(404).json({
+                success: false,
+                msg: "Module not found in the project",
+            });
         }
 
         // Send success response with updated module
-        return res
-            .status(200)
-            .json({
-                success: true,
-                msg: "Rule updated successfully",
-                data: updatedModule.rules,
-            });
+        return res.status(200).json({
+            success: true,
+            msg: "Rule updated successfully",
+            data: updatedModule.rules,
+        });
     } catch (error) {
         console.error("Error updating rule:", error);
         return res
@@ -185,22 +198,18 @@ export const deleteRuleInModule = async (
 
         // Check if the module was not found in the updated project
         if (!updatedModule) {
-            return res
-                .status(404)
-                .json({
-                    success: false,
-                    msg: "Module not found in the project",
-                });
+            return res.status(404).json({
+                success: false,
+                msg: "Module not found in the project",
+            });
         }
 
         // Send success response with updated module
-        return res
-            .status(200)
-            .json({
-                success: true,
-                msg: "Rule deleted successfully",
-                data: updatedModule.rules,
-            });
+        return res.status(200).json({
+            success: true,
+            msg: "Rule deleted successfully",
+            data: updatedModule.rules,
+        });
     } catch (error) {
         console.error("Error deleting rule:", error);
         return res
