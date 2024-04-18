@@ -159,10 +159,11 @@ const updateProjectById = async (req, res) => {
         const _a = req.body, { name, description, projectName } = _a, updateData = __rest(_a, ["name", "description", "projectName"]);
         Object.assign(existing, updateData);
         const updated = await existing.save();
+        const projects = await project_model_1.default.find({ name: userName });
         return res.status(200).json({
             success: true,
             msg: "project updated",
-            data: updated,
+            data: projects,
         });
     }
     catch (err) {
@@ -178,6 +179,7 @@ const updateProjectName = async (req, res) => {
     const { id } = req.params;
     const newName = req.body.projectName;
     try {
+        const userName = req.cookies["userName"] || req.headers["user"];
         const existing = await project_model_1.default.findById(id);
         if (!existing) {
             return res
@@ -195,7 +197,8 @@ const updateProjectName = async (req, res) => {
         }
         existing.projectName = newName;
         const updated = await existing.save();
-        return res.json({ success: true, msg: "project name updated" });
+        const projects = await project_model_1.default.find({ name: userName });
+        return res.json({ success: true, msg: "project name updated", data: projects });
     }
     catch (err) {
         return res.status(500).json({ success: false, msg: "Server error" });
@@ -232,6 +235,7 @@ exports.updateProjectDescription = updateProjectDescription;
 // delete project by id
 const deleteProjectById = async (req, res) => {
     try {
+        const userName = req.cookies["userName"] || req.headers["user"];
         const deletedproject = await project_model_1.default.findByIdAndDelete(req.params.id);
         if (!deletedproject) {
             return res
@@ -239,9 +243,10 @@ const deleteProjectById = async (req, res) => {
                 .json({ success: false, error: "project not found" });
         }
         else {
+            const projects = await project_model_1.default.find({ name: userName });
             return res
                 .status(200)
-                .json({ success: true, msg: "project removed" });
+                .json({ success: true, msg: "project removed", data: projects });
         }
     }
     catch (error) {

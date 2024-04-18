@@ -163,11 +163,11 @@ export const updateProjectById = async (
         Object.assign(existing, updateData);
 
         const updated = await existing.save();
-
+        const projects = await ProjectModel.find({ name: userName });
         return res.status(200).json({
             success: true,
             msg: "project updated",
-            data: updated,
+            data: projects,
         });
     } catch (err) {
         return res.status(500).json({
@@ -186,6 +186,7 @@ export const updateProjectName = async (
     const newName = req.body.projectName;
 
     try {
+        const userName = req.cookies["userName"] || req.headers["user"];
         const existing = await ProjectModel.findById(id);
 
         if (!existing) {
@@ -208,8 +209,8 @@ export const updateProjectName = async (
         existing.projectName = newName;
 
         const updated = await existing.save();
-
-        return res.json({ success: true, msg: "project name updated" });
+        const projects = await ProjectModel.find({ name: userName });
+        return res.json({ success: true, msg: "project name updated" ,data:projects});
     } catch (err) {
         return res.status(500).json({ success: false, msg: "Server error" });
     }
@@ -257,6 +258,7 @@ export const deleteProjectById = async (
     res: express.Response,
 ) => {
     try {
+        const userName = req.cookies["userName"] || req.headers["user"];
         const deletedproject = await ProjectModel.findByIdAndDelete(
             req.params.id,
         );
@@ -266,9 +268,10 @@ export const deleteProjectById = async (
                 .status(404)
                 .json({ success: false, error: "project not found" });
         } else {
+            const projects = await ProjectModel.find({ name: userName });
             return res
                 .status(200)
-                .json({ success: true, msg: "project removed" });
+                .json({ success: true, msg: "project removed",data:projects });
         }
     } catch (error) {
         return res.status(500).json({
