@@ -211,7 +211,11 @@ export const updateProjectName = async (
 
         const updated = await existing.save();
         const projects = await ProjectModel.find({ name: userName });
-        return res.json({ success: true, msg: "project name updated" ,data:projects});
+        return res.json({
+            success: true,
+            msg: "project name updated",
+            data: projects,
+        });
     } catch (err) {
         return res.status(500).json({ success: false, msg: "Server error" });
     }
@@ -270,9 +274,11 @@ export const deleteProjectById = async (
                 .json({ success: false, error: "project not found" });
         } else {
             const projects = await ProjectModel.find({ name: userName });
-            return res
-                .status(200)
-                .json({ success: true, msg: "project removed",data:projects });
+            return res.status(200).json({
+                success: true,
+                msg: "project removed",
+                data: projects,
+            });
         }
     } catch (error) {
         return res.status(500).json({
@@ -323,8 +329,6 @@ export const updateProjectModulesValues = async (
         });
     }
 };
-
-
 
 export const getProjectByUserAndPassword = async (
     req: express.Request,

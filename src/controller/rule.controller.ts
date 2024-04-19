@@ -92,10 +92,21 @@ export const createRuleInModule = async (
         // Save the project
         await project.save();
 
+        const projectAftersave: any = await ProjectModel.findById(projectId);
+
+        const modules = projectAftersave.modules;
+        const rules: any[] = [];
+        modules.forEach((module: any) => {
+            if (module.rules) {
+                module.rules.forEach((rule: any) => {
+                    rules.push(rule);
+                });
+            }
+        });
         return res.status(201).json({
             success: true,
             msg: "Rules added successfully",
-            data: project.modules, // Return all modules with updated rules
+            data:rules, // Return all modules with updated rules
         });
     } catch (error) {
         console.error("Error creating rules:", error);

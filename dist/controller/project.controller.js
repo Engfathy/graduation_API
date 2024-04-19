@@ -199,7 +199,11 @@ const updateProjectName = async (req, res) => {
         existing.projectName = newName;
         const updated = await existing.save();
         const projects = await project_model_1.default.find({ name: userName });
-        return res.json({ success: true, msg: "project name updated", data: projects });
+        return res.json({
+            success: true,
+            msg: "project name updated",
+            data: projects,
+        });
     }
     catch (err) {
         return res.status(500).json({ success: false, msg: "Server error" });
@@ -245,9 +249,11 @@ const deleteProjectById = async (req, res) => {
         }
         else {
             const projects = await project_model_1.default.find({ name: userName });
-            return res
-                .status(200)
-                .json({ success: true, msg: "project removed", data: projects });
+            return res.status(200).json({
+                success: true,
+                msg: "project removed",
+                data: projects,
+            });
         }
     }
     catch (error) {

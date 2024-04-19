@@ -75,10 +75,20 @@ const createRuleInModule = async (req, res) => {
         }
         // Save the project
         await project.save();
+        const projectAftersave = await project_model_1.default.findById(projectId);
+        const modules = projectAftersave.modules;
+        const rules = [];
+        modules.forEach((module) => {
+            if (module.rules) {
+                module.rules.forEach((rule) => {
+                    rules.push(rule);
+                });
+            }
+        });
         return res.status(201).json({
             success: true,
             msg: "Rules added successfully",
-            data: project.modules, // Return all modules with updated rules
+            data: rules, // Return all modules with updated rules
         });
     }
     catch (error) {
