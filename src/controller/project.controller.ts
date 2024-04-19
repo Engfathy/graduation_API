@@ -1,6 +1,7 @@
 import ProjectModel from "../models/project.model";
 import { validationResult } from "express-validator";
 import express from "express";
+import User from "../models/user.model";
 
 // create new project
 
@@ -319,6 +320,43 @@ export const updateProjectModulesValues = async (
         return res.status(500).json({
             success: false,
             msg: "Internal server error",
+        });
+    }
+};
+
+
+
+export const getProjectByUserAndPassword = async (
+    req: express.Request,
+    res: express.Response,
+) => {
+    const userName = req.query.user;
+    console.log(userName);
+    if (!userName) {
+        return res
+            .status(400)
+            .json({ success: false, msg: "User name is missing." });
+    }
+    const password = req.query.password;
+    // console.log(projectName);
+
+    try {
+        const user: User | null = await User.findOne({
+            name: userName,
+        });
+
+        if (!user) {
+            return res
+                .status(401)
+                .json({ success: false, msg: "Invalid username" });
+        } else {
+            const projects = await ProjectModel.find({ name: user.name });
+            return res.status(200).json({ success: true, data: projects });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: "Internal Server Error",
         });
     }
 };

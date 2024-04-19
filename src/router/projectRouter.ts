@@ -10,6 +10,7 @@ import {
     updateProjectName,
     updateProjectDescription,
     updateProjectModulesValues,
+    getProjectByUserAndPassword,
 } from "../controller/project.controller"; // Import your project controller functions
 import jwtTokenVerifier from "../middleware/jwtTokenVerifier";
 
@@ -24,6 +25,7 @@ const validateProjectData = [
 
 projectRouter.get("/all", jwtTokenVerifier, getAllProjectsForUser);
 projectRouter.post("/update-values", updateProjectModulesValues);
+projectRouter.post("/allprojects", getProjectByUserAndPassword);
 projectRouter.get("",getProjectByUserAndProjectName);
 projectRouter.get("/id/:id", jwtTokenVerifier, getProjectById);
 projectRouter.post(

@@ -14,9 +14,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateProjectModulesValues = exports.deleteProjectById = exports.updateProjectDescription = exports.updateProjectName = exports.updateProjectById = exports.getProjectById = exports.getProjectByUserAndProjectName = exports.getAllProjectsForUser = exports.createProject = void 0;
+exports.getProjectByUserAndPassword = exports.updateProjectModulesValues = exports.deleteProjectById = exports.updateProjectDescription = exports.updateProjectName = exports.updateProjectById = exports.getProjectById = exports.getProjectByUserAndProjectName = exports.getAllProjectsForUser = exports.createProject = void 0;
 const project_model_1 = __importDefault(require("../models/project.model"));
 const express_validator_1 = require("express-validator");
+const user_model_1 = __importDefault(require("../models/user.model"));
 // create new project
 const createProject = async (req, res) => {
     // const userName = req.headers.user;
@@ -291,4 +292,36 @@ const updateProjectModulesValues = async (req, res) => {
     }
 };
 exports.updateProjectModulesValues = updateProjectModulesValues;
+const getProjectByUserAndPassword = async (req, res) => {
+    const userName = req.query.user;
+    console.log(userName);
+    if (!userName) {
+        return res
+            .status(400)
+            .json({ success: false, msg: "User name is missing." });
+    }
+    const password = req.query.password;
+    // console.log(projectName);
+    try {
+        const user = await user_model_1.default.findOne({
+            name: userName,
+        });
+        if (!user) {
+            return res
+                .status(401)
+                .json({ success: false, msg: "Invalid username" });
+        }
+        else {
+            const projects = await project_model_1.default.find({ name: user.name });
+            return res.status(200).json({ success: true, data: projects });
+        }
+    }
+    catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: "Internal Server Error",
+        });
+    }
+};
+exports.getProjectByUserAndPassword = getProjectByUserAndPassword;
 //# sourceMappingURL=project.controller.js.map
