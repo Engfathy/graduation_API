@@ -12,12 +12,12 @@ const getRulesForProject = async (req, res) => {
         // Retrieve modules based on the project ID
         const project = await project_model_1.default.findById(projectId);
         const modules = project.modules;
-        if (!modules || modules.length === 0) {
-            return res.status(404).json({
-                success: false,
-                msg: "project not found for the project",
-            });
-        }
+        // if (!modules || modules.length === 0) {
+        //     return res.status(404).json({
+        //         success: false,
+        //         msg: "project not found for the project",
+        //     });
+        // }
         // Extract rules from modules
         const rules = [];
         modules.forEach((module) => {

@@ -15,12 +15,12 @@ export const getRulesForProject = async (
         const project: any = await ProjectModel.findById(projectId);
 
         const modules = project.modules;
-        if (!modules || modules.length === 0) {
-            return res.status(404).json({
-                success: false,
-                msg: "project not found for the project",
-            });
-        }
+        // if (!modules || modules.length === 0) {
+        //     return res.status(404).json({
+        //         success: false,
+        //         msg: "project not found for the project",
+        //     });
+        // }
 
         // Extract rules from modules
         const rules: any[] = [];
