@@ -29,7 +29,7 @@ export const createProject = async (
             // console.log(newProject);
             const savedProject = await newProject.save();
             // console.log(savedProject);
-            const projects = await ProjectModel.find({ name: userName });
+            const projects = await ProjectModel.find({ name: userName }).sort({ createdAt: -1 });
             return res.status(201).json({
                 success: true,
                 msg: "project created",
@@ -165,7 +165,7 @@ export const updateProjectById = async (
         Object.assign(existing, updateData);
 
         const updated = await existing.save();
-        const projects = await ProjectModel.find({ name: userName });
+        const projects = await ProjectModel.find({ name: userName }).sort({ createdAt: -1 });
         return res.status(200).json({
             success: true,
             msg: "project updated",
@@ -211,7 +211,7 @@ export const updateProjectName = async (
         existing.projectName = newName;
 
         const updated = await existing.save();
-        const projects = await ProjectModel.find({ name: userName });
+        const projects = await ProjectModel.find({ name: userName }).sort({ createdAt: -1 });
         return res.json({
             success: true,
             msg: "project name updated",
@@ -274,7 +274,7 @@ export const deleteProjectById = async (
                 .status(404)
                 .json({ success: false, error: "project not found" });
         } else {
-            const projects = await ProjectModel.find({ name: userName });
+            const projects = await ProjectModel.find({ name: userName }).sort({ createdAt: -1 });
             return res.status(200).json({
                 success: true,
                 msg: "project removed",
@@ -297,7 +297,7 @@ export const updateProjectModulesValues = async (
 ) => {
     try {
         const { projectID, modules } = req.body;
-
+        const userName = req.cookies["userName"] || req.headers["user"];
         // Find and validate the project
         const existingProject = await ProjectModel.findById(projectID);
         if (!existingProject) {
@@ -317,11 +317,11 @@ export const updateProjectModulesValues = async (
 
         // Save the updated project
         const updatedProject = await existingProject.save();
-
+        const projects = await ProjectModel.find({ name: userName }).sort({ createdAt: -1 });
         return res.status(200).json({
             success: true,
             msg: "Modules updated successfully",
-            data: updatedProject,
+            data: projects,
         });
     } catch (err) {
         return res.status(500).json({

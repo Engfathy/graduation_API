@@ -40,7 +40,7 @@ const createProject = async (req, res) => {
             // console.log(newProject);
             const savedProject = await newProject.save();
             // console.log(savedProject);
-            const projects = await project_model_1.default.find({ name: userName });
+            const projects = await project_model_1.default.find({ name: userName }).sort({ createdAt: -1 });
             return res.status(201).json({
                 success: true,
                 msg: "project created",
@@ -162,7 +162,7 @@ const updateProjectById = async (req, res) => {
         const _a = req.body, { name, description, projectName } = _a, updateData = __rest(_a, ["name", "description", "projectName"]);
         Object.assign(existing, updateData);
         const updated = await existing.save();
-        const projects = await project_model_1.default.find({ name: userName });
+        const projects = await project_model_1.default.find({ name: userName }).sort({ createdAt: -1 });
         return res.status(200).json({
             success: true,
             msg: "project updated",
@@ -200,7 +200,7 @@ const updateProjectName = async (req, res) => {
         }
         existing.projectName = newName;
         const updated = await existing.save();
-        const projects = await project_model_1.default.find({ name: userName });
+        const projects = await project_model_1.default.find({ name: userName }).sort({ createdAt: -1 });
         return res.json({
             success: true,
             msg: "project name updated",
@@ -250,7 +250,7 @@ const deleteProjectById = async (req, res) => {
                 .json({ success: false, error: "project not found" });
         }
         else {
-            const projects = await project_model_1.default.find({ name: userName });
+            const projects = await project_model_1.default.find({ name: userName }).sort({ createdAt: -1 });
             return res.status(200).json({
                 success: true,
                 msg: "project removed",
@@ -270,6 +270,7 @@ exports.deleteProjectById = deleteProjectById;
 const updateProjectModulesValues = async (req, res) => {
     try {
         const { projectID, modules } = req.body;
+        const userName = req.cookies["userName"] || req.headers["user"];
         // Find and validate the project
         const existingProject = await project_model_1.default.findById(projectID);
         if (!existingProject) {
@@ -286,10 +287,11 @@ const updateProjectModulesValues = async (req, res) => {
         }
         // Save the updated project
         const updatedProject = await existingProject.save();
+        const projects = await project_model_1.default.find({ name: userName }).sort({ createdAt: -1 });
         return res.status(200).json({
             success: true,
             msg: "Modules updated successfully",
-            data: updatedProject,
+            data: projects,
         });
     }
     catch (err) {
