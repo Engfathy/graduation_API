@@ -64,8 +64,7 @@ export const getAllProjectsForUser = async (
                 .json({ success: false, msg: "User header is missing." });
         }
 
-        const projects = await ProjectModel.find({ name: userName });
-
+        const projects = await ProjectModel.find({ name: userName }).sort({ createdAt: -1 })
         return res.status(200).json({ success: true, data: projects });
     } catch (error) {
         console.error(error);

@@ -72,7 +72,7 @@ const getAllProjectsForUser = async (req, res) => {
                 .status(400)
                 .json({ success: false, msg: "User header is missing." });
         }
-        const projects = await project_model_1.default.find({ name: userName });
+        const projects = await project_model_1.default.find({ name: userName }).sort({ createdAt: -1 });
         return res.status(200).json({ success: true, data: projects });
     }
     catch (error) {
