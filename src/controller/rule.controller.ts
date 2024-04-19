@@ -33,9 +33,10 @@ export const getRulesForProject = async (
         });
 
         if (rules.length === 0) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 msg: "Rules not found for the project",
+                data:rules
             });
         }
 
@@ -117,61 +118,67 @@ export const createRuleInModule = async (
 };
 
 // Update rule in a module within a project
-export const updateRuleInModule = async (
+export const updateRulesInModule  = async (
     req: express.Request,
     res: express.Response,
 ) => {
     try {
         const projectId = req.params.projectId;
-        const moduleId = req.params.moduleId;
-        const ruleId = req.params.ruleId;
-        const updatedRuleData = req.body;
 
-        // Find the project by ID and update the module's rule using $set operator
-        const updatedProject = await ProjectModel.findOneAndUpdate(
-            {
-                _id: projectId,
-                "modules._id": moduleId,
-                "modules.rules._id": ruleId,
-            },
-            { $set: { "modules.$[module].rules.$[rule]": updatedRuleData } },
-            {
-                arrayFilters: [
-                    { "module._id": moduleId },
-                    { "rule._id": ruleId },
-                ],
-                new: true,
-            },
-        );
+        const project = await ProjectModel.findById(projectId);
 
-        // Check if the project was not found or if the module was not found in the updated project
-        if (!updatedProject) {
+        if (!project) {
             return res
                 .status(404)
-                .json({ success: false, msg: "Project or module not found" });
+                .json({ success: false, msg: "Project not found" });
         }
 
-        // Find the updated module within the updated project
-        const updatedModule = updatedProject.modules.find(
-            (mod: any) => mod._id == moduleId,
-        );
+        const rulesData = req.body;
 
-        // Check if the module was not found in the updated project
-        if (!updatedModule) {
-            return res.status(404).json({
+        if (!Array.isArray(rulesData)) {
+            return res.status(400).json({
                 success: false,
-                msg: "Module not found in the project",
+                msg: "Request body should contain an array of rules",
             });
         }
 
-        // Send success response with updated module
-        return res.status(200).json({
+        // Iterate over each rule object in the array
+        for (const ruleData of rulesData) {
+            const { triggerModuleId } = ruleData;
+
+            // Find the corresponding module using its triggerModuleId
+            const module = project.modules.find((mod: any) => mod._id == triggerModuleId);
+
+            if (!module) {
+                return res.status(400).json({
+                    success: false,
+                    msg: `Module not found for rule with triggerModuleId: ${triggerModuleId}`,
+                });
+            }
+
+            // Push the rule to the module's rules array
+            if (!module.rules) {
+                module.rules = []; // Initialize rules array if not already present
+            }
+            module.rules.push(ruleData);
+        }
+
+        // Save the project
+        await project.save();
+
+        // Get all modules with updated rules
+        const modulesWithUpdatedRules = project.modules.map((module: any) => ({
+            moduleId: module._id,
+            rules: module.rules || [],
+        }));
+
+        return res.status(201).json({
             success: true,
-            msg: "Rule updated successfully",
-            data: updatedModule.rules,
+            msg: "Rules added successfully",
+            data: modulesWithUpdatedRules, // Return all modules with their updated rules
         });
     } catch (error) {
-        console.error("Error updating rule:", error);
+        console.error("Error creating rules:", error);
         return res
             .status(500)
             .json({ success: false, msg: "Internal Server Error" });

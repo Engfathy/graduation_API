@@ -26,6 +26,7 @@ const createProject = async (req, res) => {
         return res.status(400).json({ success: false, errors: errors.array() });
     }
     try {
+        const userName = req.cookies["userName"] || req.headers["user"];
         // console.log(userName);
         const ProjectNameExists = await project_model_1.default.findOne({
             name: req.body.name,
@@ -39,10 +40,11 @@ const createProject = async (req, res) => {
             // console.log(newProject);
             const savedProject = await newProject.save();
             // console.log(savedProject);
+            const projects = await project_model_1.default.find({ name: userName });
             return res.status(201).json({
                 success: true,
                 msg: "project created",
-                data: savedProject,
+                data: projects,
             });
         }
         else {

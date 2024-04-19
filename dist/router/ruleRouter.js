@@ -8,7 +8,7 @@ const rule_controller_1 = require("../controller/rule.controller");
 const ruleRouter = express_1.default.Router();
 ruleRouter.get("/all/:projectId", rule_controller_1.getRulesForProject);
 ruleRouter.post("/create/:projectId", rule_controller_1.createRuleInModule);
-ruleRouter.put("/update/:projectId/:moduleId/:ruleId", rule_controller_1.updateRuleInModule);
+ruleRouter.put("/update/:projectId", rule_controller_1.updateRulesInModule);
 ruleRouter.delete("/delete/:projectId/:moduleId/:ruleId", rule_controller_1.deleteRuleInModule);
 exports.default = ruleRouter;
 //# sourceMappingURL=ruleRouter.js.map

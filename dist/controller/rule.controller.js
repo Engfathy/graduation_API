@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteRuleInModule = exports.updateRuleInModule = exports.createRuleInModule = exports.getRulesForProject = void 0;
+exports.deleteRuleInModule = exports.updateRulesInModule = exports.createRuleInModule = exports.getRulesForProject = void 0;
 const project_model_1 = __importDefault(require("../models/project.model")); // Import your Project model
 const getRulesForProject = async (req, res) => {
     try {
@@ -28,9 +28,10 @@ const getRulesForProject = async (req, res) => {
             }
         });
         if (rules.length === 0) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: false,
                 msg: "Rules not found for the project",
+                data: rules
             });
         }
         // Send the rules as a response
@@ -100,54 +101,60 @@ const createRuleInModule = async (req, res) => {
 };
 exports.createRuleInModule = createRuleInModule;
 // Update rule in a module within a project
-const updateRuleInModule = async (req, res) => {
+const updateRulesInModule = async (req, res) => {
     try {
         const projectId = req.params.projectId;
-        const moduleId = req.params.moduleId;
-        const ruleId = req.params.ruleId;
-        const updatedRuleData = req.body;
-        // Find the project by ID and update the module's rule using $set operator
-        const updatedProject = await project_model_1.default.findOneAndUpdate({
-            _id: projectId,
-            "modules._id": moduleId,
-            "modules.rules._id": ruleId,
-        }, { $set: { "modules.$[module].rules.$[rule]": updatedRuleData } }, {
-            arrayFilters: [
-                { "module._id": moduleId },
-                { "rule._id": ruleId },
-            ],
-            new: true,
-        });
-        // Check if the project was not found or if the module was not found in the updated project
-        if (!updatedProject) {
+        const project = await project_model_1.default.findById(projectId);
+        if (!project) {
             return res
                 .status(404)
-                .json({ success: false, msg: "Project or module not found" });
+                .json({ success: false, msg: "Project not found" });
         }
-        // Find the updated module within the updated project
-        const updatedModule = updatedProject.modules.find((mod) => mod._id == moduleId);
-        // Check if the module was not found in the updated project
-        if (!updatedModule) {
-            return res.status(404).json({
+        const rulesData = req.body;
+        if (!Array.isArray(rulesData)) {
+            return res.status(400).json({
                 success: false,
-                msg: "Module not found in the project",
+                msg: "Request body should contain an array of rules",
             });
         }
-        // Send success response with updated module
-        return res.status(200).json({
+        // Iterate over each rule object in the array
+        for (const ruleData of rulesData) {
+            const { triggerModuleId } = ruleData;
+            // Find the corresponding module using its triggerModuleId
+            const module = project.modules.find((mod) => mod._id == triggerModuleId);
+            if (!module) {
+                return res.status(400).json({
+                    success: false,
+                    msg: `Module not found for rule with triggerModuleId: ${triggerModuleId}`,
+                });
+            }
+            // Push the rule to the module's rules array
+            if (!module.rules) {
+                module.rules = []; // Initialize rules array if not already present
+            }
+            module.rules.push(ruleData);
+        }
+        // Save the project
+        await project.save();
+        // Get all modules with updated rules
+        const modulesWithUpdatedRules = project.modules.map((module) => ({
+            moduleId: module._id,
+            rules: module.rules || [],
+        }));
+        return res.status(201).json({
             success: true,
-            msg: "Rule updated successfully",
-            data: updatedModule.rules,
+            msg: "Rules added successfully",
+            data: modulesWithUpdatedRules, // Return all modules with their updated rules
         });
     }
     catch (error) {
-        console.error("Error updating rule:", error);
+        console.error("Error creating rules:", error);
         return res
             .status(500)
             .json({ success: false, msg: "Internal Server Error" });
     }
 };
-exports.updateRuleInModule = updateRuleInModule;
+exports.updateRulesInModule = updateRulesInModule;
 // Delete rule in a module within a project
 const deleteRuleInModule = async (req, res) => {
     try {
