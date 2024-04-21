@@ -88,11 +88,11 @@ const handleRulesInModule = async (req, res) => {
         // Save the project
         await project.save();
         // Get all modules with updated rules
-        const projectAftersave = await project_model_1.default.findById(projectId);
         const modulesWithUpdatedRules = project.modules.map((module) => ({
             moduleId: module._id,
             rules: module.rules || [],
         }));
+        const projectAftersave = await project_model_1.default.findById(projectId);
         const modules = projectAftersave.modules;
         const rules = [];
         modules.forEach((module) => {
@@ -139,11 +139,21 @@ const deleteRuleInModule = async (req, res) => {
                 msg: "Module not found in the project",
             });
         }
+        const projectAftersave = await project_model_1.default.findById(projectId);
+        const modules = projectAftersave.modules;
+        const rules = [];
+        modules.forEach((module) => {
+            if (module.rules) {
+                module.rules.forEach((rule) => {
+                    rules.push(rule);
+                });
+            }
+        });
         // Send success response with updated module
         return res.status(200).json({
             success: true,
             msg: "Rule deleted successfully",
-            data: updatedModule.rules,
+            data: rules,
         });
     }
     catch (error) {
