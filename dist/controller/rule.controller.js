@@ -46,6 +46,7 @@ exports.getRulesForProject = getRulesForProject;
 const handleRulesInModule = async (req, res) => {
     try {
         const projectId = req.params.projectId;
+        // Check if the project exists
         const project = await project_model_1.default.findById(projectId);
         if (!project) {
             return res
@@ -59,7 +60,15 @@ const handleRulesInModule = async (req, res) => {
                 msg: "Request body should contain an array of rules",
             });
         }
-        // Iterate over each rule object in the array
+        // Check if there are existing rules for the project
+        const existingRules = project.modules.flatMap((module) => module.rules || []);
+        if (existingRules.length > 0) {
+            // Delete existing rules
+            project.modules.forEach((module) => {
+                module.rules = [];
+            });
+        }
+        // Iterate over each rule object in the array and add them to the project
         for (const ruleData of rulesData) {
             const { triggerModuleId } = ruleData;
             // Find the corresponding module using its triggerModuleId
@@ -79,14 +88,24 @@ const handleRulesInModule = async (req, res) => {
         // Save the project
         await project.save();
         // Get all modules with updated rules
+        const projectAftersave = await project_model_1.default.findById(projectId);
         const modulesWithUpdatedRules = project.modules.map((module) => ({
             moduleId: module._id,
             rules: module.rules || [],
         }));
-        return res.status(201).json({
+        const modules = projectAftersave.modules;
+        const rules = [];
+        modules.forEach((module) => {
+            if (module.rules) {
+                module.rules.forEach((rule) => {
+                    rules.push(rule);
+                });
+            }
+        });
+        return res.status(200).json({
             success: true,
-            msg: "Rules saved successfully",
-            data: modulesWithUpdatedRules, // Return all modules with their updated rules
+            msg: "Rules updated successfully",
+            data: rules, // Return all modules with their updated rules
         });
     }
     catch (error) {

@@ -54,6 +54,7 @@ export const handleRulesInModule = async (
     try {
         const projectId = req.params.projectId;
 
+        // Check if the project exists
         const project = await ProjectModel.findById(projectId);
 
         if (!project) {
@@ -71,7 +72,17 @@ export const handleRulesInModule = async (
             });
         }
 
-        // Iterate over each rule object in the array
+        // Check if there are existing rules for the project
+        const existingRules = project.modules.flatMap((module: any) => module.rules || []);
+
+        if (existingRules.length > 0) {
+            // Delete existing rules
+            project.modules.forEach((module: any) => {
+                module.rules = [];
+            });
+        }
+
+        // Iterate over each rule object in the array and add them to the project
         for (const ruleData of rulesData) {
             const { triggerModuleId } = ruleData;
 
@@ -96,15 +107,27 @@ export const handleRulesInModule = async (
         await project.save();
 
         // Get all modules with updated rules
+        const projectAftersave: any = await ProjectModel.findById(projectId);
         const modulesWithUpdatedRules = project.modules.map((module: any) => ({
             moduleId: module._id,
             rules: module.rules || [],
         }));
 
-        return res.status(201).json({
+        
+        const modules = projectAftersave.modules;
+        const rules: any[] = [];
+        modules.forEach((module: any) => {
+            if (module.rules) {
+                module.rules.forEach((rule: any) => {
+                    rules.push(rule);
+                });
+            }
+        });
+
+        return res.status(200).json({
             success: true,
-            msg: "Rules saved successfully",
-            data: modulesWithUpdatedRules, // Return all modules with their updated rules
+            msg: "Rules updated successfully",
+            data: rules, // Return all modules with their updated rules
         });
     } catch (error) {
         console.error("Error handling rules:", error);
