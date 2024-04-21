@@ -47,78 +47,7 @@ export const getRulesForProject = async (
         res.status(500).json({ success: false, msg: "Internal Server Error" });
     }
 };
-// Create rule in a module within a project
-export const createRuleInModule = async (
-    req: express.Request,
-    res: express.Response,
-) => {
-    try {
-        const projectId = req.params.projectId;
-
-        const project = await ProjectModel.findById(projectId);
-
-        if (!project) {
-            return res
-                .status(404)
-                .json({ success: false, msg: "Project not found" });
-        }
-
-        const rulesData = req.body;
-
-        if (!Array.isArray(rulesData)) {
-            return res.status(400).json({
-                success: false,
-                msg: "Request body should contain an array of rules",
-            });
-        }
-
-        // Iterate over each rule object in the array
-        for (const ruleData of rulesData) {
-            // Find the corresponding module using the triggerModuleId
-            const module = project.modules.find(
-                (mod: any) => mod._id == ruleData.triggerModuleId,
-            );
-
-            if (!module) {
-                return res.status(400).json({
-                    success: false,
-                    msg: `Module not found for rule with triggerModuleId: ${ruleData.triggerModuleId}`,
-                });
-            }
-
-            // Push the rule to the module's rules array
-            module.rules?.push(ruleData);
-        }
-
-        // Save the project
-        await project.save();
-
-        const projectAftersave: any = await ProjectModel.findById(projectId);
-
-        const modules = projectAftersave.modules;
-        const rules: any[] = [];
-        modules.forEach((module: any) => {
-            if (module.rules) {
-                module.rules.forEach((rule: any) => {
-                    rules.push(rule);
-                });
-            }
-        });
-        return res.status(201).json({
-            success: true,
-            msg: "Rules added successfully",
-            data:rules, // Return all modules with updated rules
-        });
-    } catch (error) {
-        console.error("Error creating rules:", error);
-        return res
-            .status(500)
-            .json({ success: false, msg: "Internal Server Error" });
-    }
-};
-
-// Update rule in a module within a project
-export const updateRulesInModule  = async (
+export const handleRulesInModule = async (
     req: express.Request,
     res: express.Response,
 ) => {
@@ -174,16 +103,17 @@ export const updateRulesInModule  = async (
 
         return res.status(201).json({
             success: true,
-            msg: "Rules added successfully",
+            msg: "Rules saved successfully",
             data: modulesWithUpdatedRules, // Return all modules with their updated rules
         });
     } catch (error) {
-        console.error("Error creating rules:", error);
+        console.error("Error handling rules:", error);
         return res
             .status(500)
             .json({ success: false, msg: "Internal Server Error" });
     }
 };
+
 
 // Delete rule in a module within a project
 export const deleteRuleInModule = async (
