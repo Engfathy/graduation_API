@@ -19,7 +19,11 @@ const jwtTokenVerifier = (req, res, next) => {
         let decode;
         try {
             decode = jsonwebtoken_1.default.verify(token, secretKey);
-            // console.log(decode);
+            if (Date.now() >= decode.exp * 1000) {
+                return res.status(401).json({
+                    msg: "Token expired. Access denied.",
+                });
+            }
         }
         catch (error) {
             return res.status(401).json({

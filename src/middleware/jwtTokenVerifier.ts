@@ -16,7 +16,11 @@ const jwtTokenVerifier = (req: express.Request, res: express.Response, next: exp
         
         try {
             decode = jwt.verify(token, secretKey);
-            // console.log(decode);
+            if (Date.now() >= decode.exp * 1000) {
+                return res.status(401).json({
+                    msg: "Token expired. Access denied.",
+                });
+            }
         } catch (error) {
             return res.status(401).json({
                 msg: "Token verification failed. Access denied.",
