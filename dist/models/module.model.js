@@ -48,7 +48,8 @@ const pinSchema = new mongoose_1.Schema({
             "output_digital",
             "input_analog",
             "input_digital",
-            "output_pwm"
+            "output_pwm",
+            "output_text"
         ],
     },
     type: { type: String },

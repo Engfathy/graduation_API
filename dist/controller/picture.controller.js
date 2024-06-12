@@ -9,6 +9,13 @@ const picture_model_1 = __importDefault(require("../models/picture.model"));
 const path_1 = __importDefault(require("path"));
 const uploadProjectPictures = async (req, res) => {
     try {
+        // const userName = req.cookies["userName"] || req.headers["user"];
+        // const project = await ProjectModel.findOne({name: userName ,_id:req.body.projectID});
+        // if (!project) {
+        //     return res
+        //         .status(404)
+        //         .json({ success: false, msg: "no project with this id belong to you" });
+        // }
         if (!req.file) {
             return res.status(400).json({ error: "No file uploaded" });
         }
@@ -48,6 +55,7 @@ const getProjectPictures = async (req, res) => {
                 .status(404)
                 .json({ error: "Pictures not found for the project" });
         }
+        console.log(pictures.length);
         // Array to store picture data
         const pictureData = [];
         // Loop through each picture and extract the file data
@@ -76,6 +84,7 @@ const getProjectPictures = async (req, res) => {
                 data: picture.fileData,
             });
         }
+        console.log(pictureData.length);
         // Send the array of picture data as a response
         res.json(pictureData);
     }

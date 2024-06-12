@@ -34,11 +34,8 @@ app.use(
     }),
 );
 app.set("trust proxy", 0);
-
 app.use(helmet());
-
-app.use(express.json({ limit: "50kb" }));
-
+app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -206,7 +203,7 @@ io.on("connection", async (socket) => {
                 data,
             );
         } catch (error) {
-            console.error("Error sending POST request to API:", error);
+            // console.error("Error sending POST request to API:", error);
         }
     });
 

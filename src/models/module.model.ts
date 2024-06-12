@@ -14,7 +14,7 @@ export interface Module {
     relationModule?: string;
     lastValue?: string | number;
     pins: Pin[];
-    rules?: Rule[]; // Optional rules field
+    rules?: Rule[]; 
 }
 
 export interface Rule {
@@ -54,7 +54,8 @@ const pinSchema = new Schema<Pin>({
             "output_digital",
             "input_analog",
             "input_digital",
-            "output_pwm"
+            "output_pwm",
+            "output_text"
         ],
     },
     type: { type: String },

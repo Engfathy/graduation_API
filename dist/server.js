@@ -36,7 +36,7 @@ app.use((0, cors_1.default)({
 }));
 app.set("trust proxy", 0);
 app.use((0, helmet_1.default)());
-app.use(express_1.default.json({ limit: "50kb" }));
+app.use(express_1.default.json({ limit: "100kb" }));
 app.use((0, cookie_parser_1.default)());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
 //The extended: true option allows for parsing complex objects and arrays.
@@ -44,7 +44,7 @@ app.use(body_parser_1.default.urlencoded({ extended: true }));
 //middle ware to prevent xss attack
 //middleware to prevent nosql injection
 app.use((0, express_mongo_sanitize_1.default)());
-//----------*****************************------------
+//---------*****************************------------
 // middleware to protect against HTTP Parameter Pollution attacks  put after parsing process
 //It prevents multiple values for the same parameter,
 app.use((0, hpp_1.default)());
@@ -176,7 +176,7 @@ io.on("connection", async (socket) => {
             const response = await axios_1.default.post("http://localhost:5500/api/v1/project/update-values", data);
         }
         catch (error) {
-            console.error("Error sending POST request to API:", error);
+            // console.error("Error sending POST request to API:", error);
         }
     });
     socket.on("joinRoom", (roomId) => {

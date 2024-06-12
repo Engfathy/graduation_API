@@ -1,5 +1,9 @@
 import express from "express";
-import { deletePictureById, getProjectPictures, uploadProjectPictures} from "../controller/picture.controller";
+import {
+    deletePictureById,
+    getProjectPictures,
+    uploadProjectPictures,
+} from "../controller/picture.controller";
 import jwtTokenVerifier from "../middleware/jwtTokenVerifier";
 import multer from "multer";
 import path from "path";
@@ -7,7 +11,7 @@ import path from "path";
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-        fileSize: 10 * 1024 * 1024, // 5MB file size limit
+        fileSize: 10 * 1024 * 1024,
     },
 });
 
@@ -19,6 +23,6 @@ filesRouter.post(
     uploadProjectPictures,
 );
 filesRouter.get("/picture/:projectId", getProjectPictures);
-filesRouter.delete('/delete/:id', deletePictureById);
+filesRouter.delete("/delete/:id", deletePictureById);
 
 export default filesRouter;

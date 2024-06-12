@@ -2,12 +2,21 @@ import { generateFilename } from "../utils/generateFileName";
 import PictureModel from "../models/picture.model";
 import express from "express";
 import path from "path";
+import ProjectModel from "../models/project.model";
 
 export const uploadProjectPictures = async (
     req: express.Request,
     res: express.Response,
 ) => {
     try {
+        // const userName = req.cookies["userName"] || req.headers["user"];
+        // const project = await ProjectModel.findOne({name: userName ,_id:req.body.projectID});
+       
+        // if (!project) {
+        //     return res
+        //         .status(404)
+        //         .json({ success: false, msg: "no project with this id belong to you" });
+        // }
         if (!req.file) {
             return res.status(400).json({ error: "No file uploaded" });
         }
@@ -54,7 +63,7 @@ export const getProjectPictures = async (
                 .status(404)
                 .json({ error: "Pictures not found for the project" });
         }
-
+        console.log(pictures.length)
         // Array to store picture data
         const pictureData = [];
 
@@ -84,7 +93,7 @@ export const getProjectPictures = async (
                 data: picture.fileData,
             });
         }
-
+        console.log(pictureData.length);
         // Send the array of picture data as a response
         res.json(pictureData);
     } catch (error) {

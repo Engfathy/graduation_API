@@ -9,12 +9,12 @@ const multer_1 = __importDefault(require("multer"));
 const upload = (0, multer_1.default)({
     storage: multer_1.default.memoryStorage(),
     limits: {
-        fileSize: 10 * 1024 * 1024, // 5MB file size limit
+        fileSize: 10 * 1024 * 1024,
     },
 });
 const filesRouter = express_1.default.Router();
 filesRouter.post("/upload-picture", upload.single("picture"), picture_controller_1.uploadProjectPictures);
 filesRouter.get("/picture/:projectId", picture_controller_1.getProjectPictures);
-filesRouter.delete('/delete/:id', picture_controller_1.deletePictureById);
+filesRouter.delete("/delete/:id", picture_controller_1.deletePictureById);
 exports.default = filesRouter;
 //# sourceMappingURL=pictureRouter.js.map
