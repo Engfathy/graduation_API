@@ -50,7 +50,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //middleware to prevent nosql injection
 app.use(ExpressMongoSanitize());
 
-//----------*****************************------------
+//---------*****************************------------
 // middleware to protect against HTTP Parameter Pollution attacks  put after parsing process
 //It prevents multiple values for the same parameter,
 app.use(hpp());
