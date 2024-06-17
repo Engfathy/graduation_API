@@ -198,3 +198,57 @@ export const deleteRuleInModule = async (
             .json({ success: false, msg: "Internal Server Error" });
     }
 };
+
+export const getRulesForProjectByUserAndName = async (
+    req: express.Request,
+    res: express.Response,
+) => {
+    try {
+        const { user, projectName } = req.query;
+        if (!user || !projectName) {
+            return res.status(400).json({
+                success: false,
+                msg: "Username and project name are required",
+            });
+        }
+
+        // Find the project by username and project name
+        const project = await ProjectModel.findOne({
+            name: user,
+            projectName: projectName,
+        });
+
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                msg: "Project not found for the given username and project name",
+            });
+        }
+
+        const modules = project.modules;
+
+        // Extract rules from modules
+        const rules: any[] = [];
+        modules.forEach((module: any) => {
+            if (module.rules) {
+                module.rules.forEach((rule: any) => {
+                    rules.push(rule);
+                });
+            }
+        });
+
+        if (rules.length === 0) {
+            return res.status(200).json({
+                success: false,
+                msg: "Rules not found for the project",
+                data: rules,
+            });
+        }
+
+        // Send the rules as a response
+        res.json({ success: true, msg: "Rule Retrieved success", data: rules });
+    } catch (error) {
+        console.error("Error fetching rules for project:", error);
+        res.status(500).json({ success: false, msg: "Internal Server Error" });
+    }
+};

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteRuleInModule = exports.handleRulesInModule = exports.getRulesForProject = void 0;
+exports.getRulesForProjectByUserAndName = exports.deleteRuleInModule = exports.handleRulesInModule = exports.getRulesForProject = void 0;
 const project_model_1 = __importDefault(require("../models/project.model")); // Import your Project model
 const getRulesForProject = async (req, res) => {
     try {
@@ -164,4 +164,50 @@ const deleteRuleInModule = async (req, res) => {
     }
 };
 exports.deleteRuleInModule = deleteRuleInModule;
+const getRulesForProjectByUserAndName = async (req, res) => {
+    try {
+        const { user, projectName } = req.query;
+        if (!user || !projectName) {
+            return res.status(400).json({
+                success: false,
+                msg: "Username and project name are required",
+            });
+        }
+        // Find the project by username and project name
+        const project = await project_model_1.default.findOne({
+            name: user,
+            projectName: projectName,
+        });
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                msg: "Project not found for the given username and project name",
+            });
+        }
+        const modules = project.modules;
+        // Extract rules from modules
+        const rules = [];
+        modules.forEach((module) => {
+            if (module.rules) {
+                module.rules.forEach((rule) => {
+                    rules.push(rule);
+                });
+            }
+        });
+        if (rules.length === 0) {
+            return res.status(200).json({
+                success: false,
+                msg: "Rules not found for the project",
+                data: rules,
+            });
+        }
+        // Send the rules as a response
+        res.json({ success: true, msg: "Rule Retrieved success", data: rules });
+    }
+    catch (error) {
+        console.error("Error fetching rules for project:", error);
+        res.status(500).json({ success: false, msg: "Internal Server Error" });
+    }
+};
+exports.getRulesForProjectByUserAndName = getRulesForProjectByUserAndName;
 //# sourceMappingURL=rule.controller.js.map

@@ -149,17 +149,16 @@ io.on("connection", async (socket) => {
     console.log(`user ${io.engine.clientsCount} connected`);
 
     socket.on("createRooms", (roomsIds: string[]) => {
-        if(roomsIds.length ==0){
+        if (roomsIds.length == 0) {
             io.emit("rooms status", `no room sended`);
-        }else{
+        } else {
             roomsIds.forEach((roomId) => {
                 io.to(roomId).emit("init", `initate room`);
                 console.log(`Room ${roomId} created`);
             });
-
         }
     });
-
+//--------------------------------------------------------------------------------------------
     socket.on("joinRooms", (roomsIds: string[]) => {
         // Join the socket to the specified room
         console.log(roomsIds);
@@ -177,6 +176,8 @@ io.on("connection", async (socket) => {
             console.log(socket.rooms);
         }
     });
+
+    //------------------------------------------------------------------
     socket.on("leaveRooms", (roomsIds: string[]) => {
         // Join the socket to the specified room
         console.log(roomsIds);
@@ -194,6 +195,7 @@ io.on("connection", async (socket) => {
             console.log(socket.rooms);
         }
     });
+    //-----------------------------------------------------------------------
     socket.on("updateValues", async (data) => {
         console.log(data);
         try {
@@ -202,11 +204,64 @@ io.on("connection", async (socket) => {
                 "http://localhost:5500/api/v1/project/update-values",
                 data,
             );
-        } catch (error) {
-            // console.error("Error sending POST request to API:", error);
+        } catch (error:any) {
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                console.error(`Error sending POST request to API: ${error.response.data.msg}`);
+                socket.emit("rulesError", error.response.data.msg);
+            } else if (error.request) {
+                // The request was made but no response was received
+                console.error("No response received from the API:", error.request);
+                socket.emit("updateValuseError", "No response received from the API");
+            } else {
+                // Something happened in setting up the request that triggered an error
+                console.error("Error sending POST request to API:", error.message);
+                socket.emit("updateValuseError", error.message);
+            }
         }
     });
 
+    //-----------------------------------------------------------------------------
+    interface RulesRequestData {
+        user: string;
+        projectName: string;
+        token: string;
+    }
+    socket.on("getRules", async (data: RulesRequestData) => {
+        try {
+            // Send get request to API
+            const response = await axios.get(
+                `http://localhost:5500/api/v1/rule/projectRules?user=${data.user}&projectName=${data.projectName}`,
+                {
+                    headers: {
+                        Authorization: data.token,
+                    },
+                },
+            );
+            if (response.data.success == true) {
+                socket.emit("rulesResponse", response.data.data);
+            } else {
+                socket.emit("rulesError", response.data.msg);
+            }
+        } catch (error:any) {
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                console.error(`Error sending GET request to API: ${error.response.data.msg}`);
+                socket.emit("rulesError", error.response.data.msg);
+            } else if (error.request) {
+                // The request was made but no response was received
+                console.error("No response received from the API:", error.request);
+                socket.emit("rulesError", "No response received from the API");
+            } else {
+                // Something happened in setting up the request that triggered an error
+                console.error("Error sending GET request to API:", error.message);
+                socket.emit("rulesError", error.message);
+            }
+        }
+    });
+//---------------------------------------------------------------------------------------
     socket.on("joinRoom", (roomId) => {
         // Join the socket to the specified room
 
@@ -224,17 +279,18 @@ io.on("connection", async (socket) => {
         // Do something with the received data, emit an event back if needed
         io.emit("test response", `User ${socket.id} sent message: ${msg}`);
     });
+    //---------------------------------------------------------------------------------
     socket.on("messageToRoom", (msg: any) => {
         console.log(msg.roomId);
         console.log(msg.value);
         console.log(msg);
-        // io.emit(
-        //     "message_log",
-        //     `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`,
-        // );
+        io.emit(
+            "message_log",
+            `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`,
+        );
         socket.to(msg.roomId).emit("roomMessage", msg);
 
-        // socket.to(msg.roomId).emit("message1",  `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`);
+       
         // console.log(msg.value, msg.status, msg.roomId);
         // if (!isNaN(parseInt(msg.value))) {
         //     let numericValue = parseInt(msg.value);
@@ -281,18 +337,6 @@ io.on("connection", async (socket) => {
         //     }
         // }
     });
-    // io.engine.generateId = (req) => {
-    //     return uuid.v4(); // Generate a unique identifier for each socket connection
-    // };
-    // socket.broadcast.emit send to everyone expect the sender
-    // io.sockets.in("room1").emit("message","fuck you"); => send msg to specific room
-    // const sockets = await io.fetchSockets();
-    // console.log(sockets);
-    // for (const socket of sockets) {
-    //     console.log(socket.id);
-
-    //     console.log(socket.data);
-    //   }
 
     io.emit("user numbers", io.engine.clientsCount);
     // console.log(io.of("/").sockets.size, "of name space");
@@ -312,6 +356,8 @@ io.engine.on("connection_error", (err) => {
     console.log(err.message); // the error message, for example "Session ID unknown"
     console.log(err.context); // some additional error context
 });
+
+//--------------------------------------------------------------------------
 app.post(
     "/api/v1/connect-data",
     async (req: express.Request, res: express.Response) => {
