@@ -9,7 +9,7 @@ const jwtTokenVerifier_1 = __importDefault(require("../middleware/jwtTokenVerifi
 const ruleRouter = express_1.default.Router();
 ruleRouter.get("/all/:projectId", jwtTokenVerifier_1.default, rule_controller_1.getRulesForProject);
 ruleRouter.post("/save/:projectId", jwtTokenVerifier_1.default, rule_controller_1.handleRulesInModule);
-ruleRouter.get("/projectRules", jwtTokenVerifier_1.default, rule_controller_1.getRulesForProjectByUserAndName);
+ruleRouter.get("/projectRules", rule_controller_1.getRulesForProjectByUserAndName);
 // ruleRouter.put("/update/:projectId" ,updateRulesInModule);
 ruleRouter.delete("/delete/:projectId/:moduleId/:ruleId", jwtTokenVerifier_1.default, rule_controller_1.deleteRuleInModule);
 exports.default = ruleRouter;

@@ -19,7 +19,7 @@ const uploadProjectPictures = async (req, res) => {
         if (!req.file) {
             return res.status(400).json({ error: "No file uploaded" });
         }
-        let newName = (0, generateFileName_1.generateFilename)(req.file.originalname, "picture");
+        let newName = (0, generateFileName_1.generateFilename)(req.file.originalname, req.body.pictureName);
         console.log(newName);
         console.log(req.file);
         // Create a new picture document
@@ -65,6 +65,8 @@ const getProjectPictures = async (req, res) => {
             let contentType = "";
             switch (ext) {
                 case ".jpg":
+                    contentType = "image/jpg";
+                    break;
                 case ".jpeg":
                     contentType = "image/jpeg";
                     break;
@@ -79,7 +81,9 @@ const getProjectPictures = async (req, res) => {
                     contentType = "application/octet-stream"; // Default to binary data
             }
             pictureData.push({
+                projectId: picture.projectID,
                 _id: picture._id,
+                pictureName: picture.fileName,
                 contentType: contentType,
                 data: picture.fileData,
             });

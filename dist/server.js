@@ -200,11 +200,7 @@ io.on("connection", async (socket) => {
     socket.on("getRules", async (data) => {
         try {
             // Send get request to API
-            const response = await axios_1.default.get(`http://localhost:5500/api/v1/rule/projectRules?user=${data.user}&projectName=${data.projectName}`, {
-                headers: {
-                    Authorization: data.token,
-                },
-            });
+            const response = await axios_1.default.get(`http://localhost:5500/api/v1/rule/projectRules?user=${data.user}&projectName=${data.projectName}`, {});
             if (response.data.success == true) {
                 socket.emit("rulesResponse", response.data.data);
             }
@@ -249,53 +245,68 @@ io.on("connection", async (socket) => {
         io.emit("test response", `User ${socket.id} sent message: ${msg}`);
     });
     //---------------------------------------------------------------------------------
-    socket.on("messageToRoom", (msg) => {
-        console.log(msg.roomId);
-        console.log(msg.value);
-        console.log(msg);
-        io.emit("message_log", `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`);
-        socket.to(msg.roomId).emit("roomMessage", msg);
-        // console.log(msg.value, msg.status, msg.roomId);
-        // if (!isNaN(parseInt(msg.value))) {
-        //     let numericValue = parseInt(msg.value);
-        //     switch (true) {
-        //         case numericValue > 30 && msg.value <= 38:
-        //             io.emit("message_log", "Temperature is going high");
-        //             break;
-        //         case numericValue < 20:
-        //             io.emit("message_log", "Temperature is very low");
-        //             break;
-        //         case numericValue >= 20 && msg.value <= 30:
-        //             io.emit("message_log", "Temperature is moderate");
-        //             break;
-        //         case numericValue >= 38 && msg.value <= 50:
-        //             io.emit("message_log", "fan is on automatic");
-        //             break;
-        //         case numericValue > 50:
-        //             io.emit("message_log", "die in peace my brother ☠☠☠");
-        //             break;
-        //         default:
-        //             io.emit(
-        //                 "message_log",
-        //                 `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`,
-        //             );
-        //     }
-        // }
-        // if (isNaN(parseInt(msg.value))) {
-        //     switch (msg.value) {
-        //         case "led on":
-        //             io.emit("message_log", "Led is on now");
-        //             break;
-        //         case "led off":
-        //             io.emit("message_log", "Led is off now");
-        //             break;
-        //         default:
-        //             io.emit(
-        //                 "message_log",
-        //                 `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`,
-        //             );
-        //     }
-        // }
+    socket.on("messageToRoom", async ({ msg, data }) => {
+        try {
+            console.log(msg.roomId);
+            console.log(msg.value);
+            io.emit("message_log", `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`);
+            // Send get request to API
+            const response = await axios_1.default.get(`http://localhost:5500/api/v1/rule/projectRules?user=${data.user}&projectName=${data.projectName}`, {});
+            let rules = response.data.data;
+            rules.forEach((rule) => {
+                if (rule.triggerModuleId === msg.roomId) {
+                    let conditionMet = false;
+                    const messageValue = parseFloat(msg.value);
+                    const ruleConditionValue = parseFloat(rule.conditionValue);
+                    switch (rule.condition) {
+                        case "<":
+                            conditionMet = messageValue < ruleConditionValue;
+                            break;
+                        case "<=":
+                            conditionMet = messageValue <= ruleConditionValue;
+                            break;
+                        case ">":
+                            conditionMet = messageValue > ruleConditionValue;
+                            break;
+                        case ">=":
+                            conditionMet = messageValue >= ruleConditionValue;
+                            break;
+                        case "==":
+                            conditionMet = messageValue == ruleConditionValue;
+                            break;
+                        case "!=":
+                            conditionMet = messageValue != ruleConditionValue;
+                            break;
+                    }
+                    if (conditionMet) {
+                        console.log(`Condition met for rule: ${rule._id}, emitting to room: ${rule.actionModuleId} with value ${rule.action.value}`);
+                        socket.to(rule.actionModuleId).emit("roomMessage", {
+                            roomId: rule.actionModuleId,
+                            value: rule.action.value,
+                            status: true,
+                        });
+                    }
+                }
+            });
+        }
+        catch (error) {
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                console.error(`Error sending GET request to API: ${error.response.data.msg}`);
+                socket.emit("rulesError", error.response.data.msg);
+            }
+            else if (error.request) {
+                // The request was made but no response was received
+                console.error("No response received from the API:", error.request);
+                socket.emit("rulesError", "No response received from the API");
+            }
+            else {
+                // Something happened in setting up the request that triggered an error
+                console.error("Error sending GET request to API:", error.message);
+                socket.emit("rulesError", error.message);
+            }
+        }
     });
     io.emit("user numbers", io.engine.clientsCount);
     // console.log(io.of("/").sockets.size, "of name space");
