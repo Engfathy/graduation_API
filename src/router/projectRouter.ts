@@ -28,6 +28,7 @@ projectRouter.post("/update-values", updateProjectModulesValues);
 projectRouter.get("/allprojects", getProjectByUserAndPassword);
 projectRouter.get("",getProjectByUserAndProjectName);
 projectRouter.get("/id/:id", jwtTokenVerifier, getProjectById);
+projectRouter.get("/idNoAuth/:id", getProjectById);
 projectRouter.post(
     "/create",
     validateProjectData,

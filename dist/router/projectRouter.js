@@ -19,6 +19,7 @@ projectRouter.post("/update-values", project_controller_1.updateProjectModulesVa
 projectRouter.get("/allprojects", project_controller_1.getProjectByUserAndPassword);
 projectRouter.get("", project_controller_1.getProjectByUserAndProjectName);
 projectRouter.get("/id/:id", jwtTokenVerifier_1.default, project_controller_1.getProjectById);
+projectRouter.get("/idNoAuth/:id", project_controller_1.getProjectById);
 projectRouter.post("/create", validateProjectData, jwtTokenVerifier_1.default, project_controller_1.createProject);
 projectRouter.put("/update/:id", validateProjectData, jwtTokenVerifier_1.default, project_controller_1.updateProjectById);
 projectRouter.put("/update-project-name/:id", validateProjectData, jwtTokenVerifier_1.default, project_controller_1.updateProjectName);

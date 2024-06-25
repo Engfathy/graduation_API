@@ -2,7 +2,7 @@ import ProjectModel from "../models/project.model";
 import { validationResult } from "express-validator";
 import express from "express";
 import User from "../models/user.model";
-
+import bcrypt from "bcryptjs";
 // create new project
 
 export const createProject = async (
@@ -123,7 +123,6 @@ export const getProjectById = async (
     try {
         // console.log(req.params.id);
         const project = await ProjectModel.findById(req.params.id);
-        console.log(project);
         if (!project) {
             return res
                 .status(404)
@@ -189,7 +188,7 @@ export const updateProjectName = async (
 
     try {
         const userName = req.cookies["userName"] || req.headers["user"];
-        const existing = await ProjectModel.findById(id);
+        const existing = await ProjectModel.findOne({_id:id,name:userName});
 
         if (!existing) {
             return res
@@ -200,6 +199,7 @@ export const updateProjectName = async (
         const nameExists = await ProjectModel.findOne({
             name: existing.name,
             projectName: newName,
+            
         });
 
         if (nameExists) {
@@ -234,8 +234,9 @@ export const updateProjectDescription = async (
     const { description } = req.body;
 
     try {
+        const userName = req.cookies["userName"] || req.headers["user"];
         // Find existing project
-        const existing = await ProjectModel.findById(id);
+        const existing = await ProjectModel.findOne({_id:id,name:userName});
 
         // Check if exists
         if (!existing) {
@@ -265,8 +266,8 @@ export const deleteProjectById = async (
 ) => {
     try {
         const userName = req.cookies["userName"] || req.headers["user"];
-        const deletedproject = await ProjectModel.findByIdAndDelete(
-            req.params.id,
+        const deletedproject = await ProjectModel.findOneAndDelete(
+            {_id:req.params.id,name:userName}
         );
 
         if (!deletedproject) {
@@ -335,33 +336,29 @@ export const getProjectByUserAndPassword = async (
     req: express.Request,
     res: express.Response,
 ) => {
-    const userName = req.query.user;
-    console.log(userName);
-    if (!userName) {
-        return res
-            .status(400)
-            .json({ success: false, msg: "User name is missing." });
+    const { user: userName, password } = req.query;
+
+    if (!userName || !password) {
+        return res.status(400).json({ success: false, msg: "User name or password is missing." });
     }
-    const password = req.query.password;
-    // console.log(projectName);
 
     try {
-        const user: User | null = await User.findOne({
-            name: userName,
-        });
+        const user = await User.findOne({ name: userName });
 
         if (!user) {
-            return res
-                .status(401)
-                .json({ success: false, msg: "Invalid username" });
-        } else {
-            const projects = await ProjectModel.find({ name: user.name });
-            return res.status(200).json({ success: true, data: projects });
+            return res.status(401).json({ success: false, msg: "Invalid username" });
         }
+
+        const isMatch = await bcrypt.compare(password as string, user.password);
+
+        if (!isMatch) {
+            return res.status(401).json({ success: false, msg: "Incorrect password" });
+        }
+
+        const projects = await ProjectModel.find({ name: user.name });
+        return res.status(200).json({ success: true, data: projects });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            error: "Internal Server Error",
-        });
+        console.error("Error fetching projects:", error);
+        return res.status(500).json({ success: false, error: "Internal Server Error" });
     }
 };

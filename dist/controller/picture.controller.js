@@ -20,8 +20,16 @@ const uploadProjectPictures = async (req, res) => {
             return res.status(400).json({ error: "No file uploaded" });
         }
         let newName = (0, generateFileName_1.generateFilename)(req.file.originalname, req.body.pictureName);
-        console.log(newName);
-        console.log(req.file);
+        const existingPicture = await picture_model_1.default.findOne({
+            projectID: req.body.projectID,
+            fileName: newName,
+        });
+        if (existingPicture) {
+            return res.status(409).json({
+                success: false,
+                message: "A picture with the same project ID and filename already exists",
+            });
+        }
         // Create a new picture document
         const newPicture = new picture_model_1.default({
             projectID: req.body.projectID,

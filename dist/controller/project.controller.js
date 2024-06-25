@@ -18,6 +18,7 @@ exports.getProjectByUserAndPassword = exports.updateProjectModulesValues = expor
 const project_model_1 = __importDefault(require("../models/project.model"));
 const express_validator_1 = require("express-validator");
 const user_model_1 = __importDefault(require("../models/user.model"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 // create new project
 const createProject = async (req, res) => {
     // const userName = req.headers.user;
@@ -125,7 +126,6 @@ const getProjectById = async (req, res) => {
     try {
         // console.log(req.params.id);
         const project = await project_model_1.default.findById(req.params.id);
-        console.log(project);
         if (!project) {
             return res
                 .status(404)
@@ -183,7 +183,7 @@ const updateProjectName = async (req, res) => {
     const newName = req.body.projectName;
     try {
         const userName = req.cookies["userName"] || req.headers["user"];
-        const existing = await project_model_1.default.findById(id);
+        const existing = await project_model_1.default.findOne({ _id: id, name: userName });
         if (!existing) {
             return res
                 .status(404)
@@ -219,8 +219,9 @@ const updateProjectDescription = async (req, res) => {
     // Get new description from body
     const { description } = req.body;
     try {
+        const userName = req.cookies["userName"] || req.headers["user"];
         // Find existing project
-        const existing = await project_model_1.default.findById(id);
+        const existing = await project_model_1.default.findOne({ _id: id, name: userName });
         // Check if exists
         if (!existing) {
             return res
@@ -243,7 +244,7 @@ exports.updateProjectDescription = updateProjectDescription;
 const deleteProjectById = async (req, res) => {
     try {
         const userName = req.cookies["userName"] || req.headers["user"];
-        const deletedproject = await project_model_1.default.findByIdAndDelete(req.params.id);
+        const deletedproject = await project_model_1.default.findOneAndDelete({ _id: req.params.id, name: userName });
         if (!deletedproject) {
             return res
                 .status(404)
@@ -303,34 +304,25 @@ const updateProjectModulesValues = async (req, res) => {
 };
 exports.updateProjectModulesValues = updateProjectModulesValues;
 const getProjectByUserAndPassword = async (req, res) => {
-    const userName = req.query.user;
-    console.log(userName);
-    if (!userName) {
-        return res
-            .status(400)
-            .json({ success: false, msg: "User name is missing." });
+    const { user: userName, password } = req.query;
+    if (!userName || !password) {
+        return res.status(400).json({ success: false, msg: "User name or password is missing." });
     }
-    const password = req.query.password;
-    // console.log(projectName);
     try {
-        const user = await user_model_1.default.findOne({
-            name: userName,
-        });
+        const user = await user_model_1.default.findOne({ name: userName });
         if (!user) {
-            return res
-                .status(401)
-                .json({ success: false, msg: "Invalid username" });
+            return res.status(401).json({ success: false, msg: "Invalid username" });
         }
-        else {
-            const projects = await project_model_1.default.find({ name: user.name });
-            return res.status(200).json({ success: true, data: projects });
+        const isMatch = await bcryptjs_1.default.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ success: false, msg: "Incorrect password" });
         }
+        const projects = await project_model_1.default.find({ name: user.name });
+        return res.status(200).json({ success: true, data: projects });
     }
     catch (error) {
-        return res.status(500).json({
-            success: false,
-            error: "Internal Server Error",
-        });
+        console.error("Error fetching projects:", error);
+        return res.status(500).json({ success: false, error: "Internal Server Error" });
     }
 };
 exports.getProjectByUserAndPassword = getProjectByUserAndPassword;

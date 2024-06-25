@@ -21,8 +21,17 @@ export const uploadProjectPictures = async (
             return res.status(400).json({ error: "No file uploaded" });
         }
         let newName = generateFilename(req.file.originalname, req.body.pictureName);
-        console.log(newName);
-        console.log(req.file);
+        const existingPicture = await PictureModel.findOne({
+            projectID: req.body.projectID,
+            fileName: newName,
+        });
+
+        if (existingPicture) {
+            return res.status(409).json({
+                success: false,
+                message: "A picture with the same project ID and filename already exists",
+            });
+        }
         // Create a new picture document
         const newPicture = new PictureModel({
             projectID: req.body.projectID,

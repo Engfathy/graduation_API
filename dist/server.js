@@ -112,20 +112,6 @@ app.get("/socket2", (req, res) => {
 app.get("/socket3", (req, res) => {
     res.sendFile(__dirname + "/index3.html");
 });
-let names = ["fathy", "alice", "mohamed"];
-// io.of("/admin").on("connection", (socket) => {
-//     // admin users
-//   });
-// const chatNamespace = io.of('/chat');
-// chatNamespace.on('connection', (socket) => {
-//   console.log('A user connected to the chat namespace');
-//   io.emit("message_log", "user conected");
-//   // Handle events within the namespace
-//   socket.on('disconnect', () => {
-//     console.log('A user disconnected from the chat namespace');
-//     io.emit("message_log", "user disconected");
-//   });
-// });
 io.on("connection", async (socket) => {
     console.log(`user ${io.engine.clientsCount} connected`);
     socket.on("createRooms", (roomsIds) => {
@@ -142,7 +128,6 @@ io.on("connection", async (socket) => {
     //--------------------------------------------------------------------------------------------
     socket.on("joinRooms", (roomsIds) => {
         // Join the socket to the specified room
-        console.log(roomsIds);
         if (roomsIds.length == 0) {
             io.emit("rooms status", `no room sended`);
         }
@@ -197,39 +182,63 @@ io.on("connection", async (socket) => {
             }
         }
     });
-    socket.on("getRules", async (data) => {
+    socket.on("cameraEvent", async ({ name, project_id }) => {
         try {
-            // Send get request to API
-            const response = await axios_1.default.get(`http://localhost:5500/api/v1/rule/projectRules?user=${data.user}&projectName=${data.projectName}`, {});
-            if (response.data.success == true) {
-                socket.emit("rulesResponse", response.data.data);
+            console.log(name, project_id);
+            // Fetch project details from the API
+            const response = await axios_1.default.get(`http://localhost:5500/api/v1/project/idNoAuth/${project_id}`);
+            if (response.data.success) {
+                const project = response.data.data;
+                // Find the module with alternateName 'door'
+                const module = project.modules.find((mod) => mod.alternateName === "CameraDoor");
+                if (module) {
+                    const msg = {
+                        msg: {
+                            roomId: module._id,
+                            value: "on",
+                            status: true,
+                        },
+                        data: {
+                            user: project.name,
+                            projectName: project.projectName,
+                        },
+                    };
+                    const offMessage = {
+                        msg: {
+                            roomId: module._id,
+                            value: "off",
+                            status: true,
+                        },
+                        data: {
+                            user: project.name,
+                            projectName: project.projectName,
+                        },
+                    };
+                    io.emit("joinRoom", module._id);
+                    socket.join(module._id);
+                    socket.to(module._id).emit("roomMessage", msg.msg);
+                    setTimeout(() => {
+                        socket
+                            .to(module._id)
+                            .emit("roomMessage", offMessage.msg);
+                    }, 5000);
+                }
+                else {
+                    console.error('Module with alternateName "door" not found');
+                }
             }
             else {
-                socket.emit("rulesError", response.data.msg);
+                console.error("Failed to fetch project details");
             }
         }
         catch (error) {
-            if (error.response) {
-                // The request was made and the server responded with a status code
-                // that falls out of the range of 2xx
-                console.error(`Error sending GET request to API: ${error.response.data.msg}`);
-                socket.emit("rulesError", error.response.data.msg);
-            }
-            else if (error.request) {
-                // The request was made but no response was received
-                console.error("No response received from the API:", error.request);
-                socket.emit("rulesError", "No response received from the API");
-            }
-            else {
-                // Something happened in setting up the request that triggered an error
-                console.error("Error sending GET request to API:", error.message);
-                socket.emit("rulesError", error.message);
-            }
+            console.error("Error fetching project details:", error.message);
         }
     });
     //---------------------------------------------------------------------------------------
     socket.on("joinRoom", (roomId) => {
         // Join the socket to the specified room
+        console.log(roomId);
         socket.join(roomId);
         io.emit("rooms status", `User: ${socket.id} joined room ${roomId}`);
         console.log(`User: ${socket.id} joined room ${roomId}`);
@@ -247,62 +256,91 @@ io.on("connection", async (socket) => {
     //---------------------------------------------------------------------------------
     socket.on("messageToRoom", async ({ msg, data }) => {
         try {
-            console.log(msg.roomId);
-            console.log(msg.value);
+            console.log(msg);
             io.emit("message_log", `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`);
             // Send get request to API
             const response = await axios_1.default.get(`http://localhost:5500/api/v1/rule/projectRules?user=${data.user}&projectName=${data.projectName}`, {});
             let rules = response.data.data;
-            rules.forEach((rule) => {
-                if (rule.triggerModuleId === msg.roomId) {
-                    let conditionMet = false;
-                    const messageValue = parseFloat(msg.value);
-                    const ruleConditionValue = parseFloat(rule.conditionValue);
-                    switch (rule.condition) {
-                        case "<":
-                            conditionMet = messageValue < ruleConditionValue;
-                            break;
-                        case "<=":
-                            conditionMet = messageValue <= ruleConditionValue;
-                            break;
-                        case ">":
-                            conditionMet = messageValue > ruleConditionValue;
-                            break;
-                        case ">=":
-                            conditionMet = messageValue >= ruleConditionValue;
-                            break;
-                        case "==":
-                            conditionMet = messageValue == ruleConditionValue;
-                            break;
-                        case "!=":
-                            conditionMet = messageValue != ruleConditionValue;
-                            break;
+            if (rules.length == 0) {
+                console.log("in lenght 0");
+                // socket.join(msg.roomId);
+                socket.to(msg.roomId).emit("roomMessage", {
+                    roomId: msg.roomId,
+                    value: msg.value,
+                    status: true,
+                });
+                console.log("after roomMessage length 0");
+            }
+            if (rules.length !== 0 || rules != null) {
+                rules.forEach((rule) => {
+                    if (rule.triggerModuleId === msg.roomId) {
+                        let conditionMet = false;
+                        const messageValue = parseFloat(msg.value);
+                        const ruleConditionValue = parseFloat(rule.conditionValue);
+                        switch (rule.condition) {
+                            case "<":
+                                conditionMet =
+                                    messageValue < ruleConditionValue;
+                                break;
+                            case "<=":
+                                conditionMet =
+                                    messageValue <= ruleConditionValue;
+                                break;
+                            case ">":
+                                conditionMet =
+                                    messageValue > ruleConditionValue;
+                                break;
+                            case ">=":
+                                conditionMet =
+                                    messageValue >= ruleConditionValue;
+                                break;
+                            case "==":
+                                conditionMet =
+                                    messageValue == ruleConditionValue;
+                                break;
+                            case "!=":
+                                conditionMet =
+                                    messageValue != ruleConditionValue;
+                                break;
+                        }
+                        if (conditionMet) {
+                            console.log(`Condition met for rule: ${rule._id}, emitting to room: ${rule.actionModuleId} with value ${rule.action.value}`);
+                            socket.to(rule.actionModuleId).emit("roomMessage", {
+                                roomId: rule.actionModuleId,
+                                value: rule.action.value,
+                                status: true,
+                            });
+                        }
+                        else {
+                            console.log("afther met condition");
+                            socket.to(msg.roomId).emit("roomMessage", {
+                                roomId: msg.roomId,
+                                value: msg.value,
+                                status: true,
+                            });
+                        }
                     }
-                    if (conditionMet) {
-                        console.log(`Condition met for rule: ${rule._id}, emitting to room: ${rule.actionModuleId} with value ${rule.action.value}`);
-                        socket.to(rule.actionModuleId).emit("roomMessage", {
-                            roomId: rule.actionModuleId,
-                            value: rule.action.value,
-                            status: true,
-                        });
-                    }
-                }
-            });
+                });
+            }
+            else {
+                console.log("last");
+                socket.to(msg.roomId).emit("roomMessage", {
+                    roomId: msg.roomId,
+                    value: msg.value,
+                    status: true,
+                });
+            }
         }
         catch (error) {
             if (error.response) {
-                // The request was made and the server responded with a status code
-                // that falls out of the range of 2xx
                 console.error(`Error sending GET request to API: ${error.response.data.msg}`);
                 socket.emit("rulesError", error.response.data.msg);
             }
             else if (error.request) {
-                // The request was made but no response was received
                 console.error("No response received from the API:", error.request);
                 socket.emit("rulesError", "No response received from the API");
             }
             else {
-                // Something happened in setting up the request that triggered an error
                 console.error("Error sending GET request to API:", error.message);
                 socket.emit("rulesError", error.message);
             }
