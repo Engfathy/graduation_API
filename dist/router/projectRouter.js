@@ -22,8 +22,8 @@ projectRouter.get("/id/:id", jwtTokenVerifier_1.default, project_controller_1.ge
 projectRouter.get("/idNoAuth/:id", project_controller_1.getProjectById);
 projectRouter.post("/create", validateProjectData, jwtTokenVerifier_1.default, project_controller_1.createProject);
 projectRouter.put("/update/:id", validateProjectData, jwtTokenVerifier_1.default, project_controller_1.updateProjectById);
-projectRouter.put("/update-project-name/:id", validateProjectData, jwtTokenVerifier_1.default, project_controller_1.updateProjectName);
-projectRouter.put("/update-project-description/:id", validateProjectData, jwtTokenVerifier_1.default, project_controller_1.updateProjectDescription);
+projectRouter.put("/update-project-name/:id", jwtTokenVerifier_1.default, project_controller_1.updateProjectName);
+projectRouter.put("/update-project-description/:id", jwtTokenVerifier_1.default, project_controller_1.updateProjectDescription);
 projectRouter.delete("/delete/:id", jwtTokenVerifier_1.default, project_controller_1.deleteProjectById);
 exports.default = projectRouter;
 //# sourceMappingURL=projectRouter.js.map

@@ -43,13 +43,11 @@ projectRouter.put(
 );
 projectRouter.put(
     "/update-project-name/:id",
-    validateProjectData,
     jwtTokenVerifier,
     updateProjectName,
 );
 projectRouter.put(
     "/update-project-description/:id",
-    validateProjectData,
     jwtTokenVerifier,
     updateProjectDescription,
 );
