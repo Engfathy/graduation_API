@@ -192,7 +192,7 @@ export const updateProjectName = async (
 
         if (!existing) {
             return res
-                .status(404)
+                .status(200)
                 .json({ success: false, msg: "Project not found" });
         }
 
@@ -250,9 +250,9 @@ export const updateProjectDescription = async (
 
         // Save updated doc
         const updated = await existing.save();
-
+        const projects = await ProjectModel.find({ name: userName }).sort({ createdAt: -1 });
         // Return response
-        return res.json({ success: false, msg: "description updated" });
+        return res.json({ success: true, msg: "description updated" ,data:projects});
     } catch (error) {
         return res.status(500).json({ success: false, msg: "Server error" });
     }
@@ -362,3 +362,53 @@ export const getProjectByUserAndPassword = async (
         return res.status(500).json({ success: false, error: "Internal Server Error" });
     }
 };
+
+export const updateProjectDetails = async (
+    req: express.Request,
+    res: express.Response,
+) => {
+    const { id } = req.params;
+    const { projectName, description } = req.body;
+
+    try {
+        const userName = req.cookies["userName"] || req.headers["user"];
+        const existing = await ProjectModel.findOne({ _id: id, name: userName });
+
+        if (!existing) {
+            return res
+                .status(404)
+                .json({ success: false, msg: "Project not found" });
+        }
+
+        if (projectName && projectName !== existing.projectName) {
+            const nameExists = await ProjectModel.findOne({
+                name: existing.name,
+                projectName: projectName,
+            });
+
+            if (nameExists) {
+                return res
+                    .status(400)
+                    .json({ success: false, msg: "Project name already exists" });
+            }
+
+            existing.projectName = projectName;
+        }
+
+        if (description) {
+            existing.description = description;
+        }
+
+        const updated = await existing.save();
+        const projects = await ProjectModel.find({ name: userName }).sort({ createdAt: -1 });
+
+        return res.json({
+            success: true,
+            msg: "Project details updated",
+            data: projects,
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, msg: "Server error" });
+    }
+};
+

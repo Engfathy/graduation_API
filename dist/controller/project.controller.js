@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProjectByUserAndPassword = exports.updateProjectModulesValues = exports.deleteProjectById = exports.updateProjectDescription = exports.updateProjectName = exports.updateProjectById = exports.getProjectById = exports.getProjectByUserAndProjectName = exports.getAllProjectsForUser = exports.createProject = void 0;
+exports.updateProjectDetails = exports.getProjectByUserAndPassword = exports.updateProjectModulesValues = exports.deleteProjectById = exports.updateProjectDescription = exports.updateProjectName = exports.updateProjectById = exports.getProjectById = exports.getProjectByUserAndProjectName = exports.getAllProjectsForUser = exports.createProject = void 0;
 const project_model_1 = __importDefault(require("../models/project.model"));
 const express_validator_1 = require("express-validator");
 const user_model_1 = __importDefault(require("../models/user.model"));
@@ -186,7 +186,7 @@ const updateProjectName = async (req, res) => {
         const existing = await project_model_1.default.findOne({ _id: id, name: userName });
         if (!existing) {
             return res
-                .status(404)
+                .status(200)
                 .json({ success: false, msg: "Project not found" });
         }
         const nameExists = await project_model_1.default.findOne({
@@ -232,8 +232,9 @@ const updateProjectDescription = async (req, res) => {
         existing.description = description;
         // Save updated doc
         const updated = await existing.save();
+        const projects = await project_model_1.default.find({ name: userName }).sort({ createdAt: -1 });
         // Return response
-        return res.json({ success: false, msg: "description updated" });
+        return res.json({ success: true, msg: "description updated", data: projects });
     }
     catch (error) {
         return res.status(500).json({ success: false, msg: "Server error" });
@@ -326,4 +327,43 @@ const getProjectByUserAndPassword = async (req, res) => {
     }
 };
 exports.getProjectByUserAndPassword = getProjectByUserAndPassword;
+const updateProjectDetails = async (req, res) => {
+    const { id } = req.params;
+    const { projectName, description } = req.body;
+    try {
+        const userName = req.cookies["userName"] || req.headers["user"];
+        const existing = await project_model_1.default.findOne({ _id: id, name: userName });
+        if (!existing) {
+            return res
+                .status(404)
+                .json({ success: false, msg: "Project not found" });
+        }
+        if (projectName && projectName !== existing.projectName) {
+            const nameExists = await project_model_1.default.findOne({
+                name: existing.name,
+                projectName: projectName,
+            });
+            if (nameExists) {
+                return res
+                    .status(400)
+                    .json({ success: false, msg: "Project name already exists" });
+            }
+            existing.projectName = projectName;
+        }
+        if (description) {
+            existing.description = description;
+        }
+        const updated = await existing.save();
+        const projects = await project_model_1.default.find({ name: userName }).sort({ createdAt: -1 });
+        return res.json({
+            success: true,
+            msg: "Project details updated",
+            data: projects,
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ success: false, msg: "Server error" });
+    }
+};
+exports.updateProjectDetails = updateProjectDetails;
 //# sourceMappingURL=project.controller.js.map
