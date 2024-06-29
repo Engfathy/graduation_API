@@ -100,44 +100,49 @@ app.post("/api/v1/connect-data", async (req, res) => {
         });
     }
 });
-app.get("/test", (req, res) => {
-    res.sendFile(__dirname + "/test.html");
-});
-app.get("/socket1", (req, res) => {
-    res.sendFile(__dirname + "/index.html");
-});
-app.get("/socket2", (req, res) => {
-    res.sendFile(__dirname + "/index2.html");
-});
-app.get("/socket3", (req, res) => {
-    res.sendFile(__dirname + "/index3.html");
-});
+// app.get("/test", (req, res) => {
+//     res.sendFile(__dirname + "/test.html");
+// });
+// app.get("/socket1", (req, res) => {
+//     res.sendFile(__dirname + "/index.html");
+// });
+// app.get("/socket2", (req, res) => {
+//     res.sendFile(__dirname + "/index2.html");
+// });
+// app.get("/socket3", (req, res) => {
+//     res.sendFile(__dirname + "/index3.html");
+// });
 io.on("connection", async (socket) => {
     console.log(`user ${io.engine.clientsCount} connected`);
     socket.on("createRooms", (roomsIds) => {
         if (roomsIds.length == 0) {
-            io.emit("rooms status", `no room sended`);
+            // io.emit("rooms status", `no room sended`);
         }
         else {
             roomsIds.forEach((roomId) => {
-                io.to(roomId).emit("init", `initate room`);
+                // io.to(roomId).emit("init", `initate room`);
                 console.log(`Room ${roomId} created`);
             });
         }
     });
     //--------------------------------------------------------------------------------------------
     socket.on("joinRooms", (roomsIds) => {
-        // Join the socket to the specified room
         if (roomsIds.length == 0) {
-            io.emit("rooms status", `no room sended`);
+            console.log("rooms type incorrect");
+        }
+        else if (!Array.isArray(roomsIds)) {
+            let jsonRooms = JSON.parse(roomsIds);
+            jsonRooms.forEach((roomId) => {
+                socket.join(roomId);
+                console.log(`User: ${socket.id} joined room ${roomId}`);
+            });
         }
         else {
             roomsIds.forEach((roomId) => {
                 socket.join(roomId);
-                io.emit("rooms status", `User: ${socket.id} joined room ${roomId}`);
                 console.log(`User: ${socket.id} joined room ${roomId}`);
             });
-            console.log(socket.rooms);
+            // console.log(socket.rooms);
         }
     });
     //------------------------------------------------------------------
@@ -150,7 +155,10 @@ io.on("connection", async (socket) => {
         else {
             roomsIds.forEach((roomId) => {
                 socket.leave(roomId);
-                io.emit("rooms status", `User: ${socket.id} leaved room ${roomId}`);
+                // io.emit(
+                //     "rooms status",
+                //     `User: ${socket.id} leaved room ${roomId}`,
+                // );
                 console.log(`User: ${socket.id} left room ${roomId}`);
             });
             console.log(socket.rooms);
@@ -162,6 +170,10 @@ io.on("connection", async (socket) => {
         try {
             // Send POST request to API
             const response = await axios_1.default.post("http://localhost:5500/api/v1/project/update-values", data);
+            console.log(response.data);
+            if (response.data.msg == true) {
+                console.log("last valued updated");
+            }
         }
         catch (error) {
             if (error.response) {
@@ -194,6 +206,7 @@ io.on("connection", async (socket) => {
                 if (module) {
                     const msg = {
                         msg: {
+                            source: "camera",
                             roomId: module._id,
                             value: "on",
                             status: true,
@@ -205,6 +218,7 @@ io.on("connection", async (socket) => {
                     };
                     const offMessage = {
                         msg: {
+                            source: "camera",
                             roomId: module._id,
                             value: "off",
                             status: true,
@@ -214,13 +228,12 @@ io.on("connection", async (socket) => {
                             projectName: project.projectName,
                         },
                     };
+                    console.log(msg);
                     io.emit("joinRoom", module._id);
                     socket.join(module._id);
-                    socket.to(module._id).emit("roomMessage", msg.msg);
+                    socket.to(module._id).emit("roomMessagess", msg);
                     setTimeout(() => {
-                        socket
-                            .to(module._id)
-                            .emit("roomMessage", offMessage.msg);
+                        socket.to(module._id).emit("roomMessagess", offMessage);
                     }, 5000);
                 }
                 else {
@@ -232,108 +245,101 @@ io.on("connection", async (socket) => {
             }
         }
         catch (error) {
-            console.error("Error fetching project details:", error.message);
+            // console.error("Error fetching project details:", error.message);
         }
     });
     //---------------------------------------------------------------------------------------
     socket.on("joinRoom", (roomId) => {
         // Join the socket to the specified room
-        console.log(roomId);
         socket.join(roomId);
-        io.emit("rooms status", `User: ${socket.id} joined room ${roomId}`);
         console.log(`User: ${socket.id} joined room ${roomId}`);
     });
-    socket.on("message1", (msg) => {
-        console.log(msg);
-        io.emit("message1", msg);
-    });
-    socket.on("test", (msg) => {
-        console.log(`User ${socket.id} sent message event with data:`, msg);
-        console.log(socket.rooms);
-        // Do something with the received data, emit an event back if needed
-        io.emit("test response", `User ${socket.id} sent message: ${msg}`);
-    });
-    //---------------------------------------------------------------------------------
     socket.on("messageToRoom", async ({ msg, data }) => {
+        // messageQueue.push({ msg, data, socket });
+        // if (!isProcessing) {
+        //     processNextMessage();
+        // }
         try {
-            console.log(msg);
-            io.emit("message_log", `user Id: ${socket.id} in roomId: ${msg.roomId} send message with value: ${msg.value}`);
-            // Send get request to API
-            const response = await axios_1.default.get(`http://localhost:5500/api/v1/rule/projectRules?user=${data.user}&projectName=${data.projectName}`, {});
-            let rules = response.data.data;
-            if (rules.length == 0) {
-                console.log("in lenght 0");
-                // socket.join(msg.roomId);
-                socket.to(msg.roomId).emit("roomMessage", {
-                    roomId: msg.roomId,
-                    value: msg.value,
-                    status: true,
-                });
-                console.log("after roomMessage length 0");
-            }
-            if (rules.length !== 0 || rules != null) {
-                rules.forEach((rule) => {
-                    if (rule.triggerModuleId === msg.roomId) {
-                        let conditionMet = false;
-                        const messageValue = parseFloat(msg.value);
-                        const ruleConditionValue = parseFloat(rule.conditionValue);
-                        switch (rule.condition) {
-                            case "<":
-                                conditionMet =
-                                    messageValue < ruleConditionValue;
-                                break;
-                            case "<=":
-                                conditionMet =
-                                    messageValue <= ruleConditionValue;
-                                break;
-                            case ">":
-                                conditionMet =
-                                    messageValue > ruleConditionValue;
-                                break;
-                            case ">=":
-                                conditionMet =
-                                    messageValue >= ruleConditionValue;
-                                break;
-                            case "==":
-                                conditionMet =
-                                    messageValue == ruleConditionValue;
-                                break;
-                            case "!=":
-                                conditionMet =
-                                    messageValue != ruleConditionValue;
-                                break;
-                        }
-                        if (conditionMet) {
-                            console.log(`Condition met for rule: ${rule._id}, emitting to room: ${rule.actionModuleId} with value ${rule.action.value}`);
-                            socket.to(rule.actionModuleId).emit("roomMessage", {
-                                roomId: rule.actionModuleId,
-                                value: rule.action.value,
-                                status: true,
-                            });
+            console.log(msg.source);
+            console.log(msg, data);
+            let value = msg.value;
+            let isNumber = !isNaN(value); // Check if value is a number
+            let startsWithNumber = /^[0-9]/.test(value); // Check if value starts with a number
+            if (isNumber || startsWithNumber) {
+                // Send get request to API
+                const response = await axios_1.default.get(`https://graduation-api-zaj9.onrender.com/api/v1/rule/projectRules?user=${data.user}&projectName=${data.projectName}`, {});
+                let rules = response.data.data;
+                if (rules.length == 0) {
+                    console.log("no rules found");
+                    socket.to(msg.roomId).emit("roomMessagess", { msg, data });
+                }
+                else {
+                    rules.forEach((rule) => {
+                        if (rule.triggerModuleId === msg.roomId) {
+                            let conditionMet = false;
+                            let messageValue = msg.value.split(" ")[0];
+                            let numberValue = parseInt(messageValue);
+                            console.log(numberValue);
+                            const ruleConditionValue = parseFloat(rule.conditionValue);
+                            switch (rule.condition) {
+                                case "<":
+                                    conditionMet =
+                                        numberValue < ruleConditionValue;
+                                    break;
+                                case "<=":
+                                    conditionMet =
+                                        numberValue <= ruleConditionValue;
+                                    break;
+                                case ">":
+                                    conditionMet =
+                                        numberValue > ruleConditionValue;
+                                    break;
+                                case ">=":
+                                    conditionMet =
+                                        numberValue >= ruleConditionValue;
+                                    break;
+                                case "==":
+                                    conditionMet =
+                                        numberValue == ruleConditionValue;
+                                    break;
+                                case "!=":
+                                    conditionMet =
+                                        numberValue != ruleConditionValue;
+                                    break;
+                            }
+                            if (conditionMet) {
+                                console.log(`Condition met for rule: ${rule._id}, emitting to room: ${rule.actionModuleId} with value ${rule.action.value}`);
+                                let actionData = {
+                                    msg: {
+                                        source: "server",
+                                        roomId: rule.actionModuleId,
+                                        value: rule.action.value,
+                                        status: true,
+                                    },
+                                    data: data,
+                                };
+                                console.log(actionData);
+                                socket.to(rule.actionModuleId)
+                                    .emit("roomMessagess", actionData);
+                                socket.to(msg.roomId)
+                                    .emit("roomMessagess", { msg, data });
+                            }
                         }
                         else {
-                            console.log("afther met condition");
-                            socket.to(msg.roomId).emit("roomMessage", {
-                                roomId: msg.roomId,
-                                value: msg.value,
-                                status: true,
-                            });
+                            console.log("condition not met");
+                            socket.to(msg.roomId)
+                                .emit("roomMessagess", { msg, data });
                         }
-                    }
-                });
+                    });
+                }
             }
             else {
-                console.log("last");
-                socket.to(msg.roomId).emit("roomMessage", {
-                    roomId: msg.roomId,
-                    value: msg.value,
-                    status: true,
-                });
+                console.log("not  a number value ");
+                io.in(msg.roomId).emit("roomMessagess", { msg, data });
             }
         }
         catch (error) {
             if (error.response) {
-                console.error(`Error sending GET request to API: ${error.response.data.msg}`);
                 socket.emit("rulesError", error.response.data.msg);
             }
             else if (error.request) {
@@ -346,20 +352,20 @@ io.on("connection", async (socket) => {
             }
         }
     });
-    io.emit("user numbers", io.engine.clientsCount);
     // console.log(io.of("/").sockets.size, "of name space");
     socket.on("disconnect", () => {
-        console.log("User disconnected");
-        io.emit("user numbers", io.engine.clientsCount);
+        console.log(`User ${io.engine.clientsCount} disconnected`);
+        socket.removeAllListeners();
+        // io.emit("user numbers", io.engine.clientsCount);
         io.emit("user leave", "user diconnected");
     });
 });
-io.engine.on("connection_error", (err) => {
-    console.log(err.req); // the request object
-    console.log(err.code); // the error code, for example 1
-    console.log(err.message); // the error message, for example "Session ID unknown"
-    console.log(err.context); // some additional error context
-});
+// io.engine.on("connection_error", (err) => {
+//     console.log(err.req); // the request object
+//     console.log(err.code); // the error code, for example 1
+//     console.log(err.message); // the error message, for example "Session ID unknown"
+//     console.log(err.context); // some additional error context
+// });
 //--------------------------------------------------------------------------
 app.post("/api/v1/connect-data", async (req, res) => {
     const projectName = req.body.projectName;
@@ -391,11 +397,12 @@ app.post("/api/v1/connect-data", async (req, res) => {
         });
     }
 });
-app.get("/ip", (req, res) => {
-    const realIP = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
-    console.log("Real IP:", realIP);
-    res.send(realIP);
-});
+// app.get("/ip", (req, res) => {
+//     const realIP =
+//         req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+//     console.log("Real IP:", realIP);
+//     res.send(realIP);
+// });
 if (hostName && port) {
     server.listen(port, hostName, () => {
         console.log(`server is running at http://${hostName}:${port}`);

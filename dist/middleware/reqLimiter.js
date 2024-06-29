@@ -17,7 +17,7 @@ function keyGenerator(request, _response) {
 }
 exports.defaultLimiter = (0, express_rate_limit_1.default)({
     windowMs: 5 * 60 * 1000,
-    limit: 100,
+    limit: 300,
     message: "Too many request from this ip try again after 5 min",
     keyGenerator: keyGenerator, //generates a key used to identify the client for rate limiting. 
 });

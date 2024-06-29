@@ -289,11 +289,10 @@ const updateProjectModulesValues = async (req, res) => {
         }
         // Save the updated project
         const updatedProject = await existingProject.save();
-        const projects = await project_model_1.default.find({ name: userName }).sort({ createdAt: -1 });
+        // const projects = await ProjectModel.find({ name: userName }).sort({ createdAt: -1 });''
         return res.status(200).json({
             success: true,
             msg: "Modules updated successfully",
-            data: projects,
         });
     }
     catch (err) {

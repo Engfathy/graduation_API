@@ -347,6 +347,7 @@ const loginUser = async (req, res) => {
         console.log("logged");
         return res.status(200).json({
             success: true,
+            emailVerified: user.verified,
             msg: "Login is successful",
             token: access_token,
             refresh_token: refresh_token,
