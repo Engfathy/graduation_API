@@ -127,9 +127,10 @@ app.post(
 // app.get("/socket3", (req, res) => {
 //     res.sendFile(__dirname + "/index3.html");
 // });
-
+let i =0;
 io.on("connection", async (socket) => {
-    console.log(`user ${io.engine.clientsCount} connected`);
+    i++;
+    console.log(`user ${i} connected`);
     socket.on("createRooms", (roomsIds: string[]) => {
         if (roomsIds.length == 0) {
             // io.emit("rooms status", `no room sended`);
@@ -142,15 +143,14 @@ io.on("connection", async (socket) => {
     });
     //--------------------------------------------------------------------------------------------
     socket.on("joinRooms", (roomsIds:any) => {
-       
-    
+        console.log("join rooms",roomsIds);
         if (roomsIds.length == 0) {
             console.log("rooms type incorrect")
         }else if(!Array.isArray(roomsIds)){
             let jsonRooms =JSON.parse(roomsIds);
             jsonRooms.forEach((roomId: string) => {
                 socket.join(roomId);
-                console.log(`User: ${socket.id} joined room ${roomId}`);
+                console.log(`User mobile: ${socket.id} joined room ${roomId}`);
             });
         } else {
             roomsIds.forEach((roomId: string) => {
@@ -162,11 +162,16 @@ io.on("connection", async (socket) => {
     });
 
     //------------------------------------------------------------------
-    socket.on("leaveRooms", (roomsIds: string[]) => {
-        // Join the socket to the specified room
-        console.log(roomsIds);
+    socket.on("leaveRooms", (roomsIds:any) => {
+        console.log("leave rooms",roomsIds);
         if (roomsIds.length == 0) {
-            io.emit("rooms status", `no room sended`);
+            console.log("rooms status", `no room sended`);
+        }else if (!Array.isArray(roomsIds)){
+            let jsonRooms =JSON.parse(roomsIds);
+            jsonRooms.forEach((roomId: string) => {
+                socket.leave(roomId);
+                console.log(`User mobile: ${socket.id} left room ${roomId}`);
+            });
         } else {
             roomsIds.forEach((roomId: string) => {
                 socket.leave(roomId);
@@ -176,49 +181,51 @@ io.on("connection", async (socket) => {
                 // );
                 console.log(`User: ${socket.id} left room ${roomId}`);
             });
-            console.log(socket.rooms);
         }
     });
     //-----------------------------------------------------------------------
     socket.on("updateValues", async (data) => {
-        console.log(data);
-        try {
-            // Send POST request to API
-            const response = await axios.post(
-                "http://localhost:5500/api/v1/project/update-values",
-                data,
-            );
-            console.log(response.data);
-            if (response.data.msg == true) {
-                console.log("last valued updated");
+        // console.log(data);
+        if(data.modules.length !== 0){
+            try {
+                // Send POST request to API
+                const response = await axios.post(
+                    "http://localhost:5500/api/v1/project/update-values",
+                    data,
+                );
+                console.log(response.data);
+                if (response.data.msg == true) {
+                    console.log("last valued updated");
+                }
+            } catch (error: any) {
+                if (error.response) {
+                    console.error(
+                        `Error sending POST request to API: ${error.response.data.msg}`,
+                    );
+                    socket.emit("rulesError", error.response.data.msg);
+                } else if (error.request) {
+                    // The request was made but no response was received
+                    console.error(
+                        "No response received from the API:",
+                        error.request,
+                    );
+                    // socket.emit(
+                    //     "updateValuseError",
+                    //     "No response received from the API",
+                    // );
+                } else {
+                    // Something happened in setting up the request that triggered an error
+                    console.error(
+                        "Error sending POST request to API:",
+                        error.message,
+                    );
+                    // socket.emit("updateValuseError", error.message);
+                }
             }
-        } catch (error: any) {
-            if (error.response) {
-                // The request was made and the server responded with a status code
-                // that falls out of the range of 2xx
-                console.error(
-                    `Error sending POST request to API: ${error.response.data.msg}`,
-                );
-                socket.emit("rulesError", error.response.data.msg);
-            } else if (error.request) {
-                // The request was made but no response was received
-                console.error(
-                    "No response received from the API:",
-                    error.request,
-                );
-                socket.emit(
-                    "updateValuseError",
-                    "No response received from the API",
-                );
-            } else {
-                // Something happened in setting up the request that triggered an error
-                console.error(
-                    "Error sending POST request to API:",
-                    error.message,
-                );
-                socket.emit("updateValuseError", error.message);
-            }
+        }else{
+            console.log("updated value array empty")
         }
+       
     });
 
     //-----------------------------------------------------------------------------
@@ -289,125 +296,126 @@ io.on("connection", async (socket) => {
     });
 
     socket.on("messageToRoom", async ({ msg, data }) => {
-      
-        // messageQueue.push({ msg, data, socket });
-        // if (!isProcessing) {
-        //     processNextMessage();
-        // }
-        try {
-            console.log(msg.source);
-            console.log(msg,data)
-            let value = msg.value;
-            let isNumber = !isNaN(value); // Check if value is a number
-            let startsWithNumber = /^[0-9]/.test(value); // Check if value starts with a number
+        console.log(msg,data);
+        socket.to(msg.roomId)
+        .emit("roomMessagess", {msg,data});
+    //     try {
+    //         console.log(msg.source);
+    //         console.log(msg,data)
+    //         let value = msg.value;
+    //         let isNumber = !isNaN(value); // Check if value is a number
+    //         let startsWithNumber = /^[0-9]/.test(value); // Check if value starts with a number
 
-            if (isNumber || startsWithNumber) {
-                // Send get request to API
-                const response = await axios.get(
-                    `https://graduation-api-zaj9.onrender.com/api/v1/rule/projectRules?user=${data.user}&projectName=${data.projectName}`,
-                    {},
-                );
-                let rules = response.data.data;
-                if (rules.length == 0) {
-                    console.log("no rules found");
+    //         if (isNumber || startsWithNumber) {
+    //             // Send get request to API
+    //             const response = await axios.get(
+    //                 `https://graduation-api-zaj9.onrender.com/api/v1/rule/projectRules?user=${data.user}&projectName=${data.projectName}`,
+    //                 {},
+    //             );
+    //             let rules = response.data.data;
+    //             if (rules.length == 0) {
+    //                 console.log("no rules found");
                   
-                    socket.to(msg.roomId).emit("roomMessagess", {msg,data});
-                } else {
-                    rules.forEach((rule: any) => {
-                        if (rule.triggerModuleId === msg.roomId) {
-                            let conditionMet = false;
-                            let messageValue:string =msg.value.split(" ")[0];
-                            let numberValue :number= parseInt(messageValue)
-                            console.log(numberValue);
-                            const ruleConditionValue = parseFloat(
-                                rule.conditionValue,
-                            );
+    //                 socket.to(msg.roomId).emit("roomMessagess", {msg,data});
+    //             } else {
+    //                 rules.forEach((rule: any) => {
+    //                     if (rule.triggerModuleId === msg.roomId) {
+    //                         let conditionMet = false;
+    //                         let messageValue:string =msg.value.split(" ")[0];
+    //                         let numberValue :number= parseInt(messageValue)
+    //                         console.log(numberValue);
+    //                         const ruleConditionValue = parseFloat(
+    //                             rule.conditionValue,
+    //                         );
 
-                            switch (rule.condition) {
-                                case "<":
-                                    conditionMet =
-                                    numberValue < ruleConditionValue;
-                                    break;
-                                case "<=":
-                                    conditionMet =
-                                    numberValue <= ruleConditionValue;
-                                    break;
-                                case ">":
-                                    conditionMet =
-                                    numberValue > ruleConditionValue;
-                                    break;
-                                case ">=":
-                                    conditionMet =
-                                    numberValue >= ruleConditionValue;
-                                    break;
-                                case "==":
-                                    conditionMet =
-                                    numberValue == ruleConditionValue;
-                                    break;
-                                case "!=":
-                                    conditionMet =
-                                    numberValue != ruleConditionValue;
-                                    break;
-                            }
+    //                         switch (rule.condition) {
+    //                             case "<":
+    //                                 conditionMet =
+    //                                 numberValue < ruleConditionValue;
+    //                                 break;
+    //                             case "<=":
+    //                                 conditionMet =
+    //                                 numberValue <= ruleConditionValue;
+    //                                 break;
+    //                             case ">":
+    //                                 conditionMet =
+    //                                 numberValue > ruleConditionValue;
+    //                                 break;
+    //                             case ">=":
+    //                                 conditionMet =
+    //                                 numberValue >= ruleConditionValue;
+    //                                 break;
+    //                             case "==":
+    //                                 conditionMet =
+    //                                 numberValue == ruleConditionValue;
+    //                                 break;
+    //                             case "!=":
+    //                                 conditionMet =
+    //                                 numberValue != ruleConditionValue;
+    //                                 break;
+    //                         }
 
-                            if (conditionMet) {
-                                console.log(
-                                    `Condition met for rule: ${rule._id}, emitting to room: ${rule.actionModuleId} with value ${rule.action.value}`,
-                                );
-                                let actionData = {
-                                    msg: {
-                                        source: "server",
-                                        roomId: rule.actionModuleId,
-                                        value: rule.action.value,
-                                        status: true,
-                                    },
-                                    data: data,
-                                };
-                                console.log(actionData)
+    //                         if (conditionMet) {
+    //                             console.log(
+    //                                 `Condition met for rule: ${rule._id}, emitting to room: ${rule.actionModuleId} with value ${rule.action.value}`,
+    //                             );
+    //                             let actionData = {
+    //                                 msg: {
+    //                                     source: "server",
+    //                                     roomId: rule.actionModuleId,
+    //                                     value: rule.action.value,
+    //                                     status: true,
+    //                                 },
+    //                                 data: data,
+    //                             };
+    //                             console.log(actionData)
 
-                                socket.to(rule.actionModuleId)
-                                    .emit("roomMessagess", actionData);
+    //                             socket.to(rule.actionModuleId)
+    //                                 .emit("roomMessagess", actionData);
                                    
                                     
-                                    socket.to(msg.roomId)
-                                        .emit("roomMessagess", {msg,data});
-                            }
-                        } else {
-                            console.log("condition not met");
+    //                                 socket.to(msg.roomId)
+    //                                     .emit("roomMessagess", {msg,data});
+    //                         }
+    //                     } else {
+    //                         console.log("condition not met");
                             
-                            socket.to(msg.roomId)
-                                .emit("roomMessagess", {msg ,data});
-                        }
-                    });
-                }
-            } else {
-                console.log("not  a number value ");
+    //                         socket.to(msg.roomId)
+    //                             .emit("roomMessagess", {msg ,data});
+    //                     }
+    //                 });
+    //             }
+    //         } else {
+    //             console.log("not  a number value ");
                
-                io.in(msg.roomId).emit("roomMessagess", {msg,data});
-            }
-        } catch (error: any) {
-            if (error.response) {
-                socket.emit("rulesError", error.response.data.msg);
-            } else if (error.request) {
-                console.error(
-                    "No response received from the API:",
-                    error.request,
-                );
-                socket.emit("rulesError", "No response received from the API");
-            } else {
-                console.error(
-                    "Error sending GET request to API:",
-                    error.message,
-                );
-                socket.emit("rulesError", error.message);
-            }
-        }
+    //             io.in(msg.roomId).emit("roomMessagess", {msg,data});
+    //         }
+    //     } catch (error: any) {
+    //         if (error.response) {
+    //             socket.emit("rulesError", error.response.data.msg);
+    //         } else if (error.request) {
+    //             console.error(
+    //                 "No response received from the API:",
+    //                 error.request,
+    //             );
+    //             socket.emit("rulesError", "No response received from the API");
+    //         } else {
+    //             console.error(
+    //                 "Error sending GET request to API:",
+    //                 error.message,
+    //             );
+    //             socket.emit("rulesError", error.message);
+    //         }
+    //     }
     });
 
     // console.log(io.of("/").sockets.size, "of name space");
 
     socket.on("disconnect", () => {
-        console.log(`User ${io.engine.clientsCount} disconnected`);
+        console.log(`User ${i} disconnected`);
+        i--;
+        console.log(`${i} User  remaining`);
+
         socket.removeAllListeners();
 
         // io.emit("user numbers", io.engine.clientsCount);
@@ -464,7 +472,7 @@ app.post(
 //     res.send(realIP);
 // });
 
-if (hostName && port) {
+if(hostName && port) {
     server.listen(port, hostName, () => {
         console.log(`server is running at http://${hostName}:${port}`);
     });

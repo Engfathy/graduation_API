@@ -392,12 +392,23 @@ export const loginUser = async (
         // });
 
         console.log("logged");
+        const user_data = await User.findOne({
+            $or: [{ _id: user.id }, { name: user.name }],
+        }).select(
+            "-password -reset_token -verificationCode -reset_token_expiration -verificationCode_expiration",
+        );
+        if (!user_data) {
+            return res
+                .status(401)
+                .json({ success: false, msg: "User data not found." });
+        }
         return res.status(200).json({
             success: true,
             emailVerified:user.verified,
             msg: "Login is successful",
             token: access_token,
             refresh_token: refresh_token,
+            userData:user_data
         });
     } catch (error) {
         return res.status(500).json({ success: false, msg: error });

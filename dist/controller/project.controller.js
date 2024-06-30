@@ -28,6 +28,14 @@ const createProject = async (req, res) => {
     }
     try {
         const userName = req.cookies["userName"] || req.headers["user"];
+        if (userName !== req.body.name) {
+            return res
+                .status(400)
+                .json({
+                success: false,
+                msg: "name doesnot match acounnt name",
+            });
+        }
         // console.log(userName);
         const ProjectNameExists = await project_model_1.default.findOne({
             name: req.body.name,
@@ -41,7 +49,9 @@ const createProject = async (req, res) => {
             // console.log(newProject);
             const savedProject = await newProject.save();
             // console.log(savedProject);
-            const projects = await project_model_1.default.find({ name: userName }).sort({ createdAt: -1 });
+            const projects = await project_model_1.default.find({ name: userName }).sort({
+                createdAt: -1,
+            });
             return res.status(201).json({
                 success: true,
                 msg: "project created",
@@ -73,7 +83,9 @@ const getAllProjectsForUser = async (req, res) => {
                 .status(400)
                 .json({ success: false, msg: "User header is missing." });
         }
-        const projects = await project_model_1.default.find({ name: userName }).sort({ createdAt: -1 });
+        const projects = await project_model_1.default.find({ name: userName }).sort({
+            createdAt: -1,
+        });
         return res.status(200).json({ success: true, data: projects });
     }
     catch (error) {
@@ -162,7 +174,9 @@ const updateProjectById = async (req, res) => {
         const _a = req.body, { name, description, projectName } = _a, updateData = __rest(_a, ["name", "description", "projectName"]);
         Object.assign(existing, updateData);
         const updated = await existing.save();
-        const projects = await project_model_1.default.find({ name: userName }).sort({ createdAt: -1 });
+        const projects = await project_model_1.default.find({ name: userName }).sort({
+            createdAt: -1,
+        });
         return res.status(200).json({
             success: true,
             msg: "project updated",
@@ -183,7 +197,10 @@ const updateProjectName = async (req, res) => {
     const newName = req.body.projectName;
     try {
         const userName = req.cookies["userName"] || req.headers["user"];
-        const existing = await project_model_1.default.findOne({ _id: id, name: userName });
+        const existing = await project_model_1.default.findOne({
+            _id: id,
+            name: userName,
+        });
         if (!existing) {
             return res
                 .status(200)
@@ -200,7 +217,9 @@ const updateProjectName = async (req, res) => {
         }
         existing.projectName = newName;
         const updated = await existing.save();
-        const projects = await project_model_1.default.find({ name: userName }).sort({ createdAt: -1 });
+        const projects = await project_model_1.default.find({ name: userName }).sort({
+            createdAt: -1,
+        });
         return res.json({
             success: true,
             msg: "project name updated",
@@ -221,7 +240,10 @@ const updateProjectDescription = async (req, res) => {
     try {
         const userName = req.cookies["userName"] || req.headers["user"];
         // Find existing project
-        const existing = await project_model_1.default.findOne({ _id: id, name: userName });
+        const existing = await project_model_1.default.findOne({
+            _id: id,
+            name: userName,
+        });
         // Check if exists
         if (!existing) {
             return res
@@ -232,9 +254,15 @@ const updateProjectDescription = async (req, res) => {
         existing.description = description;
         // Save updated doc
         const updated = await existing.save();
-        const projects = await project_model_1.default.find({ name: userName }).sort({ createdAt: -1 });
+        const projects = await project_model_1.default.find({ name: userName }).sort({
+            createdAt: -1,
+        });
         // Return response
-        return res.json({ success: true, msg: "description updated", data: projects });
+        return res.json({
+            success: true,
+            msg: "description updated",
+            data: projects,
+        });
     }
     catch (error) {
         return res.status(500).json({ success: false, msg: "Server error" });
@@ -245,14 +273,19 @@ exports.updateProjectDescription = updateProjectDescription;
 const deleteProjectById = async (req, res) => {
     try {
         const userName = req.cookies["userName"] || req.headers["user"];
-        const deletedproject = await project_model_1.default.findOneAndDelete({ _id: req.params.id, name: userName });
+        const deletedproject = await project_model_1.default.findOneAndDelete({
+            _id: req.params.id,
+            name: userName,
+        });
         if (!deletedproject) {
             return res
                 .status(404)
                 .json({ success: false, error: "project not found" });
         }
         else {
-            const projects = await project_model_1.default.find({ name: userName }).sort({ createdAt: -1 });
+            const projects = await project_model_1.default.find({ name: userName }).sort({
+                createdAt: -1,
+            });
             return res.status(200).json({
                 success: true,
                 msg: "project removed",
@@ -306,23 +339,31 @@ exports.updateProjectModulesValues = updateProjectModulesValues;
 const getProjectByUserAndPassword = async (req, res) => {
     const { user: userName, password } = req.query;
     if (!userName || !password) {
-        return res.status(400).json({ success: false, msg: "User name or password is missing." });
+        return res
+            .status(400)
+            .json({ success: false, msg: "User name or password is missing." });
     }
     try {
         const user = await user_model_1.default.findOne({ name: userName });
         if (!user) {
-            return res.status(401).json({ success: false, msg: "Invalid username" });
+            return res
+                .status(401)
+                .json({ success: false, msg: "Invalid username" });
         }
         const isMatch = await bcryptjs_1.default.compare(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({ success: false, msg: "Incorrect password" });
+            return res
+                .status(401)
+                .json({ success: false, msg: "Incorrect password" });
         }
         const projects = await project_model_1.default.find({ name: user.name });
         return res.status(200).json({ success: true, data: projects });
     }
     catch (error) {
         console.error("Error fetching projects:", error);
-        return res.status(500).json({ success: false, error: "Internal Server Error" });
+        return res
+            .status(500)
+            .json({ success: false, error: "Internal Server Error" });
     }
 };
 exports.getProjectByUserAndPassword = getProjectByUserAndPassword;
@@ -331,7 +372,10 @@ const updateProjectDetails = async (req, res) => {
     const { projectName, description } = req.body;
     try {
         const userName = req.cookies["userName"] || req.headers["user"];
-        const existing = await project_model_1.default.findOne({ _id: id, name: userName });
+        const existing = await project_model_1.default.findOne({
+            _id: id,
+            name: userName,
+        });
         if (!existing) {
             return res
                 .status(404)
@@ -345,7 +389,10 @@ const updateProjectDetails = async (req, res) => {
             if (nameExists) {
                 return res
                     .status(400)
-                    .json({ success: false, msg: "Project name already exists" });
+                    .json({
+                    success: false,
+                    msg: "Project name already exists",
+                });
             }
             existing.projectName = projectName;
         }
@@ -353,7 +400,9 @@ const updateProjectDetails = async (req, res) => {
             existing.description = description;
         }
         const updated = await existing.save();
-        const projects = await project_model_1.default.find({ name: userName }).sort({ createdAt: -1 });
+        const projects = await project_model_1.default.find({ name: userName }).sort({
+            createdAt: -1,
+        });
         return res.json({
             success: true,
             msg: "Project details updated",
