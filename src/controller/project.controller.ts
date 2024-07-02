@@ -86,6 +86,51 @@ export const getAllProjectsForUser = async (
     }
 };
 
+export const getProjectSpecificFields = async (
+    req: express.Request,
+    res: express.Response,
+) => {
+    const projectName = req.query.projectName;
+    const userName = req.query.user;
+    
+    if (!userName || !projectName) {
+        return res
+            .status(400)
+            .json({ success: false, msg: "some data is missing" });
+    }
+
+    try {
+        const project = await ProjectModel.findOne({
+            name: userName,
+            projectName: projectName,
+        }).select('modules.moduleName modules._id modules.alternateName projectName _id modules.lastValue');
+
+        if (!project) {
+            return res
+                .status(404)
+                .json({ success: false, msg: "Project not found" });
+        } else {
+            // Transform the project to only include the specified fields
+            const filteredProject = {
+                _id: project._id,
+                projectName: project.projectName,
+                modules: project.modules.map(module => ({
+                    _id: module._id,
+                    moduleName: module.moduleName,
+                    alternateName: module.alternateName,
+                    lastValue: module.lastValue,
+                })),
+            };
+
+            return res.status(200).json({ success: true, data: filteredProject });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: "Internal Server Error",
+        });
+    }
+};
 // get project by user and project name
 
 export const getProjectByUserAndProjectName = async (

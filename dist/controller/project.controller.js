@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateProjectDetails = exports.getProjectByUserAndPassword = exports.updateProjectModulesValues = exports.deleteProjectById = exports.updateProjectDescription = exports.updateProjectName = exports.updateProjectById = exports.getProjectById = exports.getProjectByUserAndProjectName = exports.getAllProjectsForUser = exports.createProject = void 0;
+exports.updateProjectDetails = exports.getProjectByUserAndPassword = exports.updateProjectModulesValues = exports.deleteProjectById = exports.updateProjectDescription = exports.updateProjectName = exports.updateProjectById = exports.getProjectById = exports.getProjectByUserAndProjectName = exports.getProjectSpecificFields = exports.getAllProjectsForUser = exports.createProject = void 0;
 const project_model_1 = __importDefault(require("../models/project.model"));
 const express_validator_1 = require("express-validator");
 const user_model_1 = __importDefault(require("../models/user.model"));
@@ -96,6 +96,47 @@ const getAllProjectsForUser = async (req, res) => {
     }
 };
 exports.getAllProjectsForUser = getAllProjectsForUser;
+const getProjectSpecificFields = async (req, res) => {
+    const projectName = req.query.projectName;
+    const userName = req.query.user;
+    if (!userName || !projectName) {
+        return res
+            .status(400)
+            .json({ success: false, msg: "some data is missing" });
+    }
+    try {
+        const project = await project_model_1.default.findOne({
+            name: userName,
+            projectName: projectName,
+        }).select('modules.moduleName modules._id modules.alternateName projectName _id modules.lastValue');
+        if (!project) {
+            return res
+                .status(404)
+                .json({ success: false, msg: "Project not found" });
+        }
+        else {
+            // Transform the project to only include the specified fields
+            const filteredProject = {
+                _id: project._id,
+                projectName: project.projectName,
+                modules: project.modules.map(module => ({
+                    _id: module._id,
+                    moduleName: module.moduleName,
+                    alternateName: module.alternateName,
+                    lastValue: module.lastValue,
+                })),
+            };
+            return res.status(200).json({ success: true, data: filteredProject });
+        }
+    }
+    catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: "Internal Server Error",
+        });
+    }
+};
+exports.getProjectSpecificFields = getProjectSpecificFields;
 // get project by user and project name
 const getProjectByUserAndProjectName = async (req, res) => {
     const userName = req.query.user;

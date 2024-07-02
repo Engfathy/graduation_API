@@ -18,6 +18,7 @@ projectRouter.get("/all", jwtTokenVerifier_1.default, project_controller_1.getAl
 projectRouter.post("/update-values", project_controller_1.updateProjectModulesValues);
 projectRouter.get("/allprojects", project_controller_1.getProjectByUserAndPassword);
 projectRouter.get("", project_controller_1.getProjectByUserAndProjectName);
+projectRouter.get('/specific-project', project_controller_1.getProjectSpecificFields);
 projectRouter.get("/id/:id", jwtTokenVerifier_1.default, project_controller_1.getProjectById);
 projectRouter.get("/idNoAuth/:id", project_controller_1.getProjectById);
 projectRouter.post("/create", validateProjectData, jwtTokenVerifier_1.default, project_controller_1.createProject);

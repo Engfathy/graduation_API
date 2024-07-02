@@ -12,6 +12,7 @@ import {
     updateProjectModulesValues,
     getProjectByUserAndPassword,
     updateProjectDetails,
+    getProjectSpecificFields,
 } from "../controller/project.controller"; // Import your project controller functions
 import jwtTokenVerifier from "../middleware/jwtTokenVerifier";
 
@@ -28,6 +29,7 @@ projectRouter.get("/all", jwtTokenVerifier, getAllProjectsForUser);
 projectRouter.post("/update-values", updateProjectModulesValues);
 projectRouter.get("/allprojects", getProjectByUserAndPassword);
 projectRouter.get("",getProjectByUserAndProjectName);
+projectRouter.get('/specific-project', getProjectSpecificFields);
 projectRouter.get("/id/:id", jwtTokenVerifier, getProjectById);
 projectRouter.get("/idNoAuth/:id", getProjectById);
 projectRouter.post(

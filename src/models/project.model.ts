@@ -16,7 +16,7 @@ interface ProjectDocument extends Project, Document {}
 const projectSchema = new Schema<ProjectDocument>({
     name: { type: String, required: true },
     projectName: { type: String, required: true },
-    controller: { type: String },
+    controller: { type: String, enum: ["Node MCU", "ARDUINO UNO","ARDUNO LEONARDO"] },
     description: { type: String, required: true },
     modules: [moduleSchema],
     createdAt: { type: Date, default: Date.now },

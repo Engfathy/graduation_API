@@ -62,6 +62,11 @@ export const handleRulesInModule = async (
                 .status(404)
                 .json({ success: false, msg: "Project not found" });
         }
+        if (project.modules.length == 0) {
+            return res
+                .status(404)
+                .json({ success: false, msg: "you must add rules first" });
+        }
 
         const rulesData = req.body;
 

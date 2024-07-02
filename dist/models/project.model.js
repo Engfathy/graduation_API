@@ -28,7 +28,7 @@ const module_model_1 = require("../models/module.model");
 const projectSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
     projectName: { type: String, required: true },
-    controller: { type: String },
+    controller: { type: String, enum: ["Node MCU", "ARDUINO UNO", "ARDUNO LEONARDO"] },
     description: { type: String, required: true },
     modules: [module_model_1.moduleSchema],
     createdAt: { type: Date, default: Date.now },
