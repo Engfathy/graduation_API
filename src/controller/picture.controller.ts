@@ -67,13 +67,13 @@ export const getProjectPicturesByusernameAndProjectName = async (
         const projectname = req.query.projectname;
 
         // Find the user by username
-        const user = await User.findOne({ username });
+        const user = await User.findOne({name: username });
         if (!user) {
             return res.status(404).json({ error: "User not found" });
         }
 
         // Find the project by projectname and user ID
-        const project = await ProjectModel.findOne({ name: projectname, userId: user._id });
+        const project = await ProjectModel.findOne({ projectName: projectname, name: username});
         if (!project) {
             return res.status(404).json({ error: "Project not found" });
         }
