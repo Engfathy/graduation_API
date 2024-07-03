@@ -248,6 +248,8 @@ io.on("connection", async (socket) => {
                     socket.to(module._id).emit("roomMessagess", msg);
                     setTimeout(() => {
                         socket.to(module._id).emit("roomMessagess", offMessage);
+                        // socket.to(module._id).emit("roomMessagess", offMessage);
+                        console.log(offMessage);
                     }, 5000);
                 }
                 else {
@@ -268,109 +270,146 @@ io.on("connection", async (socket) => {
         socket.join(roomId);
         console.log(`User: ${socket.id} joined room ${roomId}`);
     });
+    // socket.on("messageToRoom", async ({ msg, data }) => {
+    //     console.log(msg,data);
+    //     socket.to(msg.roomId)
+    //     .emit("roomMessagess", {msg,data});
+    // //     try {
+    // //         console.log(msg.source);
+    // //         console.log(msg,data)
+    // //         let value = msg.value;
+    // //         let isNumber = !isNaN(value); // Check if value is a number
+    // //         let startsWithNumber = /^[0-9]/.test(value); // Check if value starts with a number
+    // //         if (isNumber || startsWithNumber) {
+    // //             // Send get request to API
+    // //             const response = await axios.get(
+    // //                 `https://graduation-api-zaj9.onrender.com/api/v1/rule/projectRules?user=${data.user}&projectName=${data.projectName}`,
+    // //                 {},
+    // //             );
+    // //             let rules = response.data.data;
+    // //             if (rules.length == 0) {
+    // //                 console.log("no rules found");
+    // //                 socket.to(msg.roomId).emit("roomMessagess", {msg,data});
+    // //             } else {
+    // //                 rules.forEach((rule: any) => {
+    // //                     if (rule.triggerModuleId === msg.roomId) {
+    // //                         let conditionMet = false;
+    // //                         let messageValue:string =msg.value.split(" ")[0];
+    // //                         let numberValue :number= parseInt(messageValue)
+    // //                         console.log(numberValue);
+    // //                         const ruleConditionValue = parseFloat(
+    // //                             rule.conditionValue,
+    // //                         );
+    // //                         switch (rule.condition) {
+    // //                             case "<":
+    // //                                 conditionMet =
+    // //                                 numberValue < ruleConditionValue;
+    // //                                 break;
+    // //                             case "<=":
+    // //                                 conditionMet =
+    // //                                 numberValue <= ruleConditionValue;
+    // //                                 break;
+    // //                             case ">":
+    // //                                 conditionMet =
+    // //                                 numberValue > ruleConditionValue;
+    // //                                 break;
+    // //                             case ">=":
+    // //                                 conditionMet =
+    // //                                 numberValue >= ruleConditionValue;
+    // //                                 break;
+    // //                             case "==":
+    // //                                 conditionMet =
+    // //                                 numberValue == ruleConditionValue;
+    // //                                 break;
+    // //                             case "!=":
+    // //                                 conditionMet =
+    // //                                 numberValue != ruleConditionValue;
+    // //                                 break;
+    // //                         }
+    // //                         if (conditionMet) {
+    // //                             console.log(
+    // //                                 `Condition met for rule: ${rule._id}, emitting to room: ${rule.actionModuleId} with value ${rule.action.value}`,
+    // //                             );
+    // //                             let actionData = {
+    // //                                 msg: {
+    // //                                     source: "server",
+    // //                                     roomId: rule.actionModuleId,
+    // //                                     value: rule.action.value,
+    // //                                     status: true,
+    // //                                 },
+    // //                                 data: data,
+    // //                             };
+    // //                             console.log(actionData)
+    // //                             socket.to(rule.actionModuleId)
+    // //                                 .emit("roomMessagess", actionData);
+    // //                                 socket.to(msg.roomId)
+    // //                                     .emit("roomMessagess", {msg,data});
+    // //                         }
+    // //                     } else {
+    // //                         console.log("condition not met");
+    // //                         socket.to(msg.roomId)
+    // //                             .emit("roomMessagess", {msg ,data});
+    // //                     }
+    // //                 });
+    // //             }
+    // //         } else {
+    // //             console.log("not  a number value ");
+    // //             io.in(msg.roomId).emit("roomMessagess", {msg,data});
+    // //         }
+    // //     } catch (error: any) {
+    // //         if (error.response) {
+    // //             socket.emit("rulesError", error.response.data.msg);
+    // //         } else if (error.request) {
+    // //             console.error(
+    // //                 "No response received from the API:",
+    // //                 error.request,
+    // //             );
+    // //             socket.emit("rulesError", "No response received from the API");
+    // //         } else {
+    // //             console.error(
+    // //                 "Error sending GET request to API:",
+    // //                 error.message,
+    // //             );
+    // //             socket.emit("rulesError", error.message);
+    // //         }
+    // //     }
+    // });
+    const messageQueue = [];
+    let isProcessing = false;
+    // Function to process the queue
+    const processQueue = () => {
+        if (messageQueue.length === 0) {
+            isProcessing = false;
+            return;
+        }
+        const { socket, msg, data } = messageQueue.shift(); // Get the first message from the queue
+        socket.to(msg.roomId).emit("roomMessagess", { msg, data });
+        setTimeout(processQueue, 500); // Process the next message after 1 second
+    };
+    // Function to add a message to the queue
+    const addToQueue = (socket, msg, data) => {
+        // Clear the queue if it reaches 100
+        if (messageQueue.length >= 100) {
+            messageQueue.length = 0;
+        }
+        messageQueue.push({ socket, msg, data });
+        if (!isProcessing) {
+            isProcessing = true;
+            processQueue();
+        }
+    };
     socket.on("messageToRoom", async ({ msg, data }) => {
         console.log(msg, data);
-        socket.to(msg.roomId)
-            .emit("roomMessagess", { msg, data });
-        //     try {
-        //         console.log(msg.source);
-        //         console.log(msg,data)
-        //         let value = msg.value;
-        //         let isNumber = !isNaN(value); // Check if value is a number
-        //         let startsWithNumber = /^[0-9]/.test(value); // Check if value starts with a number
-        //         if (isNumber || startsWithNumber) {
-        //             // Send get request to API
-        //             const response = await axios.get(
-        //                 `https://graduation-api-zaj9.onrender.com/api/v1/rule/projectRules?user=${data.user}&projectName=${data.projectName}`,
-        //                 {},
-        //             );
-        //             let rules = response.data.data;
-        //             if (rules.length == 0) {
-        //                 console.log("no rules found");
-        //                 socket.to(msg.roomId).emit("roomMessagess", {msg,data});
-        //             } else {
-        //                 rules.forEach((rule: any) => {
-        //                     if (rule.triggerModuleId === msg.roomId) {
-        //                         let conditionMet = false;
-        //                         let messageValue:string =msg.value.split(" ")[0];
-        //                         let numberValue :number= parseInt(messageValue)
-        //                         console.log(numberValue);
-        //                         const ruleConditionValue = parseFloat(
-        //                             rule.conditionValue,
-        //                         );
-        //                         switch (rule.condition) {
-        //                             case "<":
-        //                                 conditionMet =
-        //                                 numberValue < ruleConditionValue;
-        //                                 break;
-        //                             case "<=":
-        //                                 conditionMet =
-        //                                 numberValue <= ruleConditionValue;
-        //                                 break;
-        //                             case ">":
-        //                                 conditionMet =
-        //                                 numberValue > ruleConditionValue;
-        //                                 break;
-        //                             case ">=":
-        //                                 conditionMet =
-        //                                 numberValue >= ruleConditionValue;
-        //                                 break;
-        //                             case "==":
-        //                                 conditionMet =
-        //                                 numberValue == ruleConditionValue;
-        //                                 break;
-        //                             case "!=":
-        //                                 conditionMet =
-        //                                 numberValue != ruleConditionValue;
-        //                                 break;
-        //                         }
-        //                         if (conditionMet) {
-        //                             console.log(
-        //                                 `Condition met for rule: ${rule._id}, emitting to room: ${rule.actionModuleId} with value ${rule.action.value}`,
-        //                             );
-        //                             let actionData = {
-        //                                 msg: {
-        //                                     source: "server",
-        //                                     roomId: rule.actionModuleId,
-        //                                     value: rule.action.value,
-        //                                     status: true,
-        //                                 },
-        //                                 data: data,
-        //                             };
-        //                             console.log(actionData)
-        //                             socket.to(rule.actionModuleId)
-        //                                 .emit("roomMessagess", actionData);
-        //                                 socket.to(msg.roomId)
-        //                                     .emit("roomMessagess", {msg,data});
-        //                         }
-        //                     } else {
-        //                         console.log("condition not met");
-        //                         socket.to(msg.roomId)
-        //                             .emit("roomMessagess", {msg ,data});
-        //                     }
-        //                 });
-        //             }
-        //         } else {
-        //             console.log("not  a number value ");
-        //             io.in(msg.roomId).emit("roomMessagess", {msg,data});
-        //         }
-        //     } catch (error: any) {
-        //         if (error.response) {
-        //             socket.emit("rulesError", error.response.data.msg);
-        //         } else if (error.request) {
-        //             console.error(
-        //                 "No response received from the API:",
-        //                 error.request,
-        //             );
-        //             socket.emit("rulesError", "No response received from the API");
-        //         } else {
-        //             console.error(
-        //                 "Error sending GET request to API:",
-        //                 error.message,
-        //             );
-        //             socket.emit("rulesError", error.message);
-        //         }
-        //     }
+        const temperatureRegex = /45\s*C/;
+        const distanceRegex = /112\s*cm/i; // Case-insensitive regex for "cm"
+        if (temperatureRegex.test(msg.value) || distanceRegex.test(msg.value)) {
+            // If the message contains "45 C" or "112 cm", add it to the queue
+            addToQueue(socket, msg, data);
+        }
+        else {
+            // If the message does not contain "45 C" or "112 cm", forward it immediately
+            socket.to(msg.roomId).emit("roomMessagess", { msg, data });
+        }
     });
     // console.log(io.of("/").sockets.size, "of name space");
     socket.on("disconnect", () => {

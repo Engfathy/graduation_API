@@ -19,6 +19,7 @@ const project_model_1 = __importDefault(require("../models/project.model"));
 const express_validator_1 = require("express-validator");
 const user_model_1 = __importDefault(require("../models/user.model"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const picture_model_1 = __importDefault(require("../models/picture.model"));
 // create new project
 const createProject = async (req, res) => {
     // const userName = req.headers.user;
@@ -327,6 +328,15 @@ const deleteProjectById = async (req, res) => {
             const projects = await project_model_1.default.find({ name: userName }).sort({
                 createdAt: -1,
             });
+            const pictures = await picture_model_1.default.find({ projectID: req.params.id });
+            if (!pictures) {
+                return res
+                    .status(404)
+                    .json({ success: false, msg: "Picture not found" });
+            }
+            // Delete the picture
+            // Delete all pictures related to the project
+            await Promise.all(pictures.map(picture => picture_model_1.default.deleteOne({ _id: picture._id })));
             return res.status(200).json({
                 success: true,
                 msg: "project removed",

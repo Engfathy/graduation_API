@@ -3,6 +3,7 @@ import PictureModel from "../models/picture.model";
 import express from "express";
 import path from "path";
 import ProjectModel from "../models/project.model";
+import User from "../models/user.model";
 
 export const uploadProjectPictures = async (
     req: express.Request,
@@ -62,10 +63,24 @@ export const getProjectPictures = async (
     res: express.Response,
 ) => {
     try {
-        const projectId = req.params.projectId; // Assuming project ID is provided in the URL parameters
+        const username = req.params.username;
+        const projectname = req.params.projectname;
+
+        // Find the user by username
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Find the project by projectname and user ID
+        const project = await ProjectModel.findOne({ name: projectname, userId: user._id });
+        if (!project) {
+            return res.status(404).json({ error: "Project not found" });
+        }
+
 
         // Retrieve the pictures data based on the project ID
-        const pictures = await PictureModel.find({ projectID: projectId });
+        const pictures = await PictureModel.find({ projectID: project._id });
 
         if (!pictures || pictures.length === 0) {
             return res

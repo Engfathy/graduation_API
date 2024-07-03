@@ -9,7 +9,6 @@ const jwtTokenVerifier = (req, res, next) => {
     var _a, _b;
     try {
         const token = ((_a = req.cookies) === null || _a === void 0 ? void 0 : _a.access_token) || ((_b = req.header("Authorization")) === null || _b === void 0 ? void 0 : _b.replace("Bearer", "")); // Retrieve token from the HTTP-only cookie
-        console.log(token);
         if (!token) {
             return res.status(401).json({
                 msg: "No token provided. Access denied.",

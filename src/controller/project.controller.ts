@@ -3,6 +3,7 @@ import { validationResult } from "express-validator";
 import express from "express";
 import User from "../models/user.model";
 import bcrypt from "bcryptjs";
+import PictureModel from "../models/picture.model";
 // create new project
 
 export const createProject = async (
@@ -351,6 +352,16 @@ export const deleteProjectById = async (
             const projects = await ProjectModel.find({ name: userName }).sort({
                 createdAt: -1,
             });
+            const pictures = await PictureModel.find({projectID:req.params.id});
+        if (!pictures) {
+            return res
+                .status(404)
+                .json({ success: false, msg: "Picture not found" });
+        }
+       
+        // Delete the picture
+// Delete all pictures related to the project
+            await Promise.all(pictures.map(picture => PictureModel.deleteOne({ _id: picture._id })));
             return res.status(200).json({
                 success: true,
                 msg: "project removed",

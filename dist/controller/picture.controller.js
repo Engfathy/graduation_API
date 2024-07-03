@@ -7,6 +7,8 @@ exports.deletePictureById = exports.getProjectPictures = exports.uploadProjectPi
 const generateFileName_1 = require("../utils/generateFileName");
 const picture_model_1 = __importDefault(require("../models/picture.model"));
 const path_1 = __importDefault(require("path"));
+const project_model_1 = __importDefault(require("../models/project.model"));
+const user_model_1 = __importDefault(require("../models/user.model"));
 const uploadProjectPictures = async (req, res) => {
     try {
         // const userName = req.cookies["userName"] || req.headers["user"];
@@ -55,9 +57,20 @@ exports.uploadProjectPictures = uploadProjectPictures;
 // get project picture
 const getProjectPictures = async (req, res) => {
     try {
-        const projectId = req.params.projectId; // Assuming project ID is provided in the URL parameters
+        const username = req.params.username;
+        const projectname = req.params.projectname;
+        // Find the user by username
+        const user = await user_model_1.default.findOne({ username });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        // Find the project by projectname and user ID
+        const project = await project_model_1.default.findOne({ name: projectname, userId: user._id });
+        if (!project) {
+            return res.status(404).json({ error: "Project not found" });
+        }
         // Retrieve the pictures data based on the project ID
-        const pictures = await picture_model_1.default.find({ projectID: projectId });
+        const pictures = await picture_model_1.default.find({ projectID: project._id });
         if (!pictures || pictures.length === 0) {
             return res
                 .status(404)
