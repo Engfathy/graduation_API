@@ -22,7 +22,7 @@ filesRouter.post(
     upload.single("picture"),
     uploadProjectPictures,
 );
-filesRouter.get("/picture/:projectId", getProjectPictures);
+filesRouter.get("/picture", getProjectPictures);
 filesRouter.delete("/delete/:id", deletePictureById);
 
 export default filesRouter;

@@ -57,8 +57,8 @@ exports.uploadProjectPictures = uploadProjectPictures;
 // get project picture
 const getProjectPictures = async (req, res) => {
     try {
-        const username = req.params.username;
-        const projectname = req.params.projectname;
+        const username = req.query.username;
+        const projectname = req.query.projectname;
         // Find the user by username
         const user = await user_model_1.default.findOne({ username });
         if (!user) {

@@ -63,8 +63,8 @@ export const getProjectPictures = async (
     res: express.Response,
 ) => {
     try {
-        const username = req.params.username;
-        const projectname = req.params.projectname;
+        const username = req.query.username;
+        const projectname = req.query.projectname;
 
         // Find the user by username
         const user = await User.findOne({ username });

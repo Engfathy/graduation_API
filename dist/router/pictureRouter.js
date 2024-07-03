@@ -14,7 +14,7 @@ const upload = (0, multer_1.default)({
 });
 const filesRouter = express_1.default.Router();
 filesRouter.post("/upload-picture", upload.single("picture"), picture_controller_1.uploadProjectPictures);
-filesRouter.get("/picture/:projectId", picture_controller_1.getProjectPictures);
+filesRouter.get("/picture", picture_controller_1.getProjectPictures);
 filesRouter.delete("/delete/:id", picture_controller_1.deletePictureById);
 exports.default = filesRouter;
 //# sourceMappingURL=pictureRouter.js.map
