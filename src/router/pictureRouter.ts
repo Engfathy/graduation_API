@@ -2,6 +2,7 @@ import express from "express";
 import {
     deletePictureById,
     getProjectPictures,
+    getProjectPicturesByusernameAndProjectName,
     uploadProjectPictures,
 } from "../controller/picture.controller";
 import jwtTokenVerifier from "../middleware/jwtTokenVerifier";
@@ -22,7 +23,8 @@ filesRouter.post(
     upload.single("picture"),
     uploadProjectPictures,
 );
-filesRouter.get("/picture", getProjectPictures);
+filesRouter.get("/picture", getProjectPicturesByusernameAndProjectName);
+filesRouter.get("/picture/projectID", getProjectPictures);
 filesRouter.delete("/delete/:id", deletePictureById);
 
 export default filesRouter;

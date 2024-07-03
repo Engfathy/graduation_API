@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deletePictureById = exports.getProjectPictures = exports.uploadProjectPictures = void 0;
+exports.deletePictureById = exports.getProjectPictures = exports.getProjectPicturesByusernameAndProjectName = exports.uploadProjectPictures = void 0;
 const generateFileName_1 = require("../utils/generateFileName");
 const picture_model_1 = __importDefault(require("../models/picture.model"));
 const path_1 = __importDefault(require("path"));
@@ -55,7 +55,7 @@ const uploadProjectPictures = async (req, res) => {
 };
 exports.uploadProjectPictures = uploadProjectPictures;
 // get project picture
-const getProjectPictures = async (req, res) => {
+const getProjectPicturesByusernameAndProjectName = async (req, res) => {
     try {
         const username = req.query.username;
         const projectname = req.query.projectname;
@@ -71,6 +71,60 @@ const getProjectPictures = async (req, res) => {
         }
         // Retrieve the pictures data based on the project ID
         const pictures = await picture_model_1.default.find({ projectID: project._id });
+        if (!pictures || pictures.length === 0) {
+            return res
+                .status(404)
+                .json({ error: "Pictures not found for the project" });
+        }
+        console.log(pictures.length);
+        // Array to store picture data
+        const pictureData = [];
+        // Loop through each picture and extract the file data
+        for (const picture of pictures) {
+            // Determine the content type based on the file extension
+            const ext = path_1.default.extname(picture.fileName).toLowerCase();
+            let contentType = "";
+            switch (ext) {
+                case ".jpg":
+                    contentType = "image/jpg";
+                    break;
+                case ".jpeg":
+                    contentType = "image/jpeg";
+                    break;
+                case ".png":
+                    contentType = "image/png";
+                    break;
+                case ".gif":
+                    contentType = "image/gif";
+                    break;
+                // Add more cases for other image types if needed
+                default:
+                    contentType = "application/octet-stream"; // Default to binary data
+            }
+            pictureData.push({
+                projectId: picture.projectID,
+                _id: picture._id,
+                pictureName: picture.fileName,
+                contentType: contentType,
+                data: picture.fileData,
+            });
+        }
+        console.log(pictureData.length);
+        // Send the array of picture data as a response
+        res.json(pictureData);
+    }
+    catch (error) {
+        console.error("Error fetching project pictures:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+exports.getProjectPicturesByusernameAndProjectName = getProjectPicturesByusernameAndProjectName;
+const getProjectPictures = async (req, res) => {
+    try {
+        const projectID = req.params.projectID;
+        // Find the user by username
+        // Retrieve the pictures data based on the project ID
+        const pictures = await picture_model_1.default.find({ projectID: projectID });
         if (!pictures || pictures.length === 0) {
             return res
                 .status(404)

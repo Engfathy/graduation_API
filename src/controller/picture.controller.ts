@@ -58,7 +58,7 @@ export const uploadProjectPictures = async (
 
 // get project picture
 
-export const getProjectPictures = async (
+export const getProjectPicturesByusernameAndProjectName = async (
     req: express.Request,
     res: express.Response,
 ) => {
@@ -81,6 +81,66 @@ export const getProjectPictures = async (
 
         // Retrieve the pictures data based on the project ID
         const pictures = await PictureModel.find({ projectID: project._id });
+
+        if (!pictures || pictures.length === 0) {
+            return res
+                .status(404)
+                .json({ error: "Pictures not found for the project" });
+        }
+        console.log(pictures.length)
+        // Array to store picture data
+        const pictureData = [];
+
+        // Loop through each picture and extract the file data
+        for (const picture of pictures) {
+            // Determine the content type based on the file extension
+            const ext = path.extname(picture.fileName).toLowerCase();
+            let contentType = "";
+            switch (ext) {
+                case ".jpg":
+                    contentType = "image/jpg";
+                    break;
+                case ".jpeg":
+                    contentType = "image/jpeg";
+                    break;
+                case ".png":
+                    contentType = "image/png";
+                    break;
+                case ".gif":
+                    contentType = "image/gif";
+                    break;
+                // Add more cases for other image types if needed
+                default:
+                    contentType = "application/octet-stream"; // Default to binary data
+            }
+            pictureData.push({
+                projectId:picture.projectID,
+                _id: picture._id,
+                pictureName: picture.fileName,
+                contentType: contentType,
+                data: picture.fileData,
+            });
+        }
+        console.log(pictureData.length);
+        // Send the array of picture data as a response
+        res.json(pictureData);
+    } catch (error) {
+        console.error("Error fetching project pictures:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+export const getProjectPictures = async (
+    req: express.Request,
+    res: express.Response,
+) => {
+    try {
+       
+        const projectID = req.params.projectID;
+
+        // Find the user by username
+       
+        // Retrieve the pictures data based on the project ID
+        const pictures = await PictureModel.find({ projectID: projectID });
 
         if (!pictures || pictures.length === 0) {
             return res
