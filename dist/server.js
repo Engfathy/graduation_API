@@ -270,6 +270,12 @@ io.on("connection", async (socket) => {
         socket.join(roomId);
         console.log(`User: ${socket.id} joined room ${roomId}`);
     });
+    socket.on("leaveRoom", (roomId) => {
+        // Join the socket to the specified room
+        socket.leave(roomId);
+        ;
+        console.log(`User: ${socket.id} leave room ${roomId}`);
+    });
     // socket.on("messageToRoom", async ({ msg, data }) => {
     //     console.log(msg,data);
     //     socket.to(msg.roomId)
@@ -407,11 +413,9 @@ io.on("connection", async (socket) => {
             socket.to(msg.roomId).emit("voiceTemperature", msg.value);
         }
         if (temperatureRegex.test(msg.value) || distanceRegex.test(msg.value)) {
-            // If the message contains "45 C" or "112 cm", add it to the queue
             addToQueue(socket, msg, data);
         }
         else {
-            // If the message does not contain "45 C" or "112 cm", forward it immediately
             socket.to(msg.roomId).emit("roomMessagess", { msg, data });
         }
     });
@@ -425,12 +429,6 @@ io.on("connection", async (socket) => {
         io.emit("user leave", "user diconnected");
     });
 });
-// io.engine.on("connection_error", (err) => {
-//     console.log(err.req); // the request object
-//     console.log(err.code); // the error code, for example 1
-//     console.log(err.message); // the error message, for example "Session ID unknown"
-//     console.log(err.context); // some additional error context
-// });
 //--------------------------------------------------------------------------
 app.post("/api/v1/connect-data", async (req, res) => {
     const projectName = req.body.projectName;
