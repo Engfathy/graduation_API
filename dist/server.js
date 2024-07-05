@@ -383,8 +383,9 @@ io.on("connection", async (socket) => {
             return;
         }
         const { socket, msg, data } = messageQueue.shift(); // Get the first message from the queue
+        console.log(messageQueue.length);
         socket.to(msg.roomId).emit("roomMessagess", { msg, data });
-        setTimeout(processQueue, 500); // Process the next message after 1 second
+        setTimeout(processQueue, 1500); // Process the next message after 1 second
     };
     // Function to add a message to the queue
     const addToQueue = (socket, msg, data) => {
@@ -400,8 +401,11 @@ io.on("connection", async (socket) => {
     };
     socket.on("messageToRoom", async ({ msg, data }) => {
         console.log(msg, data);
-        const temperatureRegex = /45\s*C/;
-        const distanceRegex = /112\s*cm/i; // Case-insensitive regex for "cm"
+        const temperatureRegex = /\d+\s*C/i; // Matches any number followed by "C"
+        const distanceRegex = /\d+\s*cm/i; // Matches any number followed by "cm"
+        if (temperatureRegex.test(msg.value)) {
+            socket.to(msg.roomId).emit("voiceTemperature", msg.value);
+        }
         if (temperatureRegex.test(msg.value) || distanceRegex.test(msg.value)) {
             // If the message contains "45 C" or "112 cm", add it to the queue
             addToQueue(socket, msg, data);

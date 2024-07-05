@@ -363,7 +363,7 @@ export const loginUser = async (
         };
 
         const access_expirationTime =
-            Math.floor(Date.now() / 1000) + 1 * 60 * 60; // 1 hour from now
+            Math.floor(Date.now() / 1000) + 10 * 60 * 60; // 1 hour from now
         const refresh_expirationTime =
             Math.floor(Date.now() / 1000) + 10 * 24 * 60 * 60; // 10 days from now
         const access_token = jwt.sign(

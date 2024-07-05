@@ -326,7 +326,7 @@ const loginUser = async (req, res) => {
                 name: user.name,
             },
         };
-        const access_expirationTime = Math.floor(Date.now() / 1000) + 1 * 60 * 60; // 1 hour from now
+        const access_expirationTime = Math.floor(Date.now() / 1000) + 10 * 60 * 60; // 1 hour from now
         const refresh_expirationTime = Math.floor(Date.now() / 1000) + 10 * 24 * 60 * 60; // 10 days from now
         const access_token = jsonwebtoken_1.default.sign({ exp: access_expirationTime, payLoad }, secretKey);
         const refresh_token = jsonwebtoken_1.default.sign({ exp: refresh_expirationTime, payLoad }, secretKey);

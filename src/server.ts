@@ -19,6 +19,7 @@ import helmet from "helmet";
 import filesRouter from "./router/pictureRouter";
 import ruleRouter from "./router/ruleRouter";
 import { join } from "path";
+import { log } from "console";
 
 const app: express.Application = express();
 const server = http.createServer(app);
@@ -127,7 +128,7 @@ app.post(
 // app.get("/socket3", (req, res) => {
 //     res.sendFile(__dirname + "/index3.html");
 // });
-let i =0;
+let i = 0;
 io.on("connection", async (socket) => {
     i++;
     console.log(`user ${i} connected`);
@@ -142,12 +143,12 @@ io.on("connection", async (socket) => {
         }
     });
     //--------------------------------------------------------------------------------------------
-    socket.on("joinRooms", (roomsIds:any) => {
-        console.log("join rooms",roomsIds);
+    socket.on("joinRooms", (roomsIds: any) => {
+        console.log("join rooms", roomsIds);
         if (roomsIds.length == 0) {
-            console.log("rooms type incorrect")
-        }else if(!Array.isArray(roomsIds)){
-            let jsonRooms =JSON.parse(roomsIds);
+            console.log("rooms type incorrect");
+        } else if (!Array.isArray(roomsIds)) {
+            let jsonRooms = JSON.parse(roomsIds);
             jsonRooms.forEach((roomId: string) => {
                 socket.join(roomId);
                 console.log(`User mobile: ${socket.id} joined room ${roomId}`);
@@ -162,12 +163,12 @@ io.on("connection", async (socket) => {
     });
 
     //------------------------------------------------------------------
-    socket.on("leaveRooms", (roomsIds:any) => {
-        console.log("leave rooms",roomsIds);
+    socket.on("leaveRooms", (roomsIds: any) => {
+        console.log("leave rooms", roomsIds);
         if (roomsIds.length == 0) {
             console.log("rooms status", `no room sended`);
-        }else if (!Array.isArray(roomsIds)){
-            let jsonRooms =JSON.parse(roomsIds);
+        } else if (!Array.isArray(roomsIds)) {
+            let jsonRooms = JSON.parse(roomsIds);
             jsonRooms.forEach((roomId: string) => {
                 socket.leave(roomId);
                 console.log(`User mobile: ${socket.id} left room ${roomId}`);
@@ -186,7 +187,7 @@ io.on("connection", async (socket) => {
     //-----------------------------------------------------------------------
     socket.on("updateValues", async (data) => {
         // console.log(data);
-        if(data.modules.length !== 0){
+        if (data.modules.length !== 0) {
             try {
                 // Send POST request to API
                 const response = await axios.post(
@@ -222,10 +223,9 @@ io.on("connection", async (socket) => {
                     // socket.emit("updateValuseError", error.message);
                 }
             }
-        }else{
-            console.log("updated value array empty")
+        } else {
+            console.log("updated value array empty");
         }
-       
     });
 
     //-----------------------------------------------------------------------------
@@ -317,7 +317,7 @@ io.on("connection", async (socket) => {
     // //             let rules = response.data.data;
     // //             if (rules.length == 0) {
     // //                 console.log("no rules found");
-                  
+
     // //                 socket.to(msg.roomId).emit("roomMessagess", {msg,data});
     // //             } else {
     // //                 rules.forEach((rule: any) => {
@@ -374,14 +374,13 @@ io.on("connection", async (socket) => {
 
     // //                             socket.to(rule.actionModuleId)
     // //                                 .emit("roomMessagess", actionData);
-                                   
-                                    
+
     // //                                 socket.to(msg.roomId)
     // //                                     .emit("roomMessagess", {msg,data});
     // //                         }
     // //                     } else {
     // //                         console.log("condition not met");
-                            
+
     // //                         socket.to(msg.roomId)
     // //                             .emit("roomMessagess", {msg ,data});
     // //                     }
@@ -389,7 +388,7 @@ io.on("connection", async (socket) => {
     // //             }
     // //         } else {
     // //             console.log("not  a number value ");
-               
+
     // //             io.in(msg.roomId).emit("roomMessagess", {msg,data});
     // //         }
     // //     } catch (error: any) {
@@ -410,42 +409,45 @@ io.on("connection", async (socket) => {
     // //         }
     // //     }
     // });
-    const messageQueue:any = [];
+    const messageQueue: any = [];
     let isProcessing = false;
-    
+
     // Function to process the queue
     const processQueue = () => {
         if (messageQueue.length === 0) {
             isProcessing = false;
             return;
         }
-        
+
         const { socket, msg, data } = messageQueue.shift(); // Get the first message from the queue
+        console.log(messageQueue.length);
         socket.to(msg.roomId).emit("roomMessagess", { msg, data });
-        
-        setTimeout(processQueue, 500); // Process the next message after 1 second
+
+        setTimeout(processQueue, 1500); // Process the next message after 1 second
     };
-    
+
     // Function to add a message to the queue
-    const addToQueue = (socket:any, msg:any, data:any) => {
+    const addToQueue = (socket: any, msg: any, data: any) => {
         // Clear the queue if it reaches 100
         if (messageQueue.length >= 100) {
             messageQueue.length = 0;
         }
-        
+
         messageQueue.push({ socket, msg, data });
         if (!isProcessing) {
             isProcessing = true;
             processQueue();
         }
     };
-    
+
     socket.on("messageToRoom", async ({ msg, data }) => {
         console.log(msg, data);
-    
-        const temperatureRegex = /45\s*C/;
-        const distanceRegex = /112\s*cm/i; // Case-insensitive regex for "cm"
-        
+
+        const temperatureRegex = /\d+\s*C/i; // Matches any number followed by "C"
+        const distanceRegex = /\d+\s*cm/i; // Matches any number followed by "cm"
+        if (temperatureRegex.test(msg.value)) {
+            socket.to(msg.roomId).emit("voiceTemperature",  msg.value);
+        }
         if (temperatureRegex.test(msg.value) || distanceRegex.test(msg.value)) {
             // If the message contains "45 C" or "112 cm", add it to the queue
             addToQueue(socket, msg, data);
@@ -454,8 +456,6 @@ io.on("connection", async (socket) => {
             socket.to(msg.roomId).emit("roomMessagess", { msg, data });
         }
     });
-    
-
 
     // console.log(io.of("/").sockets.size, "of name space");
 
@@ -520,7 +520,7 @@ app.post(
 //     res.send(realIP);
 // });
 
-if(hostName && port) {
+if (hostName && port) {
     server.listen(port, hostName, () => {
         console.log(`server is running at http://${hostName}:${port}`);
     });
