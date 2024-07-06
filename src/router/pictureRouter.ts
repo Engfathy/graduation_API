@@ -24,7 +24,7 @@ filesRouter.post(
     uploadProjectPictures,
 );
 filesRouter.get("/picture", getProjectPicturesByusernameAndProjectName);
-filesRouter.get("/picture/projectID", getProjectPictures);
+filesRouter.get("/picture/:projectID", getProjectPictures);
 filesRouter.delete("/delete/:id", deletePictureById);
 
 export default filesRouter;
